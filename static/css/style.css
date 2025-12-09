@@ -1,0 +1,16 @@
+:root {
+    /* Paleta de Cores Genérica (Baseada no Verde do My Tribe) */
+    --primary-color: #009688;       /* O Verde Principal */
+    --primary-hover: #00796b;       /* Verde mais escuro pro mouse */
+    --secondary-color: #ffffff;     /* Branco */
+    --text-dark: #333333;           /* Texto Escuro */
+    --text-light: #757575;          /* Texto Cinza */
+    --background-light: #f4f6f8;    /* Fundo gelo */
+    --danger-color: #e53935;        /* Vermelho para erros */
+}
+
+/* Exemplo de uso: O botão vai pegar a cor da variável acima */
+.btn-candidatar {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
