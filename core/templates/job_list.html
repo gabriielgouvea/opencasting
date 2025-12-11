@@ -1,29 +1,29 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2 style="color: #009688; margin-top: 0;">Trabalhos perto de você</h2>
+    <h2 style="color: #009688; margin-top: 0; font-weight: 700;">Trabalhos perto de você</h2>
 
     {% for job in jobs %}
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: start;">
+    <div class="card" style="background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #009688; transition: transform 0.2s;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
             <div>
-                <h3>{{ job.titulo }}</h3>
-                <p><i class="material-icons" style="font-size: 14px; vertical-align: middle;">place</i> {{ job.local }}</p>
-                <p><i class="material-icons" style="font-size: 14px; vertical-align: middle;">event</i> {{ job.dias.count }} diárias disponíveis</p>
+                <h3 style="margin: 0 0 8px 0; color: #333; font-size: 1.3rem;">{{ job.titulo }}</h3>
+                <p style="margin: 5px 0; color: #666;"><i class="material-icons" style="font-size: 16px; vertical-align: middle; color: #009688;">place</i> {{ job.local }}</p>
+                <p style="margin: 5px 0; color: #666;"><i class="material-icons" style="font-size: 16px; vertical-align: middle; color: #009688;">event</i> {{ job.dias.count }} diárias disponíveis</p>
             </div>
-            <span style="background: #e0f2f1; color: #009688; padding: 5px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: bold;">
+            <span style="background: #e0f2f1; color: #009688; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">
                 {{ job.get_status_display }}
             </span>
         </div>
         
-        <a href="{% url 'detalhe_vaga' job.id %}" class="btn" style="background: transparent; border: 1px solid #009688; color: #009688; margin-top: 15px;">
-            Ver Detalhes
+        <a href="{% url 'detalhe_vaga' job.id %}" style="display: block; width: 100%; padding: 12px; background: #009688; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s;">
+            VER DETALHES
         </a>
     </div>
     {% empty %}
-        <div style="text-align: center; padding: 40px; color: #999;">
-            <i class="material-icons" style="font-size: 48px;">sentiment_dissatisfied</i>
-            <p>Nenhuma vaga aberta no momento.</p>
+        <div style="text-align: center; padding: 60px; color: #999;">
+            <i class="material-icons" style="font-size: 64px; color: #eee;">sentiment_dissatisfied</i>
+            <p style="font-size: 1.1rem; margin-top: 10px;">Nenhuma vaga aberta no momento.</p>
         </div>
     {% endfor %}
 {% endblock %}

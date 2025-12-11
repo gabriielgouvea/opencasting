@@ -48,7 +48,7 @@ class UserProfile(models.Model):
     tipo_chave_pix = models.CharField(max_length=20, choices=TIPO_CHAVE_CHOICES, blank=True, null=True)
     chave_pix = models.CharField(max_length=100, blank=True, null=True)
 
-    # --- FOTOS ---
+    # --- FOTOS (Vai pro Cloudinary automaticamente) ---
     foto_rosto = models.ImageField(upload_to='modelos/rosto/', blank=True, null=True)
     foto_corpo = models.ImageField(upload_to='modelos/corpo/', blank=True, null=True)
 
