@@ -3,12 +3,11 @@
 {% block content %}
 
 <style>
-    /* Transições */
+    /* Estilos (Mantidos) */
     .step-container { display: none; animation: fadeIn 0.5s; }
     .step-container.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Barra de Progresso */
     .progress-wrapper { margin-bottom: 30px; position: relative; padding: 0 10px; }
     .progress-track { background-color: #e0e0e0; height: 4px; width: 100%; border-radius: 2px; }
     .progress-fill { background-color: #009688; height: 100%; width: 0%; border-radius: 2px; transition: width 0.4s ease; }
@@ -16,33 +15,31 @@
     .dot { width: 16px; height: 16px; background: #e0e0e0; border-radius: 50%; border: 2px solid white; transition: 0.4s; }
     .dot.active { background: #009688; transform: scale(1.2); }
 
-    /* Inputs e Botões */
     .form-group { margin-bottom: 20px; text-align: left; }
     .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem; }
     .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; box-sizing: border-box; background: #fff; }
     .form-control:focus { border-color: #009688; outline: none; box-shadow: 0 0 0 3px rgba(0,150,136,0.1); }
+    .form-control.error { border-color: #e53935; box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1); }
     
     .btn { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border-radius: 25px; border: none; cursor: pointer; font-size: 1rem; font-weight: bold; }
     .btn-outline { background: transparent; border: 2px solid #ddd; color: #777; }
 
-    /* Estilo "Clean" para Perguntas Extras (Igual ao resto) */
-    .radio-group { display: flex; gap: 10px; margin-top: 5px; }
-    .radio-option { border: 1px solid #ddd; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; text-align: center; color: #555; background: #fff; transition: 0.2s; font-size: 0.9rem; }
-    input[type="radio"]:checked + label { background-color: #009688; color: white; border-color: #009688; font-weight: bold; }
-    input[type="radio"] { display: none; } 
+    /* Pagamento */
+    .payment-warning { background: #fff8e1; border-left: 4px solid #ffc107; color: #8d6e03; padding: 15px; border-radius: 4px; font-size: 0.9rem; margin-bottom: 20px; }
+    .payment-method-card { border: 2px solid #eee; padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; width: 48%; }
+    .payment-method-card:hover { border-color: #009688; }
+    .payment-method-card.selected { border-color: #009688; background-color: #e0f2f1; color: #00796b; font-weight: bold; }
     
-    /* Box de Foto */
-    .photo-tips { background: #fff3e0; padding: 15px; border-radius: 8px; font-size: 0.85rem; color: #e65100; margin-bottom: 20px; border-left: 4px solid #ff9800; }
-    .photo-box { border: 2px dashed #ccc; padding: 30px; text-align: center; border-radius: 12px; background: #fafafa; color: #aaa; }
+    .hidden-section { display: none; margin-top: 20px; animation: fadeIn 0.3s; }
 </style>
 
 <h2 style="text-align: center; color: #009688; margin-bottom: 5px;">Ficha de Cadastro</h2>
-<p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 0;">Junte-se ao time em 5 passos.</p>
+<p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 0;">Preencha todos os campos obrigatórios.</p>
 
 <div class="progress-wrapper">
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     <div class="step-dots">
-        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
 </div>
 
@@ -51,18 +48,33 @@
 
     <div class="step-container active" id="step1">
         <h3 style="color: #009688;">1. Acesso</h3>
-        <div class="form-group"><label class="form-label">Nome Completo</label>{{ form.nome_completo }}</div>
-        <div class="form-group"><label class="form-label">E-mail</label>{{ form.email }}</div>
-        <div class="form-group"><label class="form-label">Senha</label>{{ form.password }}</div>
-        <div class="form-group"><label class="form-label">Confirmar Senha</label>{{ form.confirm_password }}</div>
+        <div class="form-group">
+            <label class="form-label">Nome Completo *</label>
+            {{ form.nome_completo }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">E-mail *</label>
+            {{ form.email }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Senha *</label>
+            {{ form.password }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Confirmar Senha *</label>
+            {{ form.confirm_password }}
+        </div>
         <button type="button" class="btn" onclick="nextStep(2)">Próximo Passo</button>
     </div>
 
     <div class="step-container" id="step2">
         <h3 style="color: #009688;">2. Pessoal</h3>
-        <div class="form-group"><label class="form-label">WhatsApp</label>{{ form.whatsapp }}</div>
         <div class="form-group">
-            <label class="form-label">Data de Nascimento</label>
+            <label class="form-label">WhatsApp *</label>
+            {{ form.whatsapp }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">Data de Nascimento *</label>
             {{ form.data_nascimento }}
         </div>
         <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -74,18 +86,18 @@
     <div class="step-container" id="step3">
         <h3 style="color: #009688;">3. Endereço</h3>
         <div class="form-group">
-            <label class="form-label">CEP (Busca Automática)</label>
+            <label class="form-label">CEP *</label>
             {{ form.cep }}
             <small style="color: #009688; display: none;" id="cep-loading">Buscando endereço...</small>
         </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-            <div class="form-group"><label class="form-label">Endereço</label>{{ form.endereco }}</div>
-            <div class="form-group"><label class="form-label">Número</label>{{ form.numero }}</div>
+            <div class="form-group"><label class="form-label">Endereço *</label>{{ form.endereco }}</div>
+            <div class="form-group"><label class="form-label">Número *</label>{{ form.numero }}</div>
         </div>
-        <div class="form-group"><label class="form-label">Bairro</label>{{ form.bairro }}</div>
+        <div class="form-group"><label class="form-label">Bairro *</label>{{ form.bairro }}</div>
         <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10px;">
-            <div class="form-group"><label class="form-label">Cidade</label>{{ form.cidade }}</div>
-            <div class="form-group"><label class="form-label">UF</label>{{ form.estado }}</div>
+            <div class="form-group"><label class="form-label">Cidade *</label>{{ form.cidade }}</div>
+            <div class="form-group"><label class="form-label">UF *</label>{{ form.estado }}</div>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="button" class="btn btn-outline" onclick="prevStep(2)">Voltar</button>
@@ -95,34 +107,19 @@
 
     <div class="step-container" id="step4">
         <h3 style="color: #009688;">4. Perfil</h3>
-        
-        <div class="form-group"><label class="form-label">Altura</label>{{ form.altura }}</div>
-        
+        <div class="form-group"><label class="form-label">Altura *</label>{{ form.altura }}</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div class="form-group"><label class="form-label">Manequim</label>{{ form.manequim }}</div>
-            <div class="form-group"><label class="form-label">Calçado</label>{{ form.calcado }}</div>
+            <div class="form-group"><label class="form-label">Manequim *</label>{{ form.manequim }}</div>
+            <div class="form-group"><label class="form-label">Calçado *</label>{{ form.calcado }}</div>
         </div>
-
         {% if perguntas_extras %}
             {% for pergunta in perguntas_extras %}
                 <div class="form-group" style="margin-top: 25px;">
                     <label class="form-label">{{ pergunta.texto }}</label>
-                    
-                    {% if pergunta.tipo == 'sim_nao' %}
-                        <div class="radio-group">
-                            <input type="radio" id="p{{pergunta.id}}_sim" name="pergunta_{{pergunta.id}}" value="Sim">
-                            <label class="radio-option" for="p{{pergunta.id}}_sim">Sim</label>
-                            
-                            <input type="radio" id="p{{pergunta.id}}_nao" name="pergunta_{{pergunta.id}}" value="Não">
-                            <label class="radio-option" for="p{{pergunta.id}}_nao">Não</label>
-                        </div>
-                    {% else %}
-                        <input type="text" name="pergunta_{{pergunta.id}}" class="form-control" placeholder="Responda aqui...">
-                    {% endif %}
+                    <input type="text" name="pergunta_{{pergunta.id}}" class="form-control" required placeholder="Sua resposta...">
                 </div>
             {% endfor %}
         {% endif %}
-
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="button" class="btn btn-outline" onclick="prevStep(3)">Voltar</button>
             <button type="button" class="btn" onclick="nextStep(5)">Próximo Passo</button>
@@ -130,89 +127,156 @@
     </div>
 
     <div class="step-container" id="step5">
-        <h3 style="color: #009688;">5. Fotos</h3>
-        
-        <div class="photo-tips">
-            <strong>📸 Instruções:</strong>
-            <ul style="margin: 5px 0 0 20px; padding: 0;">
-                <li><strong>Aceito:</strong> Fotos de book, sorrindo, corpo inteiro.</li>
-                <li><strong>Proibido:</strong> Espelho, óculos escuros, filtros.</li>
-            </ul>
+        <h3 style="color: #009688;">5. Dados Bancários</h3>
+        <div class="payment-warning">
+            <i class="material-icons" style="vertical-align: bottom; font-size: 18px;">warning</i>
+            Pagamento somente em conta do titular (mesmo CPF).
         </div>
 
-        <div class="photo-box">
-            <i class="material-icons" style="font-size: 48px; margin-bottom: 10px;">add_a_photo</i>
-            <p style="margin: 0;"><strong>Upload de Fotos</strong><br>(Liberado após cadastro)</p>
+        <div class="form-group">
+            <label class="form-label">Seu CPF (Obrigatório) *</label>
+            {{ form.cpf }}
+        </div>
+
+        <label class="form-label" style="margin-top: 20px;">Selecione a Forma de Recebimento *</label>
+        
+        <input type="hidden" id="payment_method_selected" required>
+
+        <div style="display: flex; gap: 10px; justify-content: space-between;">
+            <div class="payment-method-card" onclick="selectPayment('pix')" id="card-pix">
+                <i class="material-icons">qr_code</i><br>PIX
+            </div>
+            <div class="payment-method-card" onclick="selectPayment('bank')" id="card-bank">
+                <i class="material-icons">account_balance</i><br>Transferência
+            </div>
+        </div>
+
+        <div id="fields-pix" class="hidden-section">
+            <div class="form-group">
+                <label class="form-label">Tipo de Chave *</label>
+                {{ form.tipo_chave_pix }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chave PIX *</label>
+                {{ form.chave_pix }}
+            </div>
+        </div>
+
+        <div id="fields-bank" class="hidden-section">
+            <div class="form-group"><label class="form-label">Banco *</label>{{ form.banco }}</div>
+            <div class="form-group"><label class="form-label">Tipo de Conta *</label>{{ form.tipo_conta }}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label class="form-label">Agência *</label>{{ form.agencia }}</div>
+                <div class="form-group"><label class="form-label">Conta *</label>{{ form.conta }}</div>
+            </div>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 30px;">
             <button type="button" class="btn btn-outline" onclick="prevStep(4)">Voltar</button>
-            <button type="submit" class="btn" style="background-color: #4CAF50;">FINALIZAR ✨</button>
+            <button type="button" class="btn" onclick="nextStep(6)">Próximo Passo</button>
+        </div>
+    </div>
+
+    <div class="step-container" id="step6">
+        <h3 style="color: #009688;">6. Suas Fotos</h3>
+        <p>A aprovação das fotos será feita posteriormente.</p>
+        <div style="border: 2px dashed #ccc; padding: 30px; text-align: center; border-radius: 12px; color: #999;">
+            <i class="material-icons" style="font-size: 40px;">add_a_photo</i>
+            <p>Upload de fotos</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <button type="button" class="btn btn-outline" onclick="prevStep(5)">Voltar</button>
+            <button type="submit" class="btn" style="background-color: #4CAF50;">FINALIZAR CADASTRO ✨</button>
         </div>
     </div>
 
 </form>
 
 <script>
-    // API ViaCEP
-    function buscarCep(cep) {
-        cep = cep.replace(/\D/g, '');
-        if (cep.length === 8) {
-            document.getElementById('cep-loading').style.display = 'block';
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.erro) {
-                        document.getElementById('rua').value = data.logradouro;
-                        document.getElementById('bairro').value = data.bairro;
-                        document.getElementById('cidade').value = data.localidade;
-                        document.getElementById('uf').value = data.uf;
-                    }
-                    document.getElementById('cep-loading').style.display = 'none';
-                })
-                .catch(() => document.getElementById('cep-loading').style.display = 'none');
+    // 1. Lógica para mostrar/esconder campos e MUDAR OBRIGATORIEDADE
+    function selectPayment(type) {
+        // Reseta tudo
+        document.getElementById('card-pix').classList.remove('selected');
+        document.getElementById('card-bank').classList.remove('selected');
+        document.getElementById('fields-pix').style.display = 'none';
+        document.getElementById('fields-bank').style.display = 'none';
+        document.getElementById('payment_method_selected').value = type;
+
+        // Limpa obrigatoriedade de todos primeiro
+        setRequired('fields-pix', false);
+        setRequired('fields-bank', false);
+
+        if (type === 'pix') {
+            document.getElementById('card-pix').classList.add('selected');
+            document.getElementById('fields-pix').style.display = 'block';
+            setRequired('fields-pix', true); // Pix vira obrigatório
+        } else {
+            document.getElementById('card-bank').classList.add('selected');
+            document.getElementById('fields-bank').style.display = 'block';
+            setRequired('fields-bank', true); // Banco vira obrigatório
         }
     }
 
-    // Máscaras
-    const cepInput = document.querySelector('.cep-mask');
-    if(cepInput) cepInput.addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length > 5) v = v.substring(0, 5) + '-' + v.substring(5, 8);
-        e.target.value = v;
-    });
-
-    const dateInput = document.querySelector('.date-mask');
-    if(dateInput) dateInput.addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
-        if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9);
-        e.target.value = v;
-    });
-
-    const heightInput = document.querySelector('.height-mask');
-    if(heightInput) heightInput.addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length > 2) v = v.substring(0, 1) + '.' + v.substring(1, 3);
-        e.target.value = v;
-    });
-
-    // Wizard
-    let currentStep = 1;
-    const totalSteps = 5;
-
-    function updateProgress() {
-        const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
-        document.getElementById('progressFill').style.width = percent + '%';
-        document.querySelectorAll('.dot').forEach((dot, index) => {
-            if (index < currentStep) dot.classList.add('active');
-            else dot.classList.remove('active');
+    function setRequired(containerId, isRequired) {
+        const container = document.getElementById(containerId);
+        const inputs = container.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (isRequired) input.setAttribute('required', 'true');
+            else input.removeAttribute('required');
         });
     }
 
-    function nextStep(step) {
+    // 2. Adicionar 'required' manual nos campos fixos para garantir a trava
+    document.addEventListener("DOMContentLoaded", function() {
+        // Pega todos os inputs visíveis do form e garante required neles (exceto os opcionais)
+        const fields = document.querySelectorAll('.form-control');
+        fields.forEach(f => {
+            // Se não for um dos campos condicionais de pagamento (que tratamos acima), marca como required
+            if (!f.closest('.hidden-section')) {
+                f.setAttribute('required', 'true');
+            }
+        });
+    });
+
+    // 3. Função NextStep com VALIDAÇÃO
+    let currentStep = 1;
+    const totalSteps = 6;
+
+    function nextStep(targetStep) {
+        const currentDiv = document.getElementById('step' + currentStep);
+        
+        // --- VALIDAÇÃO DA ETAPA ATUAL ---
+        let valid = true;
+        // Pega todos inputs VISÍVEIS e OBRIGATÓRIOS da etapa atual
+        const inputs = currentDiv.querySelectorAll('input[required], select[required]');
+        
+        inputs.forEach(input => {
+            if (!input.value || input.value.trim() === "") {
+                valid = false;
+                input.classList.add('error'); // Fica vermelho
+                // Tenta focar no primeiro erro
+                input.reportValidity(); 
+            } else {
+                input.classList.remove('error');
+            }
+        });
+
+        if (!valid) {
+            // Se tiver erro, NÃO AVANÇA
+            return; 
+        }
+
+        // Se for etapa 5 (Pagamento), verifica se escolheu um método
+        if (currentStep === 5) {
+            if (!document.getElementById('payment_method_selected').value) {
+                alert("Por favor, selecione uma forma de pagamento.");
+                return;
+            }
+        }
+
+        // Se tudo ok, avança
         document.getElementById('step' + currentStep).classList.remove('active');
-        currentStep = step;
+        currentStep = targetStep;
         document.getElementById('step' + currentStep).classList.add('active');
         updateProgress();
         window.scrollTo(0, 0);
@@ -224,6 +288,67 @@
         document.getElementById('step' + currentStep).classList.add('active');
         updateProgress();
     }
+
+    function updateProgress() {
+        const percent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.querySelectorAll('.dot').forEach((dot, index) => {
+            if (index < currentStep) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
+
+    // Máscaras (CPF, etc)
+    const cpfInput = document.querySelector('.cpf-mask');
+    if(cpfInput) {
+        cpfInput.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length > 3) v = v.substring(0, 3) + '.' + v.substring(3);
+            if (v.length > 7) v = v.substring(0, 7) + '.' + v.substring(7);
+            if (v.length > 11) v = v.substring(0, 11) + '-' + v.substring(11, 13);
+            e.target.value = v;
+        });
+    }
+    // ... (Mantenha as outras máscaras de CEP, Data, Altura aqui) ...
+    const cepInput = document.querySelector('.cep-mask');
+    if(cepInput) cepInput.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 5) v = v.substring(0, 5) + '-' + v.substring(5, 8);
+        e.target.value = v;
+    });
+    const dateInput = document.querySelector('.date-mask');
+    if(dateInput) dateInput.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
+        if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9);
+        e.target.value = v;
+    });
+    const heightInput = document.querySelector('.height-mask');
+    if(heightInput) heightInput.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 2) v = v.substring(0, 1) + '.' + v.substring(1, 3);
+        e.target.value = v;
+    });
+
+    // ViaCEP
+    function buscarCep(cep) {
+        cep = cep.replace(/\D/g, '');
+        if (cep.length === 8) {
+            document.getElementById('cep-loading').style.display = 'block';
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(r => r.json())
+                .then(d => {
+                    if (!d.erro) {
+                        document.getElementById('id_endereco').value = d.logradouro;
+                        document.getElementById('id_bairro').value = d.bairro;
+                        document.getElementById('id_cidade').value = d.localidade;
+                        document.getElementById('id_estado').value = d.uf;
+                    }
+                    document.getElementById('cep-loading').style.display = 'none';
+                });
+        }
+    }
+    document.querySelector('.cep-mask').addEventListener('blur', (e) => buscarCep(e.target.value));
 </script>
 
 {% endblock %}

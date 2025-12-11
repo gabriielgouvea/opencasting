@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px;">
+    <i class="material-icons" style="font-size: 64px; color: #c62828;">highlight_off</i>
+    <h2 style="color: #c62828;">Atualização sobre seu cadastro</h2>
+    
+    <p style="color: #666; max-width: 500px; margin: 20px auto; line-height: 1.6;">
+        Olá, <strong>{{ user.first_name }}</strong>. Analisamos seu perfil e, no momento, ele não pôde ser aprovado.
+    </p>
+
+    <div style="background: #ffebee; padding: 25px; border-radius: 12px; display: inline-block; margin-top: 10px; border: 1px solid #ffcdd2; text-align: left; max-width: 100%;">
+        <strong style="color: #c62828;">Motivo:</strong>
+        <p style="margin: 5px 0 15px 0;">{{ perfil.get_motivo_reprovacao_display }}</p>
+        
+        {% if perfil.observacao_admin %}
+            <strong style="color: #c62828;">Mensagem da Agência:</strong>
+            <p style="margin: 5px 0 0 0;">{{ perfil.observacao_admin }}</p>
+        {% endif %}
+    </div>
+    
+    <br><br>
+    <p style="color: #777; font-size: 0.9rem;">Você pode corrigir as informações e tentar novamente.</p>
+    
+    <a href="{% url 'editar_perfil' %}" class="btn" style="background-color: #c62828; color: white; display: inline-block; width: auto; padding: 10px 30px; margin-top: 15px; text-decoration: none; border-radius: 25px;">
+        Corrigir Cadastro
+    </a>
+</div>
+{% endblock %}

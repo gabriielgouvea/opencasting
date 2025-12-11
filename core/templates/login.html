@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+    <h2 style="color: #009688;">Bem-vindo de volta</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom: 15px; text-align: left;">
+            <label>Usuário (E-mail)</label>
+            <input type="text" name="username" class="form-control" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label>Senha</label>
+            <input type="password" name="password" class="form-control" required style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        
+        <button type="submit" style="width: 100%; padding: 12px; background: #009688; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold;">ENTRAR</button>
+    </form>
+    
+    <p style="margin-top: 20px; font-size: 0.9rem;">
+        Ainda não tem conta? <a href="{% url 'cadastro' %}" style="color: #009688; font-weight: bold;">Cadastre-se</a>
+    </p>
+</div>
+{% endblock %}

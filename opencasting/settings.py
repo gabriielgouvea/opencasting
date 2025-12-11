@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -123,3 +124,60 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Quando fizer logout, volta para a tela inicial (Landing Page)
+LOGOUT_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'lista_vagas'
+LOGIN_URL = 'login'
+
+# --- CONFIGURAÇÃO DO PAINEL ADMIN (JAZZMIN) ---
+JAZZMIN_SETTINGS = {
+    "site_title": "OpenCasting Admin",
+    "site_header": "OpenCasting",
+    "site_brand": "OpenCasting",
+    "welcome_sign": "Bem-vindo ao Painel de Controle",
+    "copyright": "OpenCasting Agency",
+    "search_model": ["core.UserProfile", "core.Job"],
+    
+    # Menu lateral
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    
+    # Ícones para deixar intuitivo (Google Icons)
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "core.UserProfile": "fas fa-id-card-alt", # Ícone de crachá para Modelos
+        "core.Job": "fas fa-briefcase",             # Ícone de maleta para Vagas
+        "core.Candidatura": "fas fa-hand-paper",    # Ícone de mão levantada
+        "core.Pergunta": "fas fa-question-circle",
+    },
+}
+
+# Cores e Estilo (Tema moderno e limpo)
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-teal", # Verde da marca
+    "accent": "accent-teal",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-teal", # Menu lateral escuro com detalhes verdes
+    "sidebar_nav_small_text": False,
+    "theme": "flatly", # Tema clean e moderno (sem cara de Windows XP)
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}

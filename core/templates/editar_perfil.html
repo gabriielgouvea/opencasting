@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+    <h2 style="color: #009688; margin-top: 0;">Editar Perfil</h2>
+    <p style="color: #666; margin-bottom: 25px;">Mantenha seus dados sempre atualizados.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #333;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <small style="color: red;">{{ field.errors.0 }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div style="margin-top: 30px; display: flex; gap: 10px;">
+            <a href="{% url 'lista_vagas' %}" style="padding: 12px 25px; border: 1px solid #ddd; border-radius: 25px; color: #555; text-decoration: none;">Cancelar</a>
+            <button type="submit" style="padding: 12px 30px; background: #009688; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold;">Salvar Alterações</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

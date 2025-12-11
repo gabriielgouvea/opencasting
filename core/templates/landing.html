@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCasting - Soluções em Staff</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #009688;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --text: #ffffff;
+            --gray: #b0b0b0;
+        }
+        
+        body { margin: 0; font-family: 'Montserrat', sans-serif; background-color: var(--dark); color: var(--text); overflow-x: hidden; }
+        
+        /* Navbar */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; position: absolute; width: 90%; top: 0; z-index: 10; }
+        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: -1px; color: white; }
+        .logo span { color: var(--primary); }
+        
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+        .nav-links a:hover { color: var(--primary); }
+        
+        /* Botões */
+        .btn-outline { border: 1px solid white; padding: 8px 20px; border-radius: 20px; transition: 0.3s; color: white; text-decoration: none; }
+        .btn-outline:hover { background: white; color: var(--dark); }
+        
+        .btn-primary { background: var(--primary); color: white; padding: 10px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; border: none; transition: 0.3s; display: inline-block; }
+        .btn-primary:hover { background: #00796b; transform: scale(1.05); box-shadow: 0 0 15px rgba(0,150,136,0.4); }
+
+        /* Mobile Login Link (Escondido no Desktop) */
+        .mobile-login { display: none; }
+
+        /* Hero Section */
+        .hero { height: 90vh; display: flex; align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle at center, #1e1e1e 0%, #000000 100%); padding: 0 20px; }
+        .hero h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; max-width: 800px; }
+        .hero p { font-size: 1.2rem; color: var(--gray); max-width: 600px; margin: 0 auto 40px auto; }
+
+        /* Clients */
+        .clients { background: var(--darker); padding: 30px 0; text-align: center; border-top: 1px solid #333; border-bottom: 1px solid #333; }
+        .clients p { color: #555; font-size: 0.8rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
+        .logos-grid { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; opacity: 0.5; }
+        .logo-placeholder { font-weight: bold; font-size: 1.2rem; color: #555; }
+
+        /* Services */
+        .services { padding: 80px 10%; background: var(--dark); }
+        .section-title { font-size: 2rem; margin-bottom: 50px; border-left: 5px solid var(--primary); padding-left: 20px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        .service-card { background: #1e1e1e; padding: 30px; border-radius: 15px; transition: 0.3s; border: 1px solid #333; }
+        .service-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .service-card i { font-size: 40px; color: var(--primary); margin-bottom: 20px; }
+        .service-card h3 { margin-bottom: 10px; }
+        .service-card p { color: var(--gray); font-size: 0.9rem; line-height: 1.6; }
+
+        /* CTA */
+        .cta-section { padding: 80px 20px; text-align: center; background: linear-gradient(45deg, #004d40, #009688); }
+        .cta-section h2 { margin-bottom: 30px; }
+        .footer { text-align: center; padding: 40px; font-size: 0.8rem; color: #555; }
+
+        /* --- RESPONSIVIDADE (MOBILE) --- */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            
+            /* Esconde o menu completo no celular */
+            .nav-links { display: none; } 
+            
+            /* Mostra o link de login simples no celular */
+            .mobile-login { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">OPEN<span>CASTING</span></div>
+        
+        <div class="nav-links">
+            <a href="#servicos">Serviços</a>
+            <a href="#quem-somos">Quem Somos</a>
+            <a href="{% url 'lista_vagas' %}" class="btn-outline">Sou Promotor</a>
+            <a href="https://wa.me/5511999999999" class="btn-primary" target="_blank">Solicitar Orçamento</a>
+        </div>
+
+        <div class="mobile-login">
+            <a href="{% url 'lista_vagas' %}" style="color: white; text-decoration: none; font-weight: bold; font-size: 0.9rem;">LOGIN / VAGAS</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div>
+            <h1>Eleve o nível do seu evento com os <span style="color: var(--primary);">melhores profissionais</span> do mercado.</h1>
+            <p>Recepcionistas, promotores e coordenadores qualificados. Agilidade na seleção e excelência na entrega.</p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://wa.me/5511999999999" class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem;">FALAR COM CONSULTOR</a>
+                <a href="{% url 'lista_vagas' %}" style="padding: 15px 40px; border: 1px solid #555; border-radius: 25px; color: white; text-decoration: none;">Sou Candidato</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="clients">
+        <p>Empresas que confiam na gente</p>
+        <div class="logos-grid">
+            <span class="logo-placeholder">GOOGLE</span>
+            <span class="logo-placeholder">VIVO</span>
+            <span class="logo-placeholder">ASICS</span>
+            <span class="logo-placeholder">DISNEY+</span>
+            <span class="logo-placeholder">UBER</span>
+        </div>
+    </section>
+
+    <section class="services" id="servicos">
+        <h2 class="section-title">O que fazemos</h2>
+        <div class="cards-grid">
+            <div class="service-card">
+                <i class="material-icons">flash_on</i>
+                <h3>Agilidade Total</h3>
+                <p>Receba opções de casting em até 24 horas. Nosso banco de talentos está pronto para atender demandas urgentes.</p>
+            </div>
+            <div class="service-card">
+                <i class="material-icons">groups</i>
+                <h3>Casting Qualificado</h3>
+                <p>Seleção rigorosa por fotos, medidas e experiência. Garantimos o perfil exato que sua marca precisa.</p>
+            </div>
+            <div class="service-card">
+                <i class="material-icons">verified</i>
+                <h3>Gestão Completa</h3>
+                <p>Do casting ao pagamento. Nós cuidamos da burocracia, contratos e escalas para você focar no evento.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2>Pronto para transformar seu evento?</h2>
+        <a href="https://wa.me/5511999999999" style="background: white; color: var(--primary); padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 900; font-size: 1.2rem; color: #004d40;">SOLICITAR ORÇAMENTO AGORA</a>
+    </section>
+
+    <style>
+        .site-footer { background-color: #0a0a0a; color: #b0b0b0; padding: 60px 0 20px; font-size: 0.9rem; border-top: 1px solid #222; }
+        .footer-content { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; padding: 0 20px; }
+        .footer-col h4 { color: white; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-col p { line-height: 1.6; margin-bottom: 10px; }
+        .footer-links { list-style: none; padding: 0; }
+        .footer-links li { margin-bottom: 10px; }
+        .footer-links a { color: #b0b0b0; text-decoration: none; transition: 0.3s; display: block; }
+        .footer-links a:hover { color: var(--primary); padding-left: 5px; }
+        
+        .social-links { display: flex; gap: 15px; margin-top: 20px; }
+        .social-icon { width: 35px; height: 35px; background: #222; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; text-decoration: none; transition: 0.3s; }
+        .social-icon:hover { background: var(--primary); transform: translateY(-3px); }
+
+        .footer-bottom { text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #222; font-size: 0.8rem; }
+        .dev-tag { color: var(--primary); font-weight: bold; text-decoration: none; }
+    </style>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-col">
+                <h4>OpenCasting</h4>
+                <p>Conectamos as melhores marcas aos profissionais mais qualificados do mercado de eventos. Agilidade, compromisso e excelência.</p>
+                <div class="social-links">
+                    <a href="#" class="social-icon" title="Instagram"><i class="material-icons" style="font-size: 20px;">photo_camera</i></a>
+                    <a href="#" class="social-icon" title="E-mail"><i class="material-icons" style="font-size: 20px;">email</i></a>
+                    <a href="#" class="social-icon" title="WhatsApp"><i class="material-icons" style="font-size: 20px;">chat</i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Navegação</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Quem Somos</a></li>
+                    <li><a href="#">Nossos Serviços</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="#">Área do Candidato</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Entre em Contato</h4>
+                <ul class="footer-links">
+                    <li><i class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">phone</i> (11) 99999-9999</li>
+                    <li><i class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">email</i> contato@opencasting.com.br</li>
+                    <li><i class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">location_on</i> Alphaville, Barueri - SP</li>
+                    <li style="margin-top: 15px;">
+                        <a href="#" style="color: white; border: 1px solid white; text-align: center; padding: 8px; border-radius: 4px; width: fit-content;">Solicitar Orçamento</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 OpenCasting Agency. Todos os direitos reservados.</p>
+            <p>Desenvolvido por <a href="#" class="dev-tag">GOUVEA AUTOMAÇÕES</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>

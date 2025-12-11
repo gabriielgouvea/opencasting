@@ -5,12 +5,12 @@ from django.contrib.auth.models import User
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     
-    # Dados Pessoais
+    # --- DADOS PESSOAIS ---
     nome_completo = models.CharField(max_length=100)
     whatsapp = models.CharField(max_length=20)
     data_nascimento = models.DateField(null=True, blank=True)
     
-    # Endereço (Novo!)
+    # --- ENDEREÇO ---
     cep = models.CharField(max_length=9, blank=True, null=True)
     endereco = models.CharField(max_length=200, blank=True, null=True)
     numero = models.CharField(max_length=20, blank=True, null=True)
@@ -18,19 +18,62 @@ class UserProfile(models.Model):
     cidade = models.CharField(max_length=100, blank=True, null=True)
     estado = models.CharField(max_length=2, blank=True, null=True)
     
-    # Medidas (Fixas)
+    # --- MEDIDAS ---
     altura = models.DecimalField(max_digits=3, decimal_places=2, help_text="Ex: 1.70")
     manequim = models.CharField(max_length=10)
     calcado = models.CharField(max_length=10)
     
-    # Fotos
+    # --- DADOS DE PAGAMENTO ---
+    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, verbose_name="CPF")
+    
+    # Opção 1: Transferência
+    banco = models.CharField(max_length=50, blank=True, null=True, verbose_name="Nome do Banco")
+    
+    TIPO_CONTA_CHOICES = [
+        ('corrente', 'Conta Corrente'),
+        ('poupanca', 'Conta Poupança'),
+    ]
+    tipo_conta = models.CharField(max_length=20, choices=TIPO_CONTA_CHOICES, blank=True, null=True, verbose_name="Tipo de Conta")
+    
+    agencia = models.CharField(max_length=10, blank=True, null=True)
+    conta = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Opção 2: PIX
+    TIPO_CHAVE_CHOICES = [
+        ('cpf', 'CPF'),
+        ('email', 'E-mail'),
+        ('telefone', 'Telefone'),
+        ('aleatoria', 'Chave Aleatória'),
+    ]
+    tipo_chave_pix = models.CharField(max_length=20, choices=TIPO_CHAVE_CHOICES, blank=True, null=True)
+    chave_pix = models.CharField(max_length=100, blank=True, null=True)
+
+    # --- FOTOS ---
     foto_rosto = models.ImageField(upload_to='modelos/rosto/', blank=True, null=True)
     foto_corpo = models.ImageField(upload_to='modelos/corpo/', blank=True, null=True)
 
-    def __str__(self):
-        return self.nome_completo
+    # --- SISTEMA DE APROVAÇÃO ---
+    STATUS_CHOICES = [
+        ('pendente', '🟡 Pendente (Em Análise)'),
+        ('aprovado', '🟢 Aprovado'),
+        ('reprovado', '🔴 Reprovado'),
+    ]
+    
+    MOTIVOS_REPROVACAO = [
+        ('fotos_ruins', 'Fotos fora do padrão (Escuras/Selfie/Espelho)'),
+        ('dados_incompletos', 'Dados incompletos ou incorretos'),
+        ('perfil', 'Perfil não compatível no momento'),
+        ('outros', 'Outros (Ver observação)'),
+    ]
 
-# --- 2. SISTEMA DE PERGUNTAS DINÂMICAS ---
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+    motivo_reprovacao = models.CharField(max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, verbose_name="Motivo (Se reprovado)")
+    observacao_admin = models.TextField(blank=True, null=True, verbose_name="Mensagem para a Modelo")
+
+    def __str__(self):
+        return f"{self.nome_completo} ({self.get_status_display()})"
+
+# --- 2. PERGUNTAS DINÂMICAS ---
 class Pergunta(models.Model):
     TIPO_CHOICES = [
         ('texto', 'Texto Curto'),
@@ -72,7 +115,6 @@ class Job(models.Model):
     def __str__(self):
         return self.titulo
 
-# Tabela para as datas e valores de cada dia do Job
 class JobDia(models.Model):
     job = models.ForeignKey(Job, related_name='dias', on_delete=models.CASCADE)
     data = models.DateField()
@@ -83,7 +125,7 @@ class JobDia(models.Model):
     def __str__(self):
         return f"{self.data} - R$ {self.valor}"
 
-# --- 4. CANDIDATURA (O Match) ---
+# --- 4. CANDIDATURA ---
 class Candidatura(models.Model):
     STATUS_CANDIDATURA = [
         ('pendente', 'Aguardando Aprovação'),
@@ -97,7 +139,7 @@ class Candidatura(models.Model):
     data_candidatura = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('job', 'modelo') # Impede de se candidatar 2x no mesmo job
+        unique_together = ('job', 'modelo')
 
     def __str__(self):
         return f"{self.modelo} -> {self.job} ({self.status})"
