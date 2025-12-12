@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
+    
+    <h2 style="color: #009688; margin-top: 0;">Avaliar Profissional</h2>
+    <p style="color: #666;">Como foi o trabalho de <strong>{{ perfil.nome_completo }}</strong>?</p>
+
+    <form method="POST" style="text-align: left; margin-top: 30px;">
+        {% csrf_token %}
+        
+        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #444;">Sua Empresa / Seu Nome</label>
+        <input type="text" name="nome" required class="form-control" placeholder="Ex: Agência XYZ" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;">
+
+        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #444;">Nota (1 a 5)</label>
+        <select name="nota" required class="form-control" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; background: white;">
+            <option value="5">⭐⭐⭐⭐⭐ (5) Excelente</option>
+            <option value="4">⭐⭐⭐⭐ (4) Muito Bom</option>
+            <option value="3">⭐⭐⭐ (3) Bom</option>
+            <option value="2">⭐⭐ (2) Regular</option>
+            <option value="1">⭐ (1) Ruim</option>
+        </select>
+
+        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #444;">Comentário</label>
+        <textarea name="comentario" required rows="4" class="form-control" placeholder="O que achou da pontualidade, postura e execução?" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box; font-family: inherit;"></textarea>
+
+        <button type="submit" style="width: 100%; padding: 15px; background: #009688; color: white; border: none; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s;">
+            ENVIAR AVALIAÇÃO
+        </button>
+    </form>
+</div>
+{% endblock %}

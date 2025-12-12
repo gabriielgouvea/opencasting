@@ -1,0 +1,52 @@
+/* --- VISUAL CORPORATIVO OPENCASTING (Verde #009688) --- */
+
+:root {
+    --primary: #009688;       
+    --primary-dark: #00796b;
+    --accent: #e0f2f1;
+}
+
+/* Força botões verdes */
+.btn-success, .btn-primary {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: white !important;
+}
+
+.btn-outline-success {
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary) !important;
+    color: white !important;
+}
+
+/* Menu Lateral Ativo */
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    background-color: var(--primary) !important;
+}
+
+/* Links */
+a { color: var(--primary); }
+a:hover { color: var(--primary-dark); }
+
+/* Card de Ajuda no Topo */
+.help-box {
+    background-color: #e0f2f1;
+    border-left: 5px solid #009688;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 4px;
+    color: #004d40;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.help-box h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

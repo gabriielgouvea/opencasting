@@ -4,152 +4,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenCasting | Área do Promotor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>OpenCasting | Gestão de Talentos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <style>
         :root { 
             --primary: #009688; 
+            --primary-dark: #00796b;
             --dark: #333; 
-            --bg: #f4f6f8; 
-            --admin-color: #c62828; /* Vermelho para destacar área restrita */
+            --bg: #f8f9fa; 
+            --text-muted: #6c757d;
         }
         
         body { 
             margin: 0; 
             font-family: 'Montserrat', sans-serif; 
             background: var(--bg); 
-            padding-top: 70px; 
+            padding-top: 70px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         
-        /* Navbar Fixa */
+        /* --- NAVBAR (TOPO) --- */
         .navbar { 
-            position: fixed; 
-            top: 0; 
-            width: 100%; 
-            background: white; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-            z-index: 1000; 
-            height: 60px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 5%; 
-            box-sizing: border-box; 
+            position: fixed; top: 0; width: 100%; background: white; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05); z-index: 1000; height: 70px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 30px; box-sizing: border-box; 
         }
-        
-        .nav-logo { 
-            font-weight: 800; 
-            font-size: 1.2rem; 
-            color: var(--dark); 
-            text-decoration: none; 
-        }
+        .nav-logo { font-weight: 800; font-size: 1.4rem; color: var(--dark); text-decoration: none; letter-spacing: -0.5px; }
         .nav-logo span { color: var(--primary); }
 
-        /* Menu Desktop */
-        .nav-menu { display: flex; gap: 20px; align-items: center; }
-        
+        .nav-menu { display: flex; gap: 25px; align-items: center; }
         .nav-link { 
-            text-decoration: none; 
-            color: #666; 
-            font-weight: 500; 
-            font-size: 0.9rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
+            text-decoration: none; color: #555; font-weight: 600; font-size: 0.9rem; 
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; 
         }
         .nav-link:hover { color: var(--primary); }
-        .nav-link.active { color: var(--primary); font-weight: 700; }
 
-        /* Botão ADMIN (Exclusivo) */
-        .btn-admin {
-            background-color: #ffebee;
-            color: var(--admin-color);
-            border: 1px solid var(--admin-color);
-            padding: 6px 15px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: 0.3s;
-        }
-        .btn-admin:hover { background-color: var(--admin-color); color: white; }
-
-        /* Menu User (Avatar) */
-        .user-menu { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        /* Menu do Usuário (Dropdown) */
+        .user-menu { position: relative; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 5px 10px; border-radius: 30px; transition: 0.2s; }
+        .user-menu:hover { background-color: #f0f0f0; }
         
+        /* Avatar Inteligente */
         .avatar-circle { 
-            width: 35px; 
-            height: 35px; 
-            background: var(--primary); 
-            color: white; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 0.9rem; 
+            width: 40px; height: 40px; background: var(--primary); color: white; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 1.1rem; overflow: hidden; border: 2px solid white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
         
         .dropdown { 
-            position: absolute; 
-            top: 45px; 
-            right: 0; 
-            background: white; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            width: 180px; 
-            display: none; 
-            overflow: hidden; 
-            border: 1px solid #eee; 
+            position: absolute; top: 60px; right: 0; background: white; 
+            border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); width: 220px; 
+            display: none; overflow: hidden; border: 1px solid #eee; z-index: 1001; 
         }
         .dropdown.show { display: block; }
-        
-        .dropdown a { 
-            display: block; 
-            padding: 12px 15px; 
-            text-decoration: none; 
-            color: #555; 
-            font-size: 0.9rem; 
-            transition: 0.2s; 
+        .dropdown a, .dropdown button { 
+            display: block; padding: 14px 20px; text-decoration: none; color: #555; 
+            font-size: 0.9rem; transition: 0.2s; border-bottom: 1px solid #f9f9f9; width: 100%; text-align: left;
+            background: none; border: none; font-family: inherit; cursor: pointer;
         }
-        .dropdown a:hover { background: #f5f5f5; color: var(--primary); }
-        .dropdown-divider { border-top: 1px solid #eee; }
+        .dropdown a:hover, .dropdown button:hover { background: #f5f5f5; color: var(--primary); padding-left: 25px; }
+        
+        /* --- CONTAINER PRINCIPAL (LARGURA PC) --- */
+        .container { 
+            width: 100%; 
+            max-width: 1200px; /* Largura Profissional */
+            margin: 30px auto; 
+            padding: 0 20px; 
+            box-sizing: border-box;
+            flex: 1; 
+        }
 
-        /* Mobile Toggle */
-        .menu-toggle { display: none; font-size: 28px; cursor: pointer; color: var(--dark); }
+        /* --- RODAPÉ INTERNO RICO --- */
+        .internal-footer { 
+            background-color: white; 
+            border-top: 1px solid #eee; 
+            padding: 60px 0 30px; 
+            margin-top: auto; 
+            color: #555;
+        }
+        .footer-grid {
+            max-width: 1200px; margin: 0 auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 40px;
+        }
+        .footer-col h5 { 
+            color: #333; font-weight: 800; margin-bottom: 20px; font-size: 1rem; 
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .footer-links { list-style: none; padding: 0; margin: 0; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { 
+            color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; 
+            display: flex; align-items: center; gap: 8px;
+        }
+        .footer-links a:hover { color: var(--primary); transform: translateX(5px); }
+        
+        .footer-bottom { 
+            text-align: center; margin-top: 60px; padding-top: 20px; 
+            border-top: 1px solid #f0f0f0; font-size: 0.85rem; color: #999; 
+        }
+        .dev-link { color: var(--primary); font-weight: 700; text-decoration: none; }
 
-        /* Container Principal */
-        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
-
-        /* --- MENSAGENS DE ALERTA --- */
+        /* Mensagens de Alerta */
         .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 500; }
         .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         .warning { background: #fff3e0; color: #ef6c00; }
         .info { background: #e3f2fd; color: #0277bd; }
 
-        /* --- RESPONSIVIDADE --- */
+        /* Responsividade */
         @media (max-width: 768px) {
-            .nav-menu { 
-                display: none; 
-                position: absolute; 
-                top: 60px; 
-                left: 0; 
-                width: 100%; 
-                background: white; 
-                flex-direction: column; 
-                padding: 20px 0; 
-                box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-            }
-            .nav-menu.active { display: flex; }
-            .menu-toggle { display: block; }
-            .user-menu { width: 100%; justify-content: center; border-top: 1px solid #eee; padding-top: 15px; }
-            .dropdown { position: static; width: 100%; box-shadow: none; border: none; text-align: center; display: block; }
+            .container { padding: 0 15px; margin-top: 15px; }
+            .nav-menu { display: none; } /* No futuro podemos por o menu mobile aqui */
+            .navbar { padding: 0 20px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 30px; text-align: center; }
+            .footer-links a { justify-content: center; }
         }
     </style>
 </head>
@@ -157,37 +132,42 @@
 
     <nav class="navbar">
         <a href="{% url 'home' %}" class="nav-logo">OPEN<span>CASTING</span></a>
-        <i class="material-icons menu-toggle" onclick="document.getElementById('navMenu').classList.toggle('active')">menu</i>
 
-        <div class="nav-menu" id="navMenu">
-            <a href="{% url 'lista_vagas' %}" class="nav-link"><i class="material-icons">work_outline</i> Vagas</a>
-            
+        <div class="nav-menu">
             {% if user.is_authenticated %}
+                <a href="{% url 'lista_vagas' %}" class="nav-link"><i class="material-icons">dashboard</i> Dashboard</a>
                 
-                {% if user.is_staff or user.is_superuser %}
-                    <a href="/admin/" target="_blank" class="btn-admin">
-                        <i class="material-icons" style="font-size: 16px;">admin_panel_settings</i>
-                        PAINEL ADMIN
-                    </a>
-                {% endif %}
-
                 <div class="user-menu" onclick="this.querySelector('.dropdown').classList.toggle('show')">
-                    <div class="avatar-circle">{{ user.first_name|slice:":1"|default:"U" }}</div>
-                    <span>Minha Conta</span>
-                    <div class="dropdown">
-                        {% if not user.is_superuser %}
-                            <a href="{% url 'editar_perfil' %}">Editar Perfil</a>
+                    <span style="font-weight: 600; color: #444;">{{ user.first_name|default:user.username }}</span>
+                    
+                    <div class="avatar-circle">
+                        {% if user.userprofile.foto_rosto %}
+                            <img src="{{ user.userprofile.foto_rosto.url }}" class="avatar-img">
+                        {% else %}
+                            {{ user.first_name|slice:":1"|default:"U" }}
                         {% endif %}
-                        
+                    </div>
+
+                    <div class="dropdown">
+                        {% if user.is_staff %}
+                            <a href="/admin/" target="_blank" style="color: #c62828;">
+                                <i class="material-icons" style="vertical-align: middle; font-size: 18px;">security</i> Painel Admin
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'editar_perfil' %}">
+                            <i class="material-icons" style="vertical-align: middle; font-size: 18px;">person</i> Meu Perfil
+                        </a>
                         <form action="{% url 'logout' %}" method="post" style="margin:0;">
                             {% csrf_token %}
-                            <button type="submit" style="background:none; border:none; width:100%; text-align:left; cursor:pointer; padding: 12px 15px; color:#d32f2f; font-family: inherit; font-size: 0.9rem;">Sair</button>
+                            <button type="submit" style="color:#d32f2f;">
+                                <i class="material-icons" style="vertical-align: middle; font-size: 18px;">logout</i> Sair
+                            </button>
                         </form>
                     </div>
                 </div>
             {% else %}
                 <a href="{% url 'login' %}" class="nav-link">Entrar</a>
-                <a href="{% url 'cadastro' %}" class="nav-link" style="color: var(--primary); border: 1px solid var(--primary); padding: 5px 15px; border-radius: 20px;">Cadastrar</a>
+                <a href="{% url 'cadastro' %}" class="nav-link" style="background: var(--primary); color: white; padding: 10px 25px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,150,136,0.2);">Criar Conta</a>
             {% endif %}
         </div>
     </nav>
@@ -198,48 +178,55 @@
                 <div class="alert {{ message.tags }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
-        {% block content %}{% endblock %}
+        
+        {% block content %}
+        {% endblock %}
     </div>
 
-    <style>
-        .internal-footer { background-color: white; border-top: 1px solid #eee; color: #666; padding: 40px 0 20px; margin-top: 60px; font-size: 0.9rem; }
-        .internal-footer-content { max-width: 900px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
-        .int-col h5 { color: #333; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; font-size: 0.85rem; }
-        .int-links a { display: block; color: #777; text-decoration: none; margin-bottom: 8px; transition: 0.2s; }
-        .int-links a:hover { color: var(--primary); }
-        .int-bottom { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f0f0f0; font-size: 0.8rem; }
-        .dev-link { color: var(--primary); font-weight: bold; text-decoration: none; }
-    </style>
+    {% block footer %}
+        <footer class="internal-footer">
+            <div class="footer-grid">
+                
+                <div class="footer-col">
+                    <h5 style="color:var(--primary);">OpenCasting</h5>
+                    <p style="font-size:0.9rem; line-height:1.6;">
+                        A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas.
+                    </p>
+                </div>
 
-    <footer class="internal-footer">
-        <div class="internal-footer-content">
-            <div class="int-col">
-                <h5>OpenCasting</h5>
-                <p>Plataforma de gestão de talentos.</p>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <i class="material-icons" style="color: #999;">photo_camera</i>
-                    <i class="material-icons" style="color: #999;">email</i>
+                <div class="footer-col">
+                    <h5>Plataforma</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'lista_vagas' %}">Mural de Vagas</a></li>
+                        <li><a href="{% url 'editar_perfil' %}">Minha Conta</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
                 </div>
-            </div>
-            <div class="int-col">
-                <h5>Suporte</h5>
-                <div class="int-links">
-                    <a href="#">Central de Ajuda</a>
-                    <a href="#">Privacidade</a>
-                    <a href="#">Termos de Uso</a>
+
+                <div class="footer-col">
+                    <h5>Suporte</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Dicas de Segurança</a></li>
+                    </ul>
                 </div>
-            </div>
-            <div class="int-col">
-                <h5>Contato</h5>
-                <div class="int-links">
-                    <a href="#">suporte@opencasting.com</a>
-                    <a href="#">WhatsApp Admin</a>
+
+                <div class="footer-col">
+                    <h5>Fale Conosco</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="material-icons" style="font-size:16px;">email</i> suporte@opencasting.com</a></li>
+                        <li><a href="#"><i class="material-icons" style="font-size:16px;">chat</i> WhatsApp Comercial</a></li>
+                    </ul>
                 </div>
+
             </div>
-        </div>
-        <div class="int-bottom">
-            <p>Desenvolvido por <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a></p>
-        </div>
-    </footer>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 OpenCasting. Desenvolvido com tecnologia <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a>.</p>
+            </div>
+        </footer>
+    {% endblock %}
+
 </body>
 </html>
