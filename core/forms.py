@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import UserProfile
+from datetime import datetime
 
 class CadastroForm(forms.ModelForm):
     # --- 1. DADOS DE LOGIN ---
@@ -25,6 +26,11 @@ class CadastroForm(forms.ModelForm):
     whatsapp = forms.CharField(
         label="WhatsApp", 
         widget=forms.TextInput(attrs={'class': 'form-control phone-mask', 'placeholder': '(11) 99999-9999'})
+    )
+    # [NOVO CAMPO] Instagram
+    instagram = forms.CharField(
+        label="Instagram", required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '@seu.perfil'})
     )
     data_nascimento = forms.CharField(
         label="Data de Nascimento", 
@@ -77,7 +83,6 @@ class CadastroForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control cpf-mask', 'placeholder': '000.000.000-00'})
     )
     
-    # Campos Opcionais no Python (O JS controla a obrigatoriedade visual)
     banco = forms.CharField(
         required=False, 
         label="Banco", 
@@ -114,8 +119,7 @@ class CadastroForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Digite sua chave'})
     )
 
-    # --- 6. FOTOS (CONFIGURAÇÃO ESPECIAL PARA O UPLOAD) ---
-    # Aqui definimos o ID específico e display:none para o JS encontrar
+    # --- 6. FOTOS ---
     foto_rosto = forms.ImageField(
         label="Foto de Rosto",
         required=False, 
@@ -128,16 +132,29 @@ class CadastroForm(forms.ModelForm):
         widget=forms.FileInput(attrs={'id': 'input_foto_corpo', 'style': 'display:none;'})
     )
 
+    # --- 7. TERMOS E CONDIÇÕES [NOVOS CAMPOS] ---
+    termo_uso_imagem = forms.BooleanField(
+        required=True, 
+        label="Autorizo o uso da minha imagem em fotos e vídeos captados em eventos ou enviados por mim para divulgação em site e redes sociais da agência."
+    )
+    termo_comunicacao = forms.BooleanField(
+        required=True, 
+        label="Autorizo a agência a entrar em contato a qualquer momento via WhatsApp, E-mail ou Telefone para tratar de vagas, jobs ou assuntos administrativos."
+    )
+
     class Meta:
         model = UserProfile
         # Lista com TODOS os campos que serão salvos no banco
         fields = [
-            'nome_completo', 'whatsapp', 'data_nascimento', 
+            'nome_completo', 'whatsapp', 'instagram', 'data_nascimento', 
             'cep', 'endereco', 'numero', 'bairro', 'cidade', 'estado',
             'altura', 'manequim', 'calcado',
             'cpf', 'banco', 'tipo_conta', 'agencia', 'conta', 'tipo_chave_pix', 'chave_pix',
-            'foto_rosto', 'foto_corpo'
+            'foto_rosto', 'foto_corpo',
+            'termo_uso_imagem', 'termo_comunicacao'
         ]
+
+    # --- MÉTODOS DE LIMPEZA E VALIDAÇÃO ---
 
     def clean(self):
         cleaned_data = super().clean()
@@ -150,7 +167,6 @@ class CadastroForm(forms.ModelForm):
     def clean_data_nascimento(self):
         data = self.cleaned_data['data_nascimento']
         try:
-            from datetime import datetime
             return datetime.strptime(data, '%d/%m/%Y').date()
         except ValueError:
             raise forms.ValidationError("Data inválida. Use o formato DD/MM/AAAA")
@@ -160,3 +176,16 @@ class CadastroForm(forms.ModelForm):
         if altura:
             return altura.replace(',', '.')
         return altura
+
+    # [NOVAS VALIDAÇÕES] Garantir que o usuário marcou os termos
+    def clean_termo_uso_imagem(self):
+        aceite = self.cleaned_data.get('termo_uso_imagem')
+        if not aceite:
+            raise forms.ValidationError("Você precisa autorizar o uso de imagem para se cadastrar.")
+        return aceite
+
+    def clean_termo_comunicacao(self):
+        aceite = self.cleaned_data.get('termo_comunicacao')
+        if not aceite:
+            raise forms.ValidationError("Você precisa autorizar a comunicação para se cadastrar.")
+        return aceite

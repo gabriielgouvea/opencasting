@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -65,6 +66,9 @@
         border-style: solid; 
     }
     .photo-tips { background: #e8f5e9; padding: 15px; border-radius: 8px; font-size: 0.85rem; color: #2e7d32; margin-bottom: 20px; border-left: 4px solid #4caf50; }
+
+    /* Loader */
+    .spinner-border { vertical-align: text-bottom; margin-right: 5px; }
 </style>
 
 <h2 style="text-align: center; color: #009688; margin-bottom: 5px;">Ficha de Cadastro</h2>
@@ -97,6 +101,7 @@
             </ul>
         </div>
     {% endif %}
+
     <div class="step-container active" id="step1">
         <h3 style="color: #009688;">1. Acesso</h3>
         <div class="form-group">
@@ -124,6 +129,12 @@
             <label class="form-label">WhatsApp *</label>
             {{ form.whatsapp }}
         </div>
+        
+        <div class="form-group">
+            <label class="form-label">Instagram</label>
+            {{ form.instagram }}
+        </div>
+
         <div class="form-group">
             <label class="form-label">Data de Nascimento *</label>
             {{ form.data_nascimento }}
@@ -242,7 +253,7 @@
     </div>
 
     <div class="step-container" id="step6">
-        <h3 style="color: #009688;">6. Suas Fotos</h3>
+        <h3 style="color: #009688;">6. Finalizar Cadastro</h3>
         
         <div class="photo-tips">
             <strong>📸 Dicas para aprovação rápida:</strong>
@@ -270,9 +281,39 @@
 
         </div>
 
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 25px; border: 1px solid #eee;">
+            <h4 style="color: #009688; margin-top:0; font-size: 1rem;">📝 Termos e Autorizações</h4>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                    {{ form.termo_uso_imagem }}
+                    <label for="{{ form.termo_uso_imagem.id_for_label }}" style="font-size:0.85rem; color:#555; cursor:pointer; line-height: 1.4;">
+                        {{ form.termo_uso_imagem.label }}
+                    </label>
+                </div>
+                 <div style="color:red; font-size:0.8rem; margin-left: 25px;">{{ form.termo_uso_imagem.errors }}</div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                    {{ form.termo_comunicacao }}
+                    <label for="{{ form.termo_comunicacao.id_for_label }}" style="font-size:0.85rem; color:#555; cursor:pointer; line-height: 1.4;">
+                        {{ form.termo_comunicacao.label }}
+                    </label>
+                </div>
+                <div style="color:red; font-size:0.8rem; margin-left: 25px;">{{ form.termo_comunicacao.errors }}</div>
+            </div>
+        </div>
+
         <div style="display: flex; gap: 10px; margin-top: 30px;">
             <button type="button" class="btn btn-outline" onclick="prevStep(5)">Voltar</button>
-            <button type="submit" class="btn" style="background-color: #4CAF50; color: white;">FINALIZAR CADASTRO ✨</button>
+            
+            <button type="submit" class="btn" style="background-color: #4CAF50; color: white;" id="btnEnviar">FINALIZAR CADASTRO ✨</button>
+            
+            <button type="button" class="btn" style="background-color: #9E9E9E; color: white; display:none; cursor: not-allowed;" id="btnLoading" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Enviando fotos, aguarde...
+            </button>
         </div>
     </div>
 
@@ -293,7 +334,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         
         // Monitora o campo de Rosto
-        const rostoInput = document.getElementById('input_foto_rosto'); // Atenção ao ID
+        const rostoInput = document.getElementById('input_foto_rosto'); 
         if (rostoInput) {
             rostoInput.addEventListener('change', function(e) {
                 if (this.files && this.files[0]) {
@@ -310,7 +351,7 @@
         }
 
         // Monitora o campo de Corpo
-        const corpoInput = document.getElementById('input_foto_corpo'); // Atenção ao ID
+        const corpoInput = document.getElementById('input_foto_corpo'); 
         if (corpoInput) {
             corpoInput.addEventListener('change', function(e) {
                 if (this.files && this.files[0]) {
@@ -326,9 +367,18 @@
             });
         }
 
+        // --- LOADING STATE ---
+        const form = document.getElementById('wizardForm');
+        if(form) {
+            form.addEventListener('submit', function() {
+                // Esconde botão normal e mostra loading
+                document.getElementById('btnEnviar').style.display = 'none';
+                document.getElementById('btnLoading').style.display = 'block';
+            });
+        }
+
         // --- AUTOMAÇÃO CPF -> PIX ---
         const tipoPixSelect = document.getElementById('id_tipo_chave_pix');
-        // O campo CPF é gerado com id_cpf pelo Django
         const cpfInput = document.getElementById('id_cpf');
         const chavePixInput = document.getElementById('id_chave_pix');
 
@@ -346,7 +396,7 @@
         const fields = document.querySelectorAll('.form-control');
         fields.forEach(f => {
             const name = f.name;
-            const opcionais = ['tipo_chave_pix', 'chave_pix', 'banco', 'agencia', 'conta', 'tipo_conta', 'foto_rosto', 'foto_corpo'];
+            const opcionais = ['tipo_chave_pix', 'chave_pix', 'banco', 'agencia', 'conta', 'tipo_conta', 'foto_rosto', 'foto_corpo', 'instagram'];
             if (!f.closest('.hidden-section') && !opcionais.includes(name)) {
                 f.setAttribute('required', 'true');
             }
@@ -395,6 +445,7 @@
         const currentDiv = document.getElementById('step' + currentStep);
         let valid = true;
         
+        // Validação de inputs visíveis e obrigatórios
         const inputs = currentDiv.querySelectorAll('input[required], select[required]');
         
         inputs.forEach(input => {
@@ -407,6 +458,7 @@
             }
         });
 
+        // Validação específica do passo 5 (Pagamento)
         if (currentStep === 5 && valid) {
             const payMethod = document.getElementById('payment_method_selected');
             if (payMethod && !payMethod.value) {

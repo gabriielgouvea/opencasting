@@ -26,6 +26,25 @@ class UserProfile(models.Model):
     whatsapp = models.CharField(max_length=20, verbose_name="WhatsApp", help_text="Formato: (11) 99999-9999")
     data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     
+    # [NOVO] Instagram (Opcional)
+    instagram = models.CharField(
+        max_length=50, blank=True, null=True, 
+        verbose_name="Instagram", 
+        help_text="Ex: @seu.perfil"
+    )
+
+    # [NOVO] Termos de Aceite (Obrigatórios)
+    termo_uso_imagem = models.BooleanField(
+        'Aceito o uso de imagem', 
+        default=False,
+        help_text="Autoriza o uso de fotos e vídeos para divulgação."
+    )
+    termo_comunicacao = models.BooleanField(
+        'Aceito receber comunicações', 
+        default=False,
+        help_text="Autoriza contato via WhatsApp/E-mail sobre vagas."
+    )
+    
     # --- ENDEREÇO ---
     cep = models.CharField(max_length=9, blank=True, null=True, verbose_name="CEP")
     endereco = models.CharField(max_length=200, blank=True, null=True, verbose_name="Endereço")
@@ -38,10 +57,11 @@ class UserProfile(models.Model):
     altura = models.DecimalField(
         max_digits=3, decimal_places=2, 
         verbose_name="Altura (m)",
-        help_text="Exemplo: 1.70"
+        help_text="Exemplo: 1.70",
+        null=True, blank=True
     )
-    manequim = models.CharField(max_length=10, verbose_name="Manequim", help_text="Ex: P, M, G, 38, 40...")
-    calcado = models.CharField(max_length=10, verbose_name="Calçado", help_text="Ex: 36, 37, 40...")
+    manequim = models.CharField(max_length=10, verbose_name="Manequim", help_text="Ex: P, M, G, 38, 40...", null=True, blank=True)
+    calcado = models.CharField(max_length=10, verbose_name="Calçado", help_text="Ex: 36, 37, 40...", null=True, blank=True)
     
     # --- DADOS BANCÁRIOS ---
     cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, verbose_name="CPF")
@@ -105,7 +125,6 @@ class UserProfile(models.Model):
         verbose_name_plural = "📂 Base de Promotores"
 
     def __str__(self):
-        # Check 5: Aparecer o nome da pessoa
         return f"{self.nome_completo}"
 
     # --- MÉTODOS AUXILIARES ---
@@ -125,7 +144,7 @@ class UserProfile(models.Model):
                 if antigo.status != 'aprovado' and self.status == 'aprovado':
                     send_mail(
                         'OpenCasting: Cadastro Aprovado! 🎉',
-                        f'Olá {self.nome_completo},\n\nParabéns! Seu perfil foi aprovado.\n\nAcesse agora: http://127.0.0.1:8000/login/',
+                        f'Olá {self.nome_completo},\n\nParabéns! Seu perfil foi aprovado.\n\nAcesse agora: https://gabrielgouvea.pythonanywhere.com/login/',
                         settings.DEFAULT_FROM_EMAIL,
                         [self.user.email],
                         fail_silently=True
