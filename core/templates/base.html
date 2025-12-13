@@ -44,6 +44,14 @@
         }
         .nav-link:hover { color: var(--primary); }
 
+        /* Botão Hambúrguer (Mobile) */
+        .hamburger-icon { 
+            display: none; 
+            cursor: pointer; 
+            color: var(--dark); 
+            user-select: none;
+        }
+
         /* Menu do Usuário (Dropdown) */
         .user-menu { position: relative; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 5px 10px; border-radius: 30px; transition: 0.2s; }
         .user-menu:hover { background-color: #f0f0f0; }
@@ -118,13 +126,44 @@
         .warning { background: #fff3e0; color: #ef6c00; }
         .info { background: #e3f2fd; color: #0277bd; }
 
-        /* Responsividade */
+        /* --- RESPONSIVIDADE (CELULAR) --- */
         @media (max-width: 768px) {
             .container { padding: 0 15px; margin-top: 15px; }
-            .nav-menu { display: none; } /* No futuro podemos por o menu mobile aqui */
             .navbar { padding: 0 20px; }
+            
+            /* Mostra o ícone de hambúrguer */
+            .hamburger-icon { display: block; }
+
+            /* Esconde o menu normal e transforma em gaveta */
+            .nav-menu { 
+                display: none; 
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-top: 1px solid #eee;
+                box-sizing: border-box;
+            }
+            
+            /* Classe para abrir o menu via JS */
+            .nav-menu.active { display: flex; animation: slideDown 0.3s ease; }
+
+            /* Ajustes nos links do mobile */
+            .nav-menu .nav-link { width: 100%; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
+            .user-menu { width: 100%; justify-content: space-between; margin-top: 10px; }
+            .dropdown { position: static; width: 100%; box-shadow: none; border: none; background: #f9f9f9; margin-top: 10px;}
+            
             .footer-grid { grid-template-columns: 1fr; gap: 30px; text-align: center; }
             .footer-links a { justify-content: center; }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -133,11 +172,15 @@
     <nav class="navbar">
         <a href="{% url 'home' %}" class="nav-logo">OPEN<span>CASTING</span></a>
 
-        <div class="nav-menu">
+        <div class="hamburger-icon" onclick="toggleMobileMenu()">
+            <i class="material-icons" style="font-size: 30px;">menu</i>
+        </div>
+
+        <div class="nav-menu" id="mainMenu">
             {% if user.is_authenticated %}
                 <a href="{% url 'lista_vagas' %}" class="nav-link"><i class="material-icons">dashboard</i> Dashboard</a>
                 
-                <div class="user-menu" onclick="this.querySelector('.dropdown').classList.toggle('show')">
+                <div class="user-menu" onclick="toggleUserDropdown(event)">
                     <span style="font-weight: 600; color: #444;">{{ user.first_name|default:user.username }}</span>
                     
                     <div class="avatar-circle">
@@ -148,7 +191,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="dropdown">
+                    <div class="dropdown" id="userDropdown">
                         {% if user.is_staff %}
                             <a href="/admin/" target="_blank" style="color: #c62828;">
                                 <i class="material-icons" style="vertical-align: middle; font-size: 18px;">security</i> Painel Admin
@@ -227,6 +270,27 @@
             </div>
         </footer>
     {% endblock %}
+
+    <script>
+        // Função para abrir/fechar o menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Função para abrir/fechar o dropdown do usuário (melhorada para mobile)
+        function toggleUserDropdown(event) {
+            // Se for mobile, evita comportamento estranho
+            if (window.innerWidth <= 768) {
+                const dropdown = document.getElementById('userDropdown');
+                dropdown.classList.toggle('show');
+                event.stopPropagation(); // Impede que o clique feche o menu principal
+            } else {
+                const dropdown = document.getElementById('userDropdown');
+                dropdown.classList.toggle('show');
+            }
+        }
+    </script>
 
 </body>
 </html>
