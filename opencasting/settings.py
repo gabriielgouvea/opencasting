@@ -21,13 +21,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Apps de Terceiros
     'cloudinary_storage',       # Armazenamento Nuvem
     'cloudinary',
-    
+
     # Seus Apps
-    'core',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
@@ -107,8 +107,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'gabriielgouvea@gmail.com' 
-EMAIL_HOST_PASSWORD = 'niwdootsbzrabfji' 
+EMAIL_HOST_USER = 'gabriielgouvea@gmail.com'
+EMAIL_HOST_PASSWORD = 'niwdootsbzrabfji'
 DEFAULT_FROM_EMAIL = 'OpenCasting <gabriielgouvea@gmail.com>'
 
 # --- LOGIN ---
@@ -150,8 +150,8 @@ JAZZMIN_SETTINGS = {
         "core.pergunta": "fas fa-question-circle",
         "core.avaliacao": "fas fa-star",
     },
-    
-    "hide_models": ["auth.group", "core.resposta", "core.jobdia", "core.avaliacao"], 
+
+    "hide_models": ["auth.group", "core.resposta", "core.jobdia", "core.avaliacao"],
 
     # --- ARQUIVOS PERSONALIZADOS (AQUI ESTÁ A CORREÇÃO) ---
     "custom_css": "css/admin_custom.css",

@@ -9,7 +9,7 @@ from .models import UserProfile, Job, JobDia, Candidatura, Pergunta, Resposta, A
 
 # Remove o admin padrão para usarmos o nosso personalizado
 admin.site.unregister(User)
-# admin.site.unregister(Group) 
+# admin.site.unregister(Group)
 
 # --- FUNÇÃO AUXILIAR: MENSAGEM NO TOPO ---
 def mostrar_aviso_topo(request, titulo, texto):
@@ -25,7 +25,7 @@ def enviar_reset_senha(modeladmin, request, queryset):
         email = getattr(obj, 'email', None)
         if not email and hasattr(obj, 'user'):
             email = obj.user.email
-            
+
         if email:
             try:
                 form = PasswordResetForm({'email': email})
@@ -33,7 +33,7 @@ def enviar_reset_senha(modeladmin, request, queryset):
                     form.save(request=request)
                     enviados += 1
             except: pass
-    
+
     if enviados > 0:
         messages.success(request, f"Link de redefinição enviado para {enviados} pessoas.")
     else:
@@ -85,15 +85,27 @@ class EquipeAdmin(BaseUserAdmin):
 # ==============================================================================
 # 2. BASE DE PROMOTORES
 # ==============================================================================
-@admin.action(description='✅ Aprovar Selecionados')
+@admin.action(description='✅ Aprovar Selecionados (Com E-mail)')
 def aprovar_modelos(modeladmin, request, queryset):
-    queryset.update(status='aprovado')
-    messages.success(request, "Promotores APROVADOS e liberados.")
+    # Em vez de update(), vamos salvar um por um para disparar o e-mail
+    count = 0
+    for perfil in queryset:
+        if perfil.status != 'aprovado':
+            perfil.status = 'aprovado'
+            perfil.save() # <--- ISSO AQUI DISPARA O E-MAIL DO models.py
+            count += 1
 
-@admin.action(description='❌ Reprovar Selecionados')
+    if count > 0:
+        messages.success(request, f"{count} promotores aprovados e notificados por e-mail!")
+    else:
+        messages.info(request, "Nenhum promotor precisou ser atualizado.")
+
+@admin.action(description='❌ Reprovar Selecionados (Com E-mail)')
 def reprovar_modelos(modeladmin, request, queryset):
-    queryset.update(status='reprovado')
-    messages.warning(request, "Promotores REPROVADOS.")
+    for perfil in queryset:
+        perfil.status = 'reprovado'
+        perfil.save() # Dispara e-mail de reprovação se tiver lógica pra isso
+    messages.warning(request, "Promotores reprovados.")
 
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('nome_completo', 'whatsapp', 'status_visual', 'nota_visual', 'acoes_rapidas')
@@ -106,11 +118,11 @@ class UserProfileAdmin(admin.ModelAdmin):
         css = {
             'all': ('css/admin_custom.css',)
         }
-    
+
     # Essas ações aparecerão como BOTÕES no topo graças ao Javascript que vamos criar
     actions = [aprovar_modelos, reprovar_modelos, enviar_reset_senha]
-    
-    readonly_fields = ('preview_rosto', 'preview_corpo')
+
+    readonly_fields = ('preview_rosto', 'preview_corpo', 'editar_login')
 
     fieldsets = (
         ('🚨 APROVAÇÃO', {
@@ -136,7 +148,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     # Visuais
     def preview_rosto(self, obj):
         return format_html('<img src="{}" style="height:150px; border-radius:10px;" />', obj.foto_rosto.url) if obj.foto_rosto else "-"
-    
+
     def preview_corpo(self, obj):
         return format_html('<img src="{}" style="height:150px; border-radius:10px;" />', obj.foto_corpo.url) if obj.foto_corpo else "-"
 
@@ -167,7 +179,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 class JobAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'local', 'data_pagamento', 'inscritos_visual', 'status_badge')
     list_filter = ('status',)
-    
+
     def status_badge(self, obj):
         cor = 'green' if obj.status == 'aberto' else 'gray'
         return format_html(f'<span style="color:{cor}; font-weight:bold;">● {obj.get_status_display()}</span>')
