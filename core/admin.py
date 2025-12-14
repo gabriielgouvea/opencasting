@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.contrib import messages
@@ -9,7 +9,6 @@ from .models import UserProfile, Job, JobDia, Candidatura, Pergunta, Resposta, A
 
 # Remove o admin padrão para usarmos o nosso personalizado
 admin.site.unregister(User)
-# admin.site.unregister(Group)
 
 # --- FUNÇÃO AUXILIAR: MENSAGEM NO TOPO ---
 def mostrar_aviso_topo(request, titulo, texto):
@@ -21,7 +20,6 @@ def mostrar_aviso_topo(request, titulo, texto):
 def enviar_reset_senha(modeladmin, request, queryset):
     enviados = 0
     for obj in queryset:
-        # Pega o email do User ou do UserProfile
         email = getattr(obj, 'email', None)
         if not email and hasattr(obj, 'user'):
             email = obj.user.email
@@ -35,38 +33,30 @@ def enviar_reset_senha(modeladmin, request, queryset):
             except: pass
 
     if enviados > 0:
-        messages.success(request, f"Link de redefinição enviado para {enviados} pessoas.")
+        messages.success(request, f"Link enviado para {enviados} pessoas.")
     else:
-        messages.warning(request, "Nenhum e-mail válido encontrado para envio.")
+        messages.warning(request, "Nenhum e-mail válido encontrado.")
 
 # ==============================================================================
 # 1. EQUIPE INTERNA (ADMINISTRADORES)
 # ==============================================================================
 @admin.register(User)
 class EquipeAdmin(BaseUserAdmin):
-    # Check 5: Mostrar NOME ao invés de apenas e-mail/usuário
     list_display = ('nome_visual', 'email', 'tipo_acesso', 'ultimo_acesso')
     list_filter = ('is_staff', 'is_active')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = ('first_name',)
     actions = [enviar_reset_senha]
 
-    # Layout Simplificado de Edição
     fieldsets = (
-        ('👤 Identificação', {
-            'fields': ('username', 'first_name', 'last_name', 'email'),
-            'description': 'Dados básicos de acesso.'
-        }),
-        ('🔑 Permissões de Acesso', {
-            'fields': ('is_active', 'is_staff', 'is_superuser'),
-            'description': '<b>Ativo:</b> Bloqueia/Desbloqueia o acesso.<br><b>Equipe (Staff):</b> Permite entrar neste painel.<br><b>Superusuário:</b> Acesso total.'
-        }),
+        ('👤 Identificação', {'fields': ('username', 'first_name', 'last_name', 'email')}),
+        ('🔑 Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
     )
 
     def nome_visual(self, obj):
         full_name = obj.get_full_name()
         return full_name if full_name else obj.username
-    nome_visual.short_description = "Nome do Colaborador"
+    nome_visual.short_description = "Nome"
 
     def tipo_acesso(self, obj):
         if obj.is_superuser: return format_html('<span style="color:red; font-weight:bold;">Super Admin</span>')
@@ -74,83 +64,93 @@ class EquipeAdmin(BaseUserAdmin):
         return "Usuário Comum"
     tipo_acesso.short_description = "Nível"
 
-    def ultimo_acesso(self, obj):
-        return obj.last_login
+    def ultimo_acesso(self, obj): return obj.last_login
     ultimo_acesso.short_description = "Último Login"
 
-    def changelist_view(self, request, extra_context=None):
-        mostrar_aviso_topo(request, "Gestão da Equipe", "Cadastre aqui apenas quem trabalha DENTRO da agência.")
-        return super().changelist_view(request, extra_context=extra_context)
-
 # ==============================================================================
-# 2. BASE DE PROMOTORES
+# 2. BASE DE PROMOTORES (ATUALIZADO COM OS NOVOS CAMPOS)
 # ==============================================================================
-@admin.action(description='✅ Aprovar Selecionados (Com E-mail)')
+@admin.action(description='✅ Aprovar Selecionados')
 def aprovar_modelos(modeladmin, request, queryset):
-    # Em vez de update(), vamos salvar um por um para disparar o e-mail
     count = 0
     for perfil in queryset:
         if perfil.status != 'aprovado':
             perfil.status = 'aprovado'
-            perfil.save() # <--- ISSO AQUI DISPARA O E-MAIL DO models.py
+            perfil.save() # Dispara e-mail
             count += 1
+    messages.success(request, f"{count} perfis aprovados!")
 
-    if count > 0:
-        messages.success(request, f"{count} promotores aprovados e notificados por e-mail!")
-    else:
-        messages.info(request, "Nenhum promotor precisou ser atualizado.")
-
-@admin.action(description='❌ Reprovar Selecionados (Com E-mail)')
+@admin.action(description='❌ Reprovar Selecionados')
 def reprovar_modelos(modeladmin, request, queryset):
     for perfil in queryset:
         perfil.status = 'reprovado'
-        perfil.save() # Dispara e-mail de reprovação se tiver lógica pra isso
-    messages.warning(request, "Promotores reprovados.")
+        perfil.save()
+    messages.warning(request, "Perfis reprovados.")
 
+@admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'whatsapp', 'status_visual', 'nota_visual', 'acoes_rapidas')
-    list_display_links = ('nome_completo',)
+    list_display = ('nome_completo', 'whatsapp', 'status_visual', 'acoes_rapidas')
+    list_filter = ('status', 'genero', 'experiencia', 'nacionalidade', 'is_pcd', 'olhos')
     search_fields = ('nome_completo', 'cpf', 'user__email', 'whatsapp')
-    list_filter = ('status', 'estado', 'manequim')
-    # ADICIONE ISSO NO FINAL DA CLASSE UserProfileAdmin:
-    class Media:
-        js = ('js/admin_custom.js',)
-        css = {
-            'all': ('css/admin_custom.css',)
-        }
-
-    # Essas ações aparecerão como BOTÕES no topo graças ao Javascript que vamos criar
     actions = [aprovar_modelos, reprovar_modelos, enviar_reset_senha]
-
+    
     readonly_fields = ('preview_rosto', 'preview_corpo', 'editar_login')
 
+    # --- ORGANIZAÇÃO DOS CAMPOS (FIELDSETS ATUALIZADOS) ---
     fieldsets = (
-        ('🚨 APROVAÇÃO', {
+        ('🚨 APROVAÇÃO & STATUS', {
             'fields': ('status', 'motivo_reprovacao', 'observacao_admin'),
             'classes': ('extrapretty',),
         }),
-        ('👤 DADOS PESSOAIS', {
-            'fields': ('nome_completo', 'cpf', 'whatsapp', 'data_nascimento', 'editar_login'),
+        ('👤 DADOS PESSOAIS & DOCUMENTOS', {
+            'fields': (
+                ('nome_completo', 'data_nascimento'),
+                ('cpf', 'rg'),
+                ('whatsapp', 'instagram', 'editar_login'),
+                ('nacionalidade', 'is_pcd', 'descricao_pcd')
+            ),
         }),
-        ('📸 FOTOS', {
-            'fields': (('preview_rosto', 'foto_rosto'), ('preview_corpo', 'foto_corpo')),
-        }),
-        ('📍 ENDEREÇO & BANCO', {
-            'fields': ('cidade', 'estado', 'banco', 'chave_pix'),
+        ('📍 ENDEREÇO', {
+            'fields': ('cep', 'endereco', 'numero', 'bairro', 'cidade', 'estado'),
             'classes': ('collapse',),
+        }),
+        ('📏 CARACTERÍSTICAS FÍSICAS', {
+            'fields': (
+                ('altura', 'peso'),
+                ('manequim', 'calcado', 'tamanho_camiseta'),
+                ('genero', 'etnia'),
+                ('olhos', 'cabelo_tipo', 'cabelo_comprimento')
+            ),
+        }),
+        ('💼 PROFISSIONAL & IDIOMAS', {
+            'fields': (
+                'experiencia', 
+                'disponibilidade', 
+                'areas_atuacao',
+                ('nivel_ingles', 'nivel_espanhol', 'nivel_frances', 'outros_idiomas')
+            ),
+        }),
+        ('💰 DADOS BANCÁRIOS', {
+            'fields': ('banco', 'tipo_conta', 'agencia', 'conta', 'tipo_chave_pix', 'chave_pix'),
+            'classes': ('collapse',),
+        }),
+        ('📸 FOTOS & TERMOS', {
+            'fields': (
+                ('preview_rosto', 'foto_rosto'), 
+                ('preview_corpo', 'foto_corpo'),
+                ('termo_uso_imagem', 'termo_comunicacao')
+            ),
         }),
     )
 
-    def changelist_view(self, request, extra_context=None):
-        mostrar_aviso_topo(request, "Base de Talentos", "Gerencie os cadastros. Selecione os nomes na lista abaixo para ver os botões de ação.")
-        return super().changelist_view(request, extra_context=extra_context)
-
-    # Visuais
+    # --- VISUAIS ---
     def preview_rosto(self, obj):
         return format_html('<img src="{}" style="height:150px; border-radius:10px;" />', obj.foto_rosto.url) if obj.foto_rosto else "-"
+    preview_rosto.short_description = "Rosto"
 
     def preview_corpo(self, obj):
         return format_html('<img src="{}" style="height:150px; border-radius:10px;" />', obj.foto_corpo.url) if obj.foto_corpo else "-"
+    preview_corpo.short_description = "Corpo"
 
     def status_visual(self, obj):
         cor = {'aprovado':'#28a745', 'reprovado':'#dc3545', 'pendente':'#ffc107'}.get(obj.status, '#6c757d')
@@ -158,24 +158,21 @@ class UserProfileAdmin(admin.ModelAdmin):
         return format_html(f'<span style="color:{cor}; font-weight:bold; display:flex; align-items:center; gap:5px;"><i class="material-icons" style="font-size:16px;">{icon}</i> {obj.get_status_display()}</span>')
     status_visual.short_description = "Status"
 
-    def nota_visual(self, obj):
-        return format_html(f'<b style="color:#ffc107;">★ {obj.nota_media()}</b>') if obj.nota_media() else "-"
-    nota_visual.short_description = "Nota"
-
     def acoes_rapidas(self, obj):
         if not obj.uuid: return "-"
-        url = f"http://127.0.0.1:8000/p/{obj.uuid}/"
-        return format_html(f'<a href="{url}" target="_blank" class="btn btn-sm btn-info" style="color:white;">Ver Portfólio</a>')
-    acoes_rapidas.short_description = "Ações"
+        # Ajuste o link conforme sua URL real
+        return format_html(f'<a href="/admin/core/userprofile/{obj.id}/change/" class="btn btn-sm btn-info" style="color:#009688; font-weight:bold;">🔍 Analisar</a>')
+    acoes_rapidas.short_description = "Ação"
 
     def editar_login(self, obj):
         url = reverse('admin:auth_user_change', args=[obj.user.id])
         return format_html(f'<a href="{url}" target="_blank" style="color:#009688;">🖊️ Alterar E-mail/Senha</a>')
-    editar_login.short_description = "Login"
+    editar_login.short_description = "Conta"
 
 # ==============================================================================
-# 3. VAGAS
+# 3. VAGAS E CANDIDATURAS
 # ==============================================================================
+@admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'local', 'data_pagamento', 'inscritos_visual', 'status_badge')
     list_filter = ('status',)
@@ -190,24 +187,17 @@ class JobAdmin(admin.ModelAdmin):
         return format_html(f'<span style="background:#e0f2f1; color:#009688; padding:2px 8px; border-radius:10px; font-weight:bold;">{count}</span>')
     inscritos_visual.short_description = "Inscritos"
 
-# ==============================================================================
-# 4. CANDIDATURAS
-# ==============================================================================
-@admin.action(description='✅ Selecionar para o Job')
-def aprovar_candidatura(modeladmin, request, queryset):
-    queryset.update(status='aprovado')
-
+@admin.register(Candidatura)
 class CandidaturaAdmin(admin.ModelAdmin):
     list_display = ('job', 'modelo', 'status_visual')
     list_filter = ('status', 'job')
-    actions = [aprovar_candidatura]
-
+    
     def status_visual(self, obj):
         cor = {'aprovado':'green', 'reprovado':'red', 'pendente':'orange'}.get(obj.status, 'black')
         return format_html(f'<b style="color:{cor}">{obj.get_status_display()}</b>')
     status_visual.short_description = "Situação"
 
-admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(Job, JobAdmin)
-admin.site.register(Candidatura, CandidaturaAdmin)
+admin.site.register(JobDia)
 admin.site.register(Pergunta)
+admin.site.register(Resposta)
+admin.site.register(Avaliacao)

@@ -21,31 +21,75 @@ class UserProfile(models.Model):
         help_text="Código único usado para gerar os links de compartilhamento."
     )
 
-    # --- DADOS PESSOAIS ---
+    # --- 1. DADOS DE ACESSO E DOCUMENTOS ---
     nome_completo = models.CharField(max_length=100, verbose_name="Nome Completo")
-    whatsapp = models.CharField(max_length=20, verbose_name="WhatsApp", help_text="Formato: (11) 99999-9999")
-    data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     
-    # [NOVO] Instagram (Opcional)
+    # Alteração 1: Instagram Opcional
     instagram = models.CharField(
         max_length=50, blank=True, null=True, 
-        verbose_name="Instagram", 
+        verbose_name="Instagram (Opcional)", 
         help_text="Ex: @seu.perfil"
     )
 
-    # [NOVO] Termos de Aceite (Obrigatórios)
-    termo_uso_imagem = models.BooleanField(
-        'Aceito o uso de imagem', 
-        default=False,
-        help_text="Autoriza o uso de fotos e vídeos para divulgação."
-    )
-    termo_comunicacao = models.BooleanField(
-        'Aceito receber comunicações', 
-        default=False,
-        help_text="Autoriza contato via WhatsApp/E-mail sobre vagas."
-    )
+    # Alteração 11: CPF e RG no início
+    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, verbose_name="CPF")
+    rg = models.CharField(max_length=20, blank=True, null=True, verbose_name="RG / RNE")
+
+    # --- 2. DADOS PESSOAIS ---
+    whatsapp = models.CharField(max_length=20, verbose_name="WhatsApp", help_text="Formato: (11) 99999-9999")
+    data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     
-    # --- ENDEREÇO ---
+    # Alteração 7: Gênero/Sexo
+    GENERO_CHOICES = [
+        ('feminino', 'Feminino'),
+        ('masculino', 'Masculino'),
+        ('nao_binario', 'Não-binário'),
+        ('outros', 'Outros'),
+        ('prefiro_nao_dizer', 'Prefiro não dizer'),
+    ]
+    genero = models.CharField(max_length=20, choices=GENERO_CHOICES, blank=True, null=True, verbose_name="Gênero")
+
+    # Alteração 5 e 6: Etnia/Cor
+    ETNIA_CHOICES = [
+        ('branca', 'Branca'),
+        ('preta', 'Preta'),
+        ('parda', 'Parda'),
+        ('amarela', 'Amarela (Asiáticos/Orientais)'),
+        ('indigena', 'Indígena'),
+        ('outra', 'Outra'),
+    ]
+    etnia = models.CharField(max_length=20, choices=ETNIA_CHOICES, blank=True, null=True, verbose_name="Cor/Etnia")
+
+    # Alteração 3: PCD
+    is_pcd = models.BooleanField(default=False, verbose_name="É PCD (Pessoa com Deficiência)?")
+    descricao_pcd = models.CharField(max_length=200, blank=True, null=True, verbose_name="Qual deficiência? (Se PCD)")
+
+    # --- 3. NACIONALIDADE E IDIOMAS (Alteração 2) ---
+    NACIONALIDADE_CHOICES = [
+        ('brasileira', 'Brasileira 🇧🇷'),
+        ('americana', 'Americana 🇺🇸'),
+        ('espanhola', 'Espanhola 🇪🇸'),
+        ('francesa', 'Francesa 🇫🇷'),
+        ('italiana', 'Italiana 🇮🇹'),
+        ('japonesa', 'Japonesa 🇯🇵'),
+        ('chinesa', 'Chinesa 🇨🇳'),
+        ('alemama', 'Alemã 🇩🇪'),
+        ('outra', 'Outra'),
+    ]
+    nacionalidade = models.CharField(max_length=20, choices=NACIONALIDADE_CHOICES, default='brasileira', verbose_name="Nacionalidade")
+
+    # Níveis de idioma
+    NIVEL_IDIOMA = [
+        ('basico', 'Básico'),
+        ('intermediario', 'Intermediário'),
+        ('fluente', 'Fluente/Nativo'),
+    ]
+    nivel_ingles = models.CharField(max_length=15, choices=NIVEL_IDIOMA, blank=True, null=True, verbose_name="Inglês")
+    nivel_espanhol = models.CharField(max_length=15, choices=NIVEL_IDIOMA, blank=True, null=True, verbose_name="Espanhol")
+    nivel_frances = models.CharField(max_length=15, choices=NIVEL_IDIOMA, blank=True, null=True, verbose_name="Francês")
+    outros_idiomas = models.CharField(max_length=200, blank=True, null=True, verbose_name="Outros Idiomas", help_text="Ex: Japonês Fluente, Alemão Básico")
+
+    # --- 4. ENDEREÇO ---
     cep = models.CharField(max_length=9, blank=True, null=True, verbose_name="CEP")
     endereco = models.CharField(max_length=200, blank=True, null=True, verbose_name="Endereço")
     numero = models.CharField(max_length=20, blank=True, null=True, verbose_name="Número")
@@ -53,20 +97,76 @@ class UserProfile(models.Model):
     cidade = models.CharField(max_length=100, blank=True, null=True, verbose_name="Cidade")
     estado = models.CharField(max_length=2, blank=True, null=True, verbose_name="UF")
     
-    # --- MEDIDAS ---
-    altura = models.DecimalField(
-        max_digits=3, decimal_places=2, 
-        verbose_name="Altura (m)",
-        help_text="Exemplo: 1.70",
-        null=True, blank=True
-    )
-    manequim = models.CharField(max_length=10, verbose_name="Manequim", help_text="Ex: P, M, G, 38, 40...", null=True, blank=True)
-    calcado = models.CharField(max_length=10, verbose_name="Calçado", help_text="Ex: 36, 37, 40...", null=True, blank=True)
+    # --- 5. MEDIDAS E APARÊNCIA ---
+    altura = models.DecimalField(max_digits=3, decimal_places=2, help_text="Ex: 1.70", null=True, blank=True, verbose_name="Altura (m)")
+    # Alteração 8: Peso
+    peso = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Peso (kg)")
     
-    # --- DADOS BANCÁRIOS ---
-    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, verbose_name="CPF")
+    manequim = models.CharField(max_length=10, blank=True, null=True, verbose_name="Manequim")
+    calcado = models.CharField(max_length=10, blank=True, null=True, verbose_name="Calçado")
     
-    banco = models.CharField(max_length=50, blank=True, null=True, verbose_name="Banco")
+    # Alteração 15: Tamanho Camiseta
+    TAMANHO_CAMISETA = [('PP','PP'), ('P','P'), ('M','M'), ('G','G'), ('GG','GG'), ('XG','XG')]
+    tamanho_camiseta = models.CharField(max_length=5, choices=TAMANHO_CAMISETA, blank=True, null=True, verbose_name="Tamanho de Camiseta")
+
+    # Alteração 12: Olhos
+    OLHOS_CHOICES = [
+        ('castanho_escuro', 'Castanho Escuro'),
+        ('castanho_claro', 'Castanho Claro'),
+        ('azul', 'Azul'),
+        ('verde', 'Verde'),
+        ('mel', 'Mel'),
+        ('preto', 'Preto'),
+        ('heterocromia', 'Heterocromia'),
+    ]
+    olhos = models.CharField(max_length=20, choices=OLHOS_CHOICES, blank=True, null=True, verbose_name="Cor dos Olhos")
+
+    # Alteração 13: Tipo de Cabelo
+    CABELO_TIPO_CHOICES = [
+        ('liso', 'Liso'),
+        ('ondulado', 'Ondulado'),
+        ('cacheado', 'Cacheado'),
+        ('crespo', 'Crespo'),
+        ('black_power', 'Black Power'),
+        ('dread', 'Dreadlocks'),
+        ('trancas', 'Tranças'),
+    ]
+    cabelo_tipo = models.CharField(max_length=20, choices=CABELO_TIPO_CHOICES, blank=True, null=True, verbose_name="Tipo de Cabelo")
+
+    # Alteração 14: Tamanho do Cabelo
+    CABELO_TAM_CHOICES = [
+        ('curto', 'Curto'),
+        ('medio', 'Médio'),
+        ('longo', 'Longo'),
+        ('careca', 'Careca/Raspado'),
+    ]
+    cabelo_comprimento = models.CharField(max_length=20, choices=CABELO_TAM_CHOICES, blank=True, null=True, verbose_name="Comprimento do Cabelo")
+
+    # --- 6. PROFISSIONAL ---
+    # Alteração 9: Experiência
+    EXPERIENCIA_CHOICES = [
+        ('sem_experiencia', 'Não tenho experiência (Começando agora)'),
+        ('pouca', 'Tenho, mas pouca'),
+        ('media', 'Tenho experiência'),
+        ('muita', 'Sim, há bastante tempo (Expert)'),
+    ]
+    experiencia = models.CharField(max_length=20, choices=EXPERIENCIA_CHOICES, default='sem_experiencia', verbose_name="Experiência")
+
+    # Alteração 10: Áreas de Atuação (Salvo como texto separado por vírgula)
+    areas_atuacao = models.TextField(blank=True, null=True, verbose_name="Áreas de Interesse")
+    
+    # Alteração 4: Disponibilidade
+    DISPONIBILIDADE_CHOICES = [
+        ('total', 'Todos os dias (Incluindo Finais de Semana)'),
+        ('seg_sex', 'Segunda a Sexta'),
+        ('fds', 'Somente Finais de Semana'),
+        ('noite', 'Somente Período Noturno'),
+        ('freelancer', 'Dias Aleatórios / Sem data fixa'),
+    ]
+    disponibilidade = models.CharField(max_length=20, choices=DISPONIBILIDADE_CHOICES, blank=True, null=True, verbose_name="Disponibilidade")
+
+    # --- 7. DADOS BANCÁRIOS ---
+    banco = models.CharField(max_length=50, blank=True, null=True, verbose_name="Nome do Banco")
     TIPO_CONTA_CHOICES = [('corrente', 'Conta Corrente'), ('poupanca', 'Conta Poupança')]
     tipo_conta = models.CharField(max_length=20, choices=TIPO_CONTA_CHOICES, blank=True, null=True, verbose_name="Tipo de Conta")
     agencia = models.CharField(max_length=10, blank=True, null=True, verbose_name="Agência")
@@ -76,23 +176,14 @@ class UserProfile(models.Model):
     tipo_chave_pix = models.CharField(max_length=20, choices=TIPO_CHAVE_CHOICES, blank=True, null=True, verbose_name="Tipo de Chave PIX")
     chave_pix = models.CharField(max_length=100, blank=True, null=True, verbose_name="Chave PIX")
 
-    # --- FOTOS ---
-    foto_rosto = models.ImageField(
-        upload_to='modelos/rosto/', blank=True, null=True, 
-        verbose_name="Foto de Rosto (Close)",
-        help_text="Esta foto será usada na carteirinha digital e nas miniaturas."
-    )
-    foto_corpo = models.ImageField(
-        upload_to='modelos/corpo/', blank=True, null=True, 
-        verbose_name="Foto de Corpo Inteiro",
-        help_text="Foto para avaliação de perfil completo."
-    )
+    # --- 8. FOTOS & STATUS ---
+    foto_rosto = models.ImageField(upload_to='modelos/rosto/', blank=True, null=True, verbose_name="Foto de Rosto")
+    foto_corpo = models.ImageField(upload_to='modelos/corpo/', blank=True, null=True, verbose_name="Foto de Corpo")
 
-    # --- CENTRAL DE DECISÃO ---
     STATUS_CHOICES = [
         ('pendente', '🟡 Pendente (Em Análise)'),
-        ('aprovado', '🟢 Aprovado (Liberado)'),
-        ('reprovado', '🔴 Reprovado (Bloqueado)'),
+        ('aprovado', '🟢 Aprovado'),
+        ('reprovado', '🔴 Reprovado'),
     ]
     
     MOTIVOS_REPROVACAO = [
@@ -102,22 +193,14 @@ class UserProfile(models.Model):
         ('outros', 'Outros (Ver observação)'),
     ]
 
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='pendente',
-        verbose_name="Situação do Cadastro",
-        help_text="ℹ️ <b>IMPORTANTE:</b> Se você marcar como 'Aprovado', o promotor receberá um e-mail de boas-vindas e poderá ver as vagas no site."
-    )
-    motivo_reprovacao = models.CharField(
-        max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, 
-        verbose_name="Motivo da Reprovação",
-        help_text="Selecione um motivo apenas se estiver reprovando o cadastro."
-    )
-    observacao_admin = models.TextField(
-        blank=True, null=True, 
-        verbose_name="Mensagem para o Promotor",
-        help_text="Escreva aqui o que o promotor precisa corrigir. Essa mensagem será enviada por e-mail."
-    )
-    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente', verbose_name="Status")
+    motivo_reprovacao = models.CharField(max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, verbose_name="Motivo (Se reprovado)")
+    observacao_admin = models.TextField(blank=True, null=True, verbose_name="Mensagem para a Modelo")
+
+    # Termos
+    termo_uso_imagem = models.BooleanField(default=False, verbose_name="Aceito uso de imagem")
+    termo_comunicacao = models.BooleanField(default=False, verbose_name="Aceito receber comunicações")
+
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Cadastrado em")
 
     class Meta:
@@ -125,7 +208,7 @@ class UserProfile(models.Model):
         verbose_name_plural = "📂 Base de Promotores"
 
     def __str__(self):
-        return f"{self.nome_completo}"
+        return f"{self.nome_completo} ({self.get_status_display()})"
 
     # --- MÉTODOS AUXILIARES ---
     def nota_media(self):
