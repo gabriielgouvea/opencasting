@@ -1,0 +1,176 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static dashboard_tags %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .dashboard-container { padding: 20px 0; font-family: 'Segoe UI', sans-serif; }
+    
+    /* Cabeçalho */
+    .welcome-banner {
+        background: linear-gradient(135deg, #009688 0%, #00796b 100%);
+        color: white; padding: 25px; border-radius: 8px; margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .welcome-banner h1 { margin: 0; font-size: 22px; color: white !important; font-weight: 600; }
+    
+    /* Cards KPI */
+    .kpi-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px; margin-bottom: 30px;
+    }
+    .kpi-card {
+        background: white; padding: 20px; border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc;
+        display: flex; justify-content: space-between; align-items: center;
+        transition: transform 0.2s; cursor: pointer;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    
+    .kpi-data h3 { font-size: 26px; font-weight: bold; margin: 0; color: #333; }
+    .kpi-data span { font-size: 13px; color: #777; text-transform: uppercase; font-weight: 600; }
+    .kpi-icon { font-size: 30px; opacity: 0.2; }
+
+    /* Cores dos Cards */
+    .border-blue { border-left-color: #3498db; } .text-blue { color: #3498db; }
+    .border-yellow { border-left-color: #f1c40f; } .text-yellow { color: #f1c40f; }
+    .border-purple { border-left-color: #9b59b6; } .text-purple { color: #9b59b6; }
+    .border-orange { border-left-color: #e67e22; } .text-orange { color: #e67e22; }
+
+    /* Gráficos */
+    .charts-container {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+    }
+    .chart-card {
+        background: white; padding: 20px; border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .chart-header { border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 10px; }
+    .chart-header h3 { margin: 0; font-size: 16px; color: #555; font-weight: 700; text-transform: uppercase; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% get_kpis as kpi %}
+
+<div class="dashboard-container">
+    
+    <div class="welcome-banner">
+        <h1><i class="fas fa-chart-line"></i> Dashboard de Controle</h1>
+        <p style="margin:5px 0 0; opacity:0.9;">Visão geral da base de promotores e vagas.</p>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card border-blue" onclick="window.location.href='/admin/core/userprofile/'">
+            <div class="kpi-data">
+                <h3>{{ kpi.total_promotores }}</h3>
+                <span>Promotores</span>
+            </div>
+            <div class="kpi-icon text-blue"><i class="fas fa-users"></i></div>
+        </div>
+
+        <div class="kpi-card border-yellow" onclick="window.location.href='/admin/core/userprofile/?status=pendente'">
+            <div class="kpi-data">
+                <h3>{{ kpi.pendentes }}</h3>
+                <span>Pendentes</span>
+            </div>
+            <div class="kpi-icon text-yellow"><i class="fas fa-clock"></i></div>
+        </div>
+
+        <div class="kpi-card border-purple" onclick="window.location.href='/admin/core/job/'">
+            <div class="kpi-data">
+                <h3>{{ kpi.vagas_abertas }}</h3>
+                <span>Vagas Abertas</span>
+            </div>
+            <div class="kpi-icon text-purple"><i class="fas fa-briefcase"></i></div>
+        </div>
+
+        <div class="kpi-card border-orange" onclick="window.location.href='/admin/core/candidatura/'">
+            <div class="kpi-data">
+                <h3>{{ kpi.candidaturas_hoje }}</h3>
+                <span>Candidaturas Hoje</span>
+            </div>
+            <div class="kpi-icon text-orange"><i class="fas fa-file-contract"></i></div>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-card">
+            <div class="chart-header"><h3>Status da Base</h3></div>
+            <div style="height: 250px; position: relative;">
+                <canvas id="chartStatus"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header"><h3>Gênero dos Promotores</h3></div>
+            <div style="height: 250px; position: relative;">
+                <canvas id="chartGenero"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{ kpi.chart_status.labels|json_script:"status-labels" }}
+{{ kpi.chart_status.data|json_script:"status-data" }}
+{{ kpi.chart_status.colors|json_script:"status-colors" }}
+
+{{ kpi.chart_genero.labels|json_script:"genero-labels" }}
+{{ kpi.chart_genero.data|json_script:"genero-data" }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Função auxiliar para ler o JSON escondido
+        function getData(id) {
+            return JSON.parse(document.getElementById(id).textContent);
+        }
+
+        // 1. Configura Gráfico de STATUS (Pizza)
+        const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: getData('status-labels'),
+                datasets: [{
+                    data: getData('status-data'),
+                    backgroundColor: getData('status-colors'),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+
+        // 2. Configura Gráfico de GÊNERO (Barra)
+        const ctxGenero = document.getElementById('chartGenero').getContext('2d');
+        new Chart(ctxGenero, {
+            type: 'bar',
+            data: {
+                labels: getData('genero-labels'),
+                datasets: [{
+                    label: 'Quantidade',
+                    data: getData('genero-data'),
+                    backgroundColor: '#3498db',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+    });
+</script>
+{% endblock %}

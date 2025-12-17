@@ -193,10 +193,6 @@ def editar_perfil(request):
         if 'confirm_password' in form.fields: del form.fields['confirm_password']
         
         if form.is_valid():
-            # Tratamento da Data: O Form já deve vir com o objeto Date, 
-            # mas se vier string formatada errada, o Django pode chiar.
-            # O ideal é que o ModelForm cuide disso, mas a máscara ajuda.
-            
             form.save()
             messages.success(request, "Perfil atualizado com sucesso!")
             return redirect('lista_vagas')
@@ -229,3 +225,7 @@ def avaliar_promotor(request, uuid):
             Avaliacao.objects.create(promotor=perfil, cliente_nome=nome, nota=int(nota), comentario=comentario)
             return render(request, 'avaliacao_sucesso.html', {'perfil': perfil})
     return render(request, 'publico_avaliar.html', {'perfil': perfil})
+
+# --- 9. INSTITUCIONAL (QUEM SOMOS) - NOVO ---
+def quem_somos(request):
+    return render(request, 'quem_somos.html')

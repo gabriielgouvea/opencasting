@@ -24,14 +24,12 @@ class UserProfile(models.Model):
     # --- 1. DADOS DE ACESSO E DOCUMENTOS ---
     nome_completo = models.CharField(max_length=100, verbose_name="Nome Completo")
     
-    # Alteração 1: Instagram Opcional
     instagram = models.CharField(
         max_length=50, blank=True, null=True, 
         verbose_name="Instagram (Opcional)", 
         help_text="Ex: @seu.perfil"
     )
 
-    # Alteração 11: CPF e RG no início
     cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, verbose_name="CPF")
     rg = models.CharField(max_length=20, blank=True, null=True, verbose_name="RG / RNE")
 
@@ -39,7 +37,6 @@ class UserProfile(models.Model):
     whatsapp = models.CharField(max_length=20, verbose_name="WhatsApp", help_text="Formato: (11) 99999-9999")
     data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     
-    # Alteração 7: Gênero/Sexo
     GENERO_CHOICES = [
         ('feminino', 'Feminino'),
         ('masculino', 'Masculino'),
@@ -49,7 +46,6 @@ class UserProfile(models.Model):
     ]
     genero = models.CharField(max_length=20, choices=GENERO_CHOICES, blank=True, null=True, verbose_name="Gênero")
 
-    # Alteração 5 e 6: Etnia/Cor
     ETNIA_CHOICES = [
         ('branca', 'Branca'),
         ('preta', 'Preta'),
@@ -60,11 +56,10 @@ class UserProfile(models.Model):
     ]
     etnia = models.CharField(max_length=20, choices=ETNIA_CHOICES, blank=True, null=True, verbose_name="Cor/Etnia")
 
-    # Alteração 3: PCD
     is_pcd = models.BooleanField(default=False, verbose_name="É PCD (Pessoa com Deficiência)?")
     descricao_pcd = models.CharField(max_length=200, blank=True, null=True, verbose_name="Qual deficiência? (Se PCD)")
 
-    # --- 3. NACIONALIDADE E IDIOMAS (Alteração 2) ---
+    # --- 3. NACIONALIDADE E IDIOMAS ---
     NACIONALIDADE_CHOICES = [
         ('brasileira', 'Brasileira 🇧🇷'),
         ('americana', 'Americana 🇺🇸'),
@@ -78,7 +73,6 @@ class UserProfile(models.Model):
     ]
     nacionalidade = models.CharField(max_length=20, choices=NACIONALIDADE_CHOICES, default='brasileira', verbose_name="Nacionalidade")
 
-    # Níveis de idioma
     NIVEL_IDIOMA = [
         ('basico', 'Básico'),
         ('intermediario', 'Intermediário'),
@@ -99,17 +93,14 @@ class UserProfile(models.Model):
     
     # --- 5. MEDIDAS E APARÊNCIA ---
     altura = models.DecimalField(max_digits=3, decimal_places=2, help_text="Ex: 1.70", null=True, blank=True, verbose_name="Altura (m)")
-    # Alteração 8: Peso
     peso = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Peso (kg)")
     
     manequim = models.CharField(max_length=10, blank=True, null=True, verbose_name="Manequim")
     calcado = models.CharField(max_length=10, blank=True, null=True, verbose_name="Calçado")
     
-    # Alteração 15: Tamanho Camiseta
     TAMANHO_CAMISETA = [('PP','PP'), ('P','P'), ('M','M'), ('G','G'), ('GG','GG'), ('XG','XG')]
     tamanho_camiseta = models.CharField(max_length=5, choices=TAMANHO_CAMISETA, blank=True, null=True, verbose_name="Tamanho de Camiseta")
 
-    # Alteração 12: Olhos
     OLHOS_CHOICES = [
         ('castanho_escuro', 'Castanho Escuro'),
         ('castanho_claro', 'Castanho Claro'),
@@ -121,7 +112,6 @@ class UserProfile(models.Model):
     ]
     olhos = models.CharField(max_length=20, choices=OLHOS_CHOICES, blank=True, null=True, verbose_name="Cor dos Olhos")
 
-    # Alteração 13: Tipo de Cabelo
     CABELO_TIPO_CHOICES = [
         ('liso', 'Liso'),
         ('ondulado', 'Ondulado'),
@@ -133,7 +123,6 @@ class UserProfile(models.Model):
     ]
     cabelo_tipo = models.CharField(max_length=20, choices=CABELO_TIPO_CHOICES, blank=True, null=True, verbose_name="Tipo de Cabelo")
 
-    # Alteração 14: Tamanho do Cabelo
     CABELO_TAM_CHOICES = [
         ('curto', 'Curto'),
         ('medio', 'Médio'),
@@ -143,7 +132,6 @@ class UserProfile(models.Model):
     cabelo_comprimento = models.CharField(max_length=20, choices=CABELO_TAM_CHOICES, blank=True, null=True, verbose_name="Comprimento do Cabelo")
 
     # --- 6. PROFISSIONAL ---
-    # Alteração 9: Experiência
     EXPERIENCIA_CHOICES = [
         ('sem_experiencia', 'Não tenho experiência (Começando agora)'),
         ('pouca', 'Tenho, mas pouca'),
@@ -152,10 +140,8 @@ class UserProfile(models.Model):
     ]
     experiencia = models.CharField(max_length=20, choices=EXPERIENCIA_CHOICES, default='sem_experiencia', verbose_name="Experiência")
 
-    # Alteração 10: Áreas de Atuação (Salvo como texto separado por vírgula)
     areas_atuacao = models.TextField(blank=True, null=True, verbose_name="Áreas de Interesse")
     
-    # Alteração 4: Disponibilidade
     DISPONIBILIDADE_CHOICES = [
         ('total', 'Todos os dias (Incluindo Finais de Semana)'),
         ('seg_sex', 'Segunda a Sexta'),
@@ -352,3 +338,41 @@ class Candidatura(models.Model):
         verbose_name_plural = "📝 Candidaturas Recebidas"
 
     def __str__(self): return f"{self.modelo} -> {self.job}"
+
+# ==============================================================================
+# 6. CONFIGURAÇÕES GERAIS DO SITE (CMS) - NOVO
+# ==============================================================================
+class ConfiguracaoSite(models.Model):
+    # --- Cabeçalho e Rodapé ---
+    titulo_site = models.CharField(max_length=100, default="OpenCasting", verbose_name="Nome do Site")
+    
+    # --- Contatos ---
+    email_contato = models.EmailField(verbose_name="E-mail de Suporte", default="suporte@opencasting.com")
+    telefone_contato = models.CharField(max_length=20, verbose_name="Telefone / WhatsApp", default="(11) 99999-9999")
+    
+    # --- Textos do Rodapé ---
+    texto_sobre_curto = models.TextField(verbose_name="Resumo (Rodapé)", help_text="Aquele texto curto que fica na primeira coluna do rodapé.", default="A plataforma líder em gestão de talentos.")
+    
+    # --- Página Quem Somos (Coluna Extra) ---
+    titulo_quem_somos = models.CharField(max_length=50, default="Quem Somos", verbose_name="Título Coluna Extra")
+    texto_quem_somos = models.TextField(verbose_name="Texto Quem Somos", help_text="Texto completo da nova coluna.", default="Somos apaixonados por conectar marcas e pessoas.")
+
+    # --- Links Sociais (Opcional) ---
+    instagram_link = models.URLField(blank=True, null=True, verbose_name="Link do Instagram")
+    
+    class Meta:
+        verbose_name = "⚙️ Configuração do Site"
+        verbose_name_plural = "⚙️ Configurações do Site"
+
+    def __str__(self):
+        return "Configuração Geral (Única)"
+
+    def save(self, *args, **kwargs):
+        # Garante que só exista 1 registro no banco
+        self.pk = 1
+        super(ConfiguracaoSite, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

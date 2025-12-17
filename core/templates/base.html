@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenCasting | Gestão de Talentos</title>
+    <title>{{ config_site.titulo_site|default:"OpenCasting" }} | Gestão de Talentos</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
@@ -88,7 +88,7 @@
             flex: 1; 
         }
 
-        /* --- RODAPÉ INTERNO RICO --- */
+        /* --- RODAPÉ INTERNO RICO (4 COLUNAS) --- */
         .internal-footer { 
             background-color: white; 
             border-top: 1px solid #eee; 
@@ -170,7 +170,9 @@
 <body>
 
     <nav class="navbar">
-        <a href="{% url 'home' %}" class="nav-logo">OPEN<span>CASTING</span></a>
+        <a href="{% url 'home' %}" class="nav-logo">
+            {{ config_site.titulo_site|upper|default:"OPENCASTING" }}
+        </a>
 
         <div class="hamburger-icon" onclick="toggleMobileMenu()">
             <i class="material-icons" style="font-size: 30px;">menu</i>
@@ -231,9 +233,9 @@
             <div class="footer-grid">
                 
                 <div class="footer-col">
-                    <h5 style="color:var(--primary);">OpenCasting</h5>
+                    <h5 style="color:var(--primary);">{{ config_site.titulo_site|default:"OpenCasting" }}</h5>
                     <p style="font-size:0.9rem; line-height:1.6;">
-                        A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas.
+                        {{ config_site.texto_sobre_curto|default:"A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas." }}
                     </p>
                 </div>
 
@@ -247,26 +249,42 @@
                 </div>
 
                 <div class="footer-col">
-                    <h5>Suporte</h5>
-                    <ul class="footer-links">
-                        <li><a href="#">Central de Ajuda</a></li>
-                        <li><a href="#">Política de Privacidade</a></li>
-                        <li><a href="#">Dicas de Segurança</a></li>
-                    </ul>
+                    <h5>
+                        <a href="{% url 'quem_somos' %}" style="color: #333; text-decoration: none;">
+                            {{ config_site.titulo_quem_somos|default:"Quem Somos" }}
+                        </a>
+                    </h5>
+                    
+                    <p style="font-size:0.9rem; line-height:1.6; margin-bottom:10px;">
+                        {{ config_site.texto_quem_somos|truncatewords:20|default:"Somos apaixonados por conectar marcas e pessoas de forma eficiente e segura." }}
+                    </p>
+                    
+                    <a href="{% url 'quem_somos' %}" style="color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.85rem;">
+                        Ler história completa &rarr;
+                    </a>
                 </div>
 
                 <div class="footer-col">
                     <h5>Fale Conosco</h5>
                     <ul class="footer-links">
-                        <li><a href="#"><i class="material-icons" style="font-size:16px;">email</i> suporte@opencasting.com</a></li>
-                        <li><a href="#"><i class="material-icons" style="font-size:16px;">chat</i> WhatsApp Comercial</a></li>
+                        {% if config_site.email_contato %}
+                            <li><a href="mailto:{{ config_site.email_contato }}"><i class="material-icons" style="font-size:16px;">email</i> {{ config_site.email_contato }}</a></li>
+                        {% endif %}
+                        
+                        {% if config_site.telefone_contato %}
+                            <li><a href="#"><i class="material-icons" style="font-size:16px;">chat</i> {{ config_site.telefone_contato }}</a></li>
+                        {% endif %}
+
+                        {% if config_site.instagram_link %}
+                            <li><a href="{{ config_site.instagram_link }}" target="_blank"><i class="material-icons" style="font-size:16px;">camera_alt</i> Instagram</a></li>
+                        {% endif %}
                     </ul>
                 </div>
 
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2025 OpenCasting. Desenvolvido com tecnologia <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a>.</p>
+                <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"OpenCasting" }}. Desenvolvido com tecnologia <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a>.</p>
             </div>
         </footer>
     {% endblock %}

@@ -45,7 +45,10 @@ ROOT_URLCONF = 'opencasting.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'core/templates')], # Pasta de templates
+        # --- AQUI ESTÁ A CORREÇÃO CRUCIAL ---
+        # Antes estava apontando para core/templates. 
+        # Agora aponta para a pasta templates na raiz, onde está o seu dashboard.
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -53,6 +56,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # --- CONTEXT PROCESSOR DO RODAPÉ ---
+                'core.context_processors.site_config', 
             ],
         },
     },
@@ -149,13 +154,14 @@ JAZZMIN_SETTINGS = {
         "core.candidatura": "fas fa-file-signature",
         "core.pergunta": "fas fa-question-circle",
         "core.avaliacao": "fas fa-star",
+        "core.configuracaosite": "fas fa-sliders-h", 
     },
 
     "hide_models": ["auth.group", "core.resposta", "core.jobdia", "core.avaliacao"],
 
-    # --- ARQUIVOS PERSONALIZADOS (AQUI ESTÁ A CORREÇÃO) ---
+    # --- ARQUIVOS PERSONALIZADOS ---
     "custom_css": "css/admin_custom.css",
-    "custom_js": "js/admin_custom.js",  # <--- ESSA LINHA ATIVA OS BOTÕES
+    "custom_js": "js/admin_custom.js", 
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -173,7 +179,7 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_fixed": True,
     "sidebar": "sidebar-light-teal",
     "sidebar_nav_small_text": False,
-    "theme": "lumen", # Tema Clean
+    "theme": "lumen", 
     "button_classes": {
         "primary": "btn-outline-success",
         "secondary": "btn-outline-secondary",

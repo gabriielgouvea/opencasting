@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px;">
+    
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="color: #009688; font-weight: 800; font-size: 2.5rem; text-transform: uppercase;">
+            {{ config_site.titulo_quem_somos|default:"QUEM SOMOS" }}
+        </h1>
+        <div style="width: 60px; height: 4px; background: #009688; margin: 10px auto;"></div>
+        <p style="color: #666; font-size: 1.1rem;">Conectando marcas a talentos extraordinários.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start;">
+        
+        <div style="flex: 1; min-width: 300px;">
+            <h3 style="color: #333; font-weight: 700;">Nossa Missão</h3>
+            <div style="line-height: 1.8; color: #555; font-size: 1.05rem; text-align: justify;">
+                {% if config_site.texto_quem_somos %}
+                    {{ config_site.texto_quem_somos|linebreaks }}
+                {% else %}
+                    <p>A OpenCasting nasceu com o propósito de revolucionar o mercado de eventos. Acreditamos que cada promotor é a face da marca que representa, e por isso investimos em uma seleção rigorosa e humanizada.</p>
+                    <p>Nossa tecnologia conecta as melhores empresas aos profissionais mais qualificados do mercado, garantindo agilidade, segurança e transparência em todo o processo de contratação.</p>
+                {% endif %}
+            </div>
+
+            <h3 style="color: #333; font-weight: 700; margin-top: 30px;">Por que nos escolher?</h3>
+            <ul style="list-style: none; padding: 0; color: #555;">
+                <li style="margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Seleção rigorosa de talentos
+                </li>
+                <li style="margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Tecnologia de ponta para gestão
+                </li>
+                <li style="margin-bottom: 10px; display: flex; align-items: center;">
+                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Atendimento humanizado e suporte
+                </li>
+            </ul>
+        </div>
+
+        <div style="flex: 1; min-width: 300px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="background: #e0f2f1; padding: 40px; border-radius: 20px; width: 100%; box-sizing: border-box;">
+                <i class="material-icons" style="font-size: 120px; color: #009688;">groups</i>
+                <h4 style="color: #00796b; margin-top: 10px;">Equipe OpenCasting</h4>
+                <p style="font-size: 0.9rem; color: #555;">Compromisso com a excelência.</p>
+            </div>
+            
+            {% if config_site.instagram_link %}
+            <div style="margin-top: 20px;">
+                <a href="{{ config_site.instagram_link }}" target="_blank" style="text-decoration: none; color: #009688; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                    <i class="material-icons">camera_alt</i> Siga-nos no Instagram
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 60px; background: #f8f9fa; padding: 30px; border-radius: 10px; border: 1px solid #eee;">
+        <h3 style="margin-top: 0; color: #333;">Faça parte dessa história</h3>
+        <p style="color: #666; margin-bottom: 20px;">Seja você um talento ou uma marca, temos a solução ideal.</p>
+        
+        {% if user.is_authenticated %}
+            <a href="{% url 'lista_vagas' %}" class="btn" style="background: #009688; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,150,136,0.3);">
+                Acessar Painel
+            </a>
+        {% else %}
+            <a href="{% url 'cadastro' %}" class="btn" style="background: #009688; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,150,136,0.3);">
+                Criar Minha Conta
+            </a>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
