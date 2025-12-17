@@ -17,11 +17,19 @@
     }
     .welcome-banner h1 { margin: 0; font-size: 22px; color: white !important; font-weight: 600; }
     
-    /* Cards KPI */
+    /* --- GRID KPI (CARDS) --- */
+    /* Mobile: 1 por linha. Desktop: 4 por linha fixo */
     .kpi-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px; margin-bottom: 30px;
+        display: grid;
+        grid-template-columns: 1fr; /* Mobile */
+        gap: 20px;
+        margin-bottom: 30px;
     }
+    /* Tela maior que 768px (Tablet/PC) */
+    @media (min-width: 768px) {
+        .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
     .kpi-card {
         background: white; padding: 20px; border-radius: 8px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc;
@@ -31,8 +39,8 @@
     .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     
     .kpi-data h3 { font-size: 26px; font-weight: bold; margin: 0; color: #333; }
-    .kpi-data span { font-size: 13px; color: #777; text-transform: uppercase; font-weight: 600; }
-    .kpi-icon { font-size: 30px; opacity: 0.2; }
+    .kpi-data span { font-size: 11px; color: #777; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .kpi-icon { font-size: 28px; opacity: 0.3; }
 
     /* Cores dos Cards */
     .border-blue { border-left-color: #3498db; } .text-blue { color: #3498db; }
@@ -40,22 +48,42 @@
     .border-purple { border-left-color: #9b59b6; } .text-purple { color: #9b59b6; }
     .border-orange { border-left-color: #e67e22; } .text-orange { color: #e67e22; }
 
-    /* Gráficos */
+    /* --- GRID GRÁFICOS --- */
+    /* Mobile: 1 por linha. Desktop: 2 por linha */
     .charts-container {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 20px;
     }
+    @media (min-width: 992px) {
+        .charts-container { grid-template-columns: 1fr 2fr; } /* Pizza menor, Barra maior */
+    }
+
     .chart-card {
         background: white; padding: 20px; border-radius: 8px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        display: flex; flex-direction: column;
     }
-    .chart-header { border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 10px; }
-    .chart-header h3 { margin: 0; font-size: 16px; color: #555; font-weight: 700; text-transform: uppercase; }
+    
+    /* Header do Gráfico com Select */
+    .chart-header { 
+        border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 10px; 
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .chart-header h3 { margin: 0; font-size: 15px; color: #555; font-weight: 700; text-transform: uppercase; }
+    
+    /* Select Bonito */
+    .chart-select {
+        padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;
+        font-size: 13px; color: #555; background: #f9f9f9; cursor: pointer;
+        outline: none; font-weight: 600;
+    }
+    .chart-select:hover { border-color: #009688; }
 </style>
 {% endblock %}
 
 {% block content %}
-{% get_kpis as kpi %}
+{% get_kpis as dash %}
 
 <div class="dashboard-container">
     
@@ -66,34 +94,22 @@
 
     <div class="kpi-grid">
         <div class="kpi-card border-blue" onclick="window.location.href='/admin/core/userprofile/'">
-            <div class="kpi-data">
-                <h3>{{ kpi.total_promotores }}</h3>
-                <span>Promotores</span>
-            </div>
+            <div class="kpi-data"><h3>{{ dash.kpi.total }}</h3><span>Promotores</span></div>
             <div class="kpi-icon text-blue"><i class="fas fa-users"></i></div>
         </div>
 
         <div class="kpi-card border-yellow" onclick="window.location.href='/admin/core/userprofile/?status=pendente'">
-            <div class="kpi-data">
-                <h3>{{ kpi.pendentes }}</h3>
-                <span>Pendentes</span>
-            </div>
+            <div class="kpi-data"><h3>{{ dash.kpi.pendentes }}</h3><span>Pendentes</span></div>
             <div class="kpi-icon text-yellow"><i class="fas fa-clock"></i></div>
         </div>
 
         <div class="kpi-card border-purple" onclick="window.location.href='/admin/core/job/'">
-            <div class="kpi-data">
-                <h3>{{ kpi.vagas_abertas }}</h3>
-                <span>Vagas Abertas</span>
-            </div>
+            <div class="kpi-data"><h3>{{ dash.kpi.vagas }}</h3><span>Vagas</span></div>
             <div class="kpi-icon text-purple"><i class="fas fa-briefcase"></i></div>
         </div>
 
         <div class="kpi-card border-orange" onclick="window.location.href='/admin/core/candidatura/'">
-            <div class="kpi-data">
-                <h3>{{ kpi.candidaturas_hoje }}</h3>
-                <span>Candidaturas Hoje</span>
-            </div>
+            <div class="kpi-data"><h3>{{ dash.kpi.candidaturas }}</h3><span>Candidaturas</span></div>
             <div class="kpi-icon text-orange"><i class="fas fa-file-contract"></i></div>
         </div>
     </div>
@@ -107,58 +123,60 @@
         </div>
 
         <div class="chart-card">
-            <div class="chart-header"><h3>Gênero dos Promotores</h3></div>
+            <div class="chart-header">
+                <h3>Análise Demográfica</h3>
+                <select class="chart-select" id="demographicSelect" onchange="updateChart(this.value)">
+                    <option value="genero">Gênero / Sexo</option>
+                    <option value="camiseta">Tamanho de Camiseta</option>
+                    <option value="calcado">Numeração de Calçado</option>
+                    <option value="idade">Faixa Etária (Idade)</option>
+                    <option value="etnia">Etnia / Cor</option>
+                </select>
+            </div>
             <div style="height: 250px; position: relative;">
-                <canvas id="chartGenero"></canvas>
+                <canvas id="chartDynamic"></canvas>
             </div>
         </div>
     </div>
 
 </div>
 
-{{ kpi.chart_status.labels|json_script:"status-labels" }}
-{{ kpi.chart_status.data|json_script:"status-data" }}
-{{ kpi.chart_status.colors|json_script:"status-colors" }}
-
-{{ kpi.chart_genero.labels|json_script:"genero-labels" }}
-{{ kpi.chart_genero.data|json_script:"genero-data" }}
+{{ dash.status|json_script:"data-status" }}
+{{ dash.demografia|json_script:"data-demografia" }}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
-        // Função auxiliar para ler o JSON escondido
-        function getData(id) {
-            return JSON.parse(document.getElementById(id).textContent);
-        }
-
-        // 1. Configura Gráfico de STATUS (Pizza)
-        const ctxStatus = document.getElementById('chartStatus').getContext('2d');
-        new Chart(ctxStatus, {
+        // --- 1. Gráfico de Status (Pizza) ---
+        const statusData = JSON.parse(document.getElementById('data-status').textContent);
+        new Chart(document.getElementById('chartStatus'), {
             type: 'doughnut',
             data: {
-                labels: getData('status-labels'),
+                labels: statusData.labels,
                 datasets: [{
-                    data: getData('status-data'),
-                    backgroundColor: getData('status-colors'),
+                    data: statusData.data,
+                    backgroundColor: statusData.colors,
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } }
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: {size: 11} } } }
             }
         });
 
-        // 2. Configura Gráfico de GÊNERO (Barra)
-        const ctxGenero = document.getElementById('chartGenero').getContext('2d');
-        new Chart(ctxGenero, {
+        // --- 2. Gráfico Dinâmico (Barra) ---
+        window.demografiaData = JSON.parse(document.getElementById('data-demografia').textContent);
+        const ctxDyn = document.getElementById('chartDynamic').getContext('2d');
+        
+        // Inicializa com Gênero
+        window.dynamicChart = new Chart(ctxDyn, {
             type: 'bar',
             data: {
-                labels: getData('genero-labels'),
+                labels: window.demografiaData.genero.labels,
                 datasets: [{
                     label: 'Quantidade',
-                    data: getData('genero-data'),
+                    data: window.demografiaData.genero.data,
                     backgroundColor: '#3498db',
                     borderRadius: 4
                 }]
@@ -167,10 +185,29 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } // precision 0 evita decimais
             }
         });
-
     });
+
+    // Função que roda ao mudar o Select
+    function updateChart(option) {
+        const data = window.demografiaData[option];
+        const chart = window.dynamicChart;
+        
+        // Atualiza Labels e Dados
+        chart.data.labels = data.labels;
+        chart.data.datasets[0].data = data.data;
+        
+        // Cores diferentes para cada tipo (Opcional, firula visual)
+        let color = '#3498db'; // Azul padrão
+        if(option === 'camiseta') color = '#9b59b6'; // Roxo
+        if(option === 'calcado') color = '#e67e22'; // Laranja
+        if(option === 'etnia') color = '#2ecc71'; // Verde
+        if(option === 'idade') color = '#e74c3c'; // Vermelho
+
+        chart.data.datasets[0].backgroundColor = color;
+        chart.update();
+    }
 </script>
 {% endblock %}
