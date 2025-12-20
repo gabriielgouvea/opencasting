@@ -1,0 +1,78 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; background: #fff; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px;">
+    <h2 style="color: #c62828;">🛑 Reprovar / Bloquear Candidatos</h2>
+    
+    <p>Você selecionou os seguintes candidatos para reprovação:</p>
+    <ul>
+        {% for c in candidatos %}
+            <li><strong>{{ c.nome_completo }}</strong> ({{ c.user.email }})</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="ids" value="{{ ids }}">
+
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block;">Motivo Principal:</label>
+            <select name="motivo_select" class="form-control" style="width: 100%; padding: 10px;" required>
+                <option value="">Selecione...</option>
+                <option value="fotos_ruins">📸 Fotos Amadoras / Ruins</option>
+                <option value="dados_incompletos">📝 Dados Incompletos</option>
+                <option value="perfil">🚫 Perfil Inadequado</option>
+                <option value="outros">⚙️ Outros</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold; display: block;">Mensagem Adicional (Vai no e-mail):</label>
+            <textarea name="motivo_texto" rows="4" style="width: 100%; padding: 10px;" placeholder="Ex: Suas fotos estão escuras..."></textarea>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #17a2b8; margin-bottom: 20px;">
+            <label style="font-weight: bold; display: flex; align-items: center;">
+                <input type="checkbox" name="pode_tentar" id="checkTentar" checked onchange="toggleBloqueio()" style="width: 20px; height: 20px; margin-right: 10px;">
+                Permitir correção e nova tentativa imediata?
+            </label>
+            <small id="textoAjuda" style="display: block; margin-top: 5px; color: #666;">
+                Se marcado, o status vira <strong>"Aguardando Correção"</strong> e o usuário pode editar o perfil.
+            </small>
+        </div>
+
+        <div id="boxBloqueio" style="display: none; background: #fff3f3; padding: 15px; border-left: 4px solid #dc3545; margin-bottom: 20px;">
+            <label style="color: #dc3545; font-weight: bold;">⛔ Tempo de Bloqueio (Ban):</label>
+            <select name="tempo_bloqueio" style="width: 100%; padding: 8px;">
+                <option value="30">30 Dias</option>
+                <option value="90" selected>90 Dias</option>
+                <option value="180">6 Meses</option>
+                <option value="9999">Permanente</option>
+            </select>
+        </div>
+
+        <div style="text-align: right;">
+            <a href="/admin/core/userprofile/" style="margin-right: 15px; color: #666; text-decoration: none;">Cancelar</a>
+            <button type="submit" style="background: #c62828; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer;">CONFIRMAR REPROVAÇÃO</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleBloqueio() {
+        var check = document.getElementById('checkTentar');
+        var box = document.getElementById('boxBloqueio');
+        var texto = document.getElementById('textoAjuda');
+        
+        if(check.checked) {
+            box.style.display = 'none';
+            texto.innerHTML = 'Se marcado, o status vira <strong>"Aguardando Correção"</strong>.';
+        } else {
+            box.style.display = 'block';
+            texto.innerHTML = 'Se desmarcado, o usuário será <strong>BLOQUEADO</strong> pelo tempo definido abaixo.';
+        }
+    }
+</script>
+{% endblock %}

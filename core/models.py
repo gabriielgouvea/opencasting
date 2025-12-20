@@ -162,14 +162,15 @@ class UserProfile(models.Model):
     tipo_chave_pix = models.CharField(max_length=20, choices=TIPO_CHAVE_CHOICES, blank=True, null=True, verbose_name="Tipo de Chave PIX")
     chave_pix = models.CharField(max_length=100, blank=True, null=True, verbose_name="Chave PIX")
 
-    # --- 8. FOTOS & STATUS ---
+    # --- 8. FOTOS & STATUS CRM ---
     foto_rosto = models.ImageField(upload_to='modelos/rosto/', blank=True, null=True, verbose_name="Foto de Rosto")
     foto_corpo = models.ImageField(upload_to='modelos/corpo/', blank=True, null=True, verbose_name="Foto de Corpo")
 
     STATUS_CHOICES = [
         ('pendente', '🟡 Pendente (Em Análise)'),
         ('aprovado', '🟢 Aprovado'),
-        ('reprovado', '🔴 Reprovado'),
+        ('reprovado', '🔴 Reprovado (Bloqueado)'),
+        ('correcao', '🔵 Necessita Ajuste'),
     ]
     
     MOTIVOS_REPROVACAO = [
@@ -182,6 +183,7 @@ class UserProfile(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente', verbose_name="Status")
     motivo_reprovacao = models.CharField(max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, verbose_name="Motivo (Se reprovado)")
     observacao_admin = models.TextField(blank=True, null=True, verbose_name="Mensagem para a Modelo")
+    data_reprovacao = models.DateTimeField(blank=True, null=True, verbose_name="Data da Reprovação")
 
     # Termos
     termo_uso_imagem = models.BooleanField(default=False, verbose_name="Aceito uso de imagem")
@@ -209,169 +211,65 @@ class UserProfile(models.Model):
         if self.pk:
             try:
                 antigo = UserProfile.objects.get(pk=self.pk)
-                # Envia e-mail se mudar para APROVADO
                 if antigo.status != 'aprovado' and self.status == 'aprovado':
                     send_mail(
                         'OpenCasting: Cadastro Aprovado! 🎉',
-                        f'Olá {self.nome_completo},\n\nParabéns! Seu perfil foi aprovado.\n\nAcesse agora: https://gabrielgouvea.pythonanywhere.com/login/',
-                        settings.DEFAULT_FROM_EMAIL,
-                        [self.user.email],
-                        fail_silently=True
+                        f'Olá {self.nome_completo}, seu perfil foi aprovado.',
+                        settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
                     )
-                # Envia e-mail se mudar para REPROVADO
-                elif antigo.status != 'reprovado' and self.status == 'reprovado':
+                elif antigo.status != self.status and self.status in ['reprovado', 'correcao']:
                     send_mail(
                         'OpenCasting: Atualização do Cadastro',
-                        f'Olá {self.nome_completo},\n\nPrecisamos de ajustes no seu perfil.\nMotivo: {self.get_motivo_reprovacao_display()}\nObs: {self.observacao_admin}',
-                        settings.DEFAULT_FROM_EMAIL,
-                        [self.user.email],
-                        fail_silently=True
+                        f'Olá {self.nome_completo}, precisamos de ajustes no perfil.\nMotivo: {self.get_motivo_reprovacao_display()}',
+                        settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
                     )
-            except Exception:
-                pass
+            except Exception: pass
         super().save(*args, **kwargs)
 
 # ==============================================================================
-# 2. AVALIAÇÕES DE CLIENTES
+# 2. OUTROS MODELOS DO SISTEMA
 # ==============================================================================
 class Avaliacao(models.Model):
     promotor = models.ForeignKey(UserProfile, related_name='avaliacoes', on_delete=models.CASCADE)
     cliente_nome = models.CharField(max_length=100, verbose_name="Empresa/Cliente")
-    nota = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], verbose_name="Nota")
-    comentario = models.TextField(verbose_name="Opinião")
-    data = models.DateTimeField(auto_now_add=True, verbose_name="Data")
+    nota = models.IntegerField(choices=[(1,'1'),(2,'2'),(3,'3'),(4,'4'),(5,'5')])
+    comentario = models.TextField()
+    data = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        verbose_name = "Avaliação"
-        verbose_name_plural = "Avaliações"
-
-    def __str__(self):
-        return f"{self.cliente_nome} ({self.nota}★)"
-
-# ==============================================================================
-# 3. QUESTIONÁRIO (PERGUNTAS E RESPOSTAS)
-# ==============================================================================
 class Pergunta(models.Model):
-    TIPO_CHOICES = [('texto', 'Texto Curto'), ('sim_nao', 'Sim ou Não')]
-    texto = models.CharField(max_length=200, verbose_name="Pergunta")
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='sim_nao', verbose_name="Tipo")
-    ativa = models.BooleanField(default=True, verbose_name="Ativa no Cadastro?")
-
-    class Meta:
-        verbose_name = "Pergunta do Formulário"
-        verbose_name_plural = "⚙️ Perguntas do Cadastro"
-
+    texto = models.CharField(max_length=200)
+    ativa = models.BooleanField(default=True)
     def __str__(self): return self.texto
 
 class Resposta(models.Model):
     perfil = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
-    texto_resposta = models.CharField(max_length=200, verbose_name="Resposta")
-    
-    class Meta:
-        verbose_name = "Resposta"
-        verbose_name_plural = "Respostas"
+    texto_resposta = models.CharField(max_length=200)
 
-    def __str__(self): return self.texto_resposta
-
-# ==============================================================================
-# 4. GESTÃO DE VAGAS (JOBS)
-# ==============================================================================
 class Job(models.Model):
-    STATUS_CHOICES = [('aberto', 'Casting Aberto'), ('analise', 'Em Análise (Fechado)'), ('finalizado', 'Finalizado')]
-    
-    titulo = models.CharField(max_length=200, verbose_name="Título da Vaga", help_text="Ex: Promotor para Blitz Dr. Peanut")
-    local = models.CharField(max_length=200, verbose_name="Local", help_text="Cidade, Bairro ou Endereço principal")
-    descricao = models.TextField(verbose_name="Descrição", help_text="Descreva as funções e o perfil desejado.")
-    uniforme = models.TextField(default="Calça preta e tênis branco", verbose_name="Uniforme")
-    infos_extras = models.TextField(blank=True, verbose_name="Infos Extras", help_text="Instruções adicionais (horário de chegada, etc).")
-    data_pagamento = models.DateField(verbose_name="Data do Pagamento")
-    
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='aberto',
-        verbose_name="Status da Vaga",
-        help_text="<b>Aberto:</b> Visível para todos os promotores.<br><b>Em Análise:</b> Ninguém mais pode se candidatar.<br><b>Finalizado:</b> Evento concluído."
-    )
-    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
-
-    class Meta:
-        verbose_name = "Vaga / Job"
-        verbose_name_plural = "💼 Vagas e Jobs"
-
+    STATUS_CHOICES = [('aberto', 'Casting Aberto'), ('analise', 'Em Análise'), ('finalizado', 'Finalizado')]
+    titulo = models.CharField(max_length=200, verbose_name="Título da Vaga")
+    local = models.CharField(max_length=200, verbose_name="Local", blank=True, null=True) # CORRIGIDO PARA MIGRAÇÃO
+    descricao = models.TextField(verbose_name="Descrição", blank=True, null=True) # CORRIGIDO PARA MIGRAÇÃO
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberto')
+    criado_em = models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.titulo
 
 class JobDia(models.Model):
     job = models.ForeignKey(Job, related_name='dias', on_delete=models.CASCADE)
-    data = models.DateField(verbose_name="Data do Evento")
-    hora_inicio = models.TimeField(verbose_name="Início")
-    hora_fim = models.TimeField(verbose_name="Fim")
-    valor = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Cachê (R$)")
-    
-    class Meta:
-        verbose_name = "Dia de Trabalho"
-        verbose_name_plural = "Dias e Cachês"
+    data = models.DateField()
+    valor = models.DecimalField(max_digits=8, decimal_places=2)
 
-    def __str__(self): return f"{self.data} - R$ {self.valor}"
-
-# ==============================================================================
-# 5. CANDIDATURAS
-# ==============================================================================
 class Candidatura(models.Model):
-    STATUS_CANDIDATURA = [
-        ('pendente', 'Aguardando Análise'), 
-        ('aprovado', '✅ Selecionado para o Job'), 
-        ('reprovado', '❌ Não Selecionado')
-    ]
-    
-    job = models.ForeignKey(Job, on_delete=models.CASCADE, verbose_name="Vaga")
-    modelo = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name="Candidato")
-    status = models.CharField(
-        max_length=20, choices=STATUS_CANDIDATURA, default='pendente',
-        verbose_name="Situação",
-        help_text="Se 'Selecionado', o promotor verá a confirmação no painel dele."
-    )
-    data_candidatura = models.DateTimeField(auto_now_add=True, verbose_name="Data de Inscrição")
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    modelo = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, default='pendente')
+    data_candidatura = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('job', 'modelo')
-        verbose_name = "Candidatura"
-        verbose_name_plural = "📝 Candidaturas Recebidas"
-
-    def __str__(self): return f"{self.modelo} -> {self.job}"
-
-# ==============================================================================
-# 6. CONFIGURAÇÕES GERAIS DO SITE (CMS) - NOVO
-# ==============================================================================
 class ConfiguracaoSite(models.Model):
-    # --- Cabeçalho e Rodapé ---
-    titulo_site = models.CharField(max_length=100, default="OpenCasting", verbose_name="Nome do Site")
-    
-    # --- Contatos ---
-    email_contato = models.EmailField(verbose_name="E-mail de Suporte", default="suporte@opencasting.com")
-    telefone_contato = models.CharField(max_length=20, verbose_name="Telefone / WhatsApp", default="(11) 99999-9999")
-    
-    # --- Textos do Rodapé ---
-    texto_sobre_curto = models.TextField(verbose_name="Resumo (Rodapé)", help_text="Aquele texto curto que fica na primeira coluna do rodapé.", default="A plataforma líder em gestão de talentos.")
-    
-    # --- Página Quem Somos (Coluna Extra) ---
-    titulo_quem_somos = models.CharField(max_length=50, default="Quem Somos", verbose_name="Título Coluna Extra")
-    texto_quem_somos = models.TextField(verbose_name="Texto Quem Somos", help_text="Texto completo da nova coluna.", default="Somos apaixonados por conectar marcas e pessoas.")
-
-    # --- Links Sociais (Opcional) ---
-    instagram_link = models.URLField(blank=True, null=True, verbose_name="Link do Instagram")
-    
-    class Meta:
-        verbose_name = "⚙️ Configuração do Site"
-        verbose_name_plural = "⚙️ Configurações do Site"
-
-    def __str__(self):
-        return "Configuração Geral (Única)"
-
-    def save(self, *args, **kwargs):
-        # Garante que só exista 1 registro no banco
-        self.pk = 1
-        super(ConfiguracaoSite, self).save(*args, **kwargs)
-
+    titulo_site = models.CharField(max_length=100, default="OpenCasting")
+    email_contato = models.EmailField(default="suporte@opencasting.com")
+    def save(self, *args, **kwargs): self.pk=1; super().save(*args, **kwargs)
     @classmethod
     def load(cls):
         obj, created = cls.objects.get_or_create(pk=1)

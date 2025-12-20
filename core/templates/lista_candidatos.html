@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📂 Gestão de Candidatos</h2>
+        <span class="badge bg-secondary">{{ candidatos.count }} Cadastrados</span>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Nome / E-mail</th>
+                            <th>Status Atual</th>
+                            <th>Data Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perfil in candidatos %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">{{ perfil.nome_completo }}</div>
+                                <small class="text-muted">{{ perfil.user.email }}</small>
+                            </td>
+                            <td>
+                                {% if perfil.status == 'pendente' %}
+                                    <span class="badge bg-warning text-dark">🟡 Pendente</span>
+                                {% elif perfil.status == 'aprovado' %}
+                                    <span class="badge bg-success">🟢 Aprovado</span>
+                                {% elif perfil.status == 'reprovado' %}
+                                    <span class="badge bg-danger">🔴 Reprovado</span>
+                                {% elif perfil.status == 'correcao' %}
+                                    <span class="badge bg-info text-dark">🟠 Corrigindo</span>
+                                {% elif perfil.status == 'bloqueado' %}
+                                    <span class="badge bg-dark">⛔ Bloqueado</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ perfil.criado_em|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'perfil_publico' perfil.uuid %}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    Ver Perfil
+                                </a>
+
+                                <button type="button" class="btn btn-sm btn-danger btn-reprovar" 
+                                        data-id="{{ perfil.id }}" 
+                                        data-nome="{{ perfil.nome_completo }}">
+                                    Reprovar / Bloquear
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">Nenhum candidato encontrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReprovar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'reprovar_candidato' %}">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="modal_user_id">
+
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Reprovar: <span id="modal_user_nome" class="fw-bold"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo Principal</label>
+                        <select name="motivo_select" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="fotos_ruins">Fotos Amadoras / Selfie no Espelho</option>
+                            <option value="dados_incompletos">Dados Incompletos ou Incorretos</option>
+                            <option value="perfil">Perfil não compatível com a agência</option>
+                            <option value="outros">Outros Motivos</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mensagem Adicional (Opcional)</label>
+                        <textarea name="motivo_texto" class="form-control" rows="3" placeholder="Ex: Olá, suas fotos estão muito escuras. Por favor envie fotos com luz natural..."></textarea>
+                        <small class="text-muted">Essa mensagem será enviada por e-mail para o candidato.</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-check form-switch mb-3 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="checkTentarNovamente" name="pode_tentar" checked onchange="toggleBloqueio()">
+                        <label class="form-check-label fw-bold" for="checkTentarNovamente">
+                            Permitir que o candidato corrija e tente novamente?
+                        </label>
+                        <div class="form-text mt-1" id="textAjudaSwitch">
+                            Se marcado: O status será "Aguardando Correção" e ele receberá um link para editar.
+                        </div>
+                    </div>
+
+                    <div id="divBloqueio" style="display: none;">
+                        <label class="form-label text-danger fw-bold">Bloquear novas tentativas por:</label>
+                        <select name="tempo_bloqueio" class="form-select">
+                            <option value="30">30 Dias</option>
+                            <option value="90" selected>90 Dias</option>
+                            <option value="180">6 Meses</option>
+                            <option value="9999">Indeterminadamente (Banir)</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Reprovação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para passar o ID do botão para o Modal
+    document.addEventListener("DOMContentLoaded", function() {
+        const botoes = document.querySelectorAll(".btn-reprovar");
+        botoes.forEach(btn => {
+            btn.addEventListener("click", function() {
+                const id = this.getAttribute("data-id");
+                const nome = this.getAttribute("data-nome");
+                document.getElementById("modal_user_id").value = id;
+                document.getElementById("modal_user_nome").innerText = nome;
+                
+                // Abre o modal usando Bootstrap 5
+                var myModal = new bootstrap.Modal(document.getElementById('modalReprovar'));
+                myModal.show();
+            });
+        });
+    });
+
+    // Script para alternar entre Correção e Bloqueio
+    function toggleBloqueio() {
+        const check = document.getElementById("checkTentarNovamente");
+        const div = document.getElementById("divBloqueio");
+        const texto = document.getElementById("textAjudaSwitch");
+        
+        if (check.checked) {
+            div.style.display = "none";
+            texto.innerText = 'Se marcado: O status será "Aguardando Correção" e ele receberá um link para editar.';
+            texto.classList.remove("text-danger");
+        } else {
+            div.style.display = "block";
+            texto.innerText = 'Se desmarcado: O usuário será BLOQUEADO pelo tempo definido abaixo.';
+            texto.classList.add("text-danger");
+        }
+    }
+</script>
+{% endblock %}

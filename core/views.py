@@ -55,14 +55,9 @@ def lista_vagas(request):
     meus_eventos = Candidatura.objects.filter(modelo=perfil).order_by('-data_candidatura')
 
     # 4. Cálculo de Progresso (Gamificação)
-    # Começa com 50% (Cadastro Básico).
-    # +25% se tiver foto de rosto
-    # +25% se tiver foto de corpo
     progresso = 50 
     if perfil.foto_rosto: progresso += 25
     if perfil.foto_corpo: progresso += 25
-    
-    # Trava em 100%
     progresso = min(progresso, 100)
     
     context = {
@@ -81,8 +76,8 @@ def lista_vagas(request):
 # --- 3. DETALHES DA VAGA ---
 @login_required(login_url='/login/')
 def detalhe_vaga(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
     if request.user.is_superuser:
-        job = get_object_or_404(Job, id=job_id)
         dias = job.dias.all()
         return render(request, 'job_detail.html', {'job': job, 'dias': dias, 'ja_candidatou': False})
 
@@ -91,7 +86,6 @@ def detalhe_vaga(request, job_id):
         if perfil.status != 'aprovado':
             return redirect('lista_vagas')
             
-        job = get_object_or_404(Job, id=job_id)
         dias = job.dias.all()
         ja_candidatou = Candidatura.objects.filter(job=job, modelo=perfil).exists()
 
@@ -111,7 +105,6 @@ def candidatar_vaga(request, job_id):
         return redirect('detalhe_vaga', job_id=job_id)
 
     job = get_object_or_404(Job, id=job_id)
-    
     try:
         perfil = request.user.userprofile
         if perfil.status != 'aprovado':
@@ -120,7 +113,6 @@ def candidatar_vaga(request, job_id):
 
         Candidatura.objects.create(job=job, modelo=perfil)
         messages.success(request, "Candidatura realizada com sucesso! Boa sorte 🍀")
-        
     except Exception:
         messages.warning(request, "Você já se candidatou para esta vaga.")
     
@@ -158,17 +150,6 @@ def cadastro(request):
                 if resposta: Resposta.objects.create(perfil=perfil, pergunta=pergunta, texto_resposta=resposta)
 
             login(request, user)
-
-            try:
-                send_mail(
-                    'Cadastro Recebido - OpenCasting',
-                    f'Olá {perfil.nome_completo}!\n\nRecebemos seu cadastro. Nossa equipe vai analisar seus dados.\n\nAtt,\nEquipe OpenCasting',
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=True,
-                )
-            except: pass
-
             messages.success(request, f"Bem-vinda, {perfil.nome_completo}! Aguarde a análise.")
             return redirect('lista_vagas')
     else:
@@ -186,21 +167,12 @@ def editar_perfil(request):
 
     if request.method == 'POST':
         form = CadastroForm(request.POST, request.FILES, instance=perfil)
-        
-        # Limpa campos sensíveis do form
-        if 'email' in form.fields: del form.fields['email']
-        if 'password' in form.fields: del form.fields['password']
-        if 'confirm_password' in form.fields: del form.fields['confirm_password']
-        
         if form.is_valid():
             form.save()
             messages.success(request, "Perfil atualizado com sucesso!")
             return redirect('lista_vagas')
     else:
         form = CadastroForm(instance=perfil)
-        if 'email' in form.fields: del form.fields['email']
-        if 'password' in form.fields: del form.fields['password']
-        if 'confirm_password' in form.fields: del form.fields['confirm_password']
 
     return render(request, 'editar_perfil.html', {'form': form})
 
@@ -214,7 +186,7 @@ def perfil_publico(request, uuid):
         'nota_media': perfil.nota_media()
     })
 
-# --- 8. AVALIAR ---
+# --- 8. AVALIAR PROMOTOR (NOVA LÓGICA INTEGRADA) ---
 def avaliar_promotor(request, uuid):
     perfil = get_object_or_404(UserProfile, uuid=uuid)
     if request.method == 'POST':
@@ -222,10 +194,17 @@ def avaliar_promotor(request, uuid):
         nota = request.POST.get('nota')
         comentario = request.POST.get('comentario')
         if nome and nota:
-            Avaliacao.objects.create(promotor=perfil, cliente_nome=nome, nota=int(nota), comentario=comentario)
+            Avaliacao.objects.create(
+                promotor=perfil, 
+                cliente_nome=nome, 
+                nota=int(nota), 
+                comentario=comentario
+            )
+            # Renderiza uma página de sucesso simples ou redireciona
             return render(request, 'avaliacao_sucesso.html', {'perfil': perfil})
+            
     return render(request, 'publico_avaliar.html', {'perfil': perfil})
 
-# --- 9. INSTITUCIONAL (QUEM SOMOS) - NOVO ---
+# --- 9. INSTITUCIONAL ---
 def quem_somos(request):
     return render(request, 'quem_somos.html')
