@@ -162,6 +162,12 @@ JAZZMIN_SETTINGS = {
     # --- ARQUIVOS PERSONALIZADOS ---
     "custom_css": "css/admin_custom.css",
     "custom_js": "js/admin_custom.js", 
+
+    # --- ADICIONE ESTAS LINHAS ABAIXO ---
+    # Isso obriga o Jazzmin a renderizar os filtros na lista (onde o JS consegue ler)
+    "change_list_filter_dropdown": False, 
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {"core.userprofile": "collapsible"},
 }
 
 JAZZMIN_UI_TWEAKS = {

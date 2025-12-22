@@ -34,7 +34,7 @@ class UserProfile(models.Model):
     rg = models.CharField(max_length=20, blank=True, null=True, verbose_name="RG / RNE")
 
     # --- 2. DADOS PESSOAIS ---
-    whatsapp = models.CharField(max_length=20, verbose_name="WhatsApp", help_text="Formato: (11) 99999-9999")
+    whatsapp = models.CharField(max_length=20, verbose_name="Telefone (WhatsApp)", help_text="Formato: (11) 99999-9999")
     data_nascimento = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
     
     GENERO_CHOICES = [

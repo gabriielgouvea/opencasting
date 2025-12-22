@@ -7,29 +7,39 @@
 
 <script>
     /**
-     * OBJETO DE DADOS GLOBAL
-     * Extraímos os dados do Django uma única vez. 
-     * Isso resolve os erros 'expected' do VS Code e centraliza as informações.
+     * ============================================================
+     * 1. MAPEAMENTO DE DADOS (DATA OBJECT)
+     * ============================================================
+     * Extraímos cada campo individual do Django para um objeto JS.
+     * Isso resolve os erros de 'expected' do VS Code e permite que
+     * o popup do WhatsApp e Link Seletivo funcione com precisão.
      */
     const PROMOTOR_DATA = {
+        // Identificação
         uuid: "{{ original.uuid }}",
         nome: "{{ original.nome_completo|upper|escapejs }}",
-        idade: "{{ original.data_nascimento|timesince|truncatewords:1 }} anos",
         nascimento: "{{ original.data_nascimento|date:'d/m/Y' }}",
+        idade: "{{ original.data_nascimento|timesince|truncatewords:1 }} anos",
         cpf: "{{ original.cpf|default:'---' }}",
         rg: "{{ original.rg|default:'---' }}",
         nacionalidade: "{{ original.get_nacionalidade_display|escapejs }}",
         genero: "{{ original.get_genero_display|escapejs }}",
         etnia: "{{ original.get_etnia_display|escapejs }}",
+        
+        // Contatos e Redes
         whatsapp: "{{ original.whatsapp }}",
         instagram: "{{ original.instagram|default:'---'|escapejs }}",
         email: "{{ original.user.email|escapejs }}",
+        
+        // Localização Completa
         endereco: "{{ original.endereco|escapejs }}",
         numero: "{{ original.numero }}",
         bairro: "{{ original.bairro|escapejs }}",
         cidade: "{{ original.cidade|escapejs }}",
         estado: "{{ original.estado }}",
         cep: "{{ original.cep }}",
+        
+        // Medidas e Perfil Físico
         altura: "{{ original.altura }}",
         peso: "{{ original.peso }}",
         manequim: "{{ original.manequim }}",
@@ -37,107 +47,143 @@
         camiseta: "{{ original.get_tamanho_camiseta_display|escapejs }}",
         olhos: "{{ original.get_olhos_display|escapejs }}",
         cabelo: "{{ original.get_cabelo_tipo_display|escapejs }} ({{ original.get_cabelo_comprimento_display|escapejs }})",
+        
+        // Profissional e Financeiro
         experiencia: "{{ original.get_experiencia_display|escapejs }}",
         disponibilidade: "{{ original.get_disponibilidade_display|escapejs }}",
         ingles: "{{ original.get_nivel_ingles_display|escapejs }}",
         espanhol: "{{ original.get_nivel_espanhol_display|escapejs }}",
-        pix: "{{ original.chave_pix|default:'---'|escapejs }}",
-        banco: "{{ original.banco|default:'---'|escapejs }}"
+        banco: "{{ original.banco|default:'---'|escapejs }}",
+        pix: "{{ original.chave_pix|default:'---'|escapejs }}"
     };
 
-    // 1. ALTERNAR VISUALIZAÇÃO
+    /**
+     * ============================================================
+     * 2. LÓGICA DE NAVEGAÇÃO E GESTÃO
+     * ============================================================
+     */
+
+    // Alterna a exibição do formulário de edição (Modo CRM vs Modo Escrita)
     function toggleEditForm() {
         const container = document.getElementById('edit-form-container');
-        container.style.display = (container.style.display === 'none') ? 'block' : 'none';
-        if (container.style.display === 'block') container.scrollIntoView({ behavior: 'smooth' });
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            container.style.display = 'none';
+        }
     }
 
-    // 2. CÓPIA DE AVALIAÇÃO
+    // Copia o link para avaliação externa
     function copiarLinkAvaliacao(uuid) {
         const url = window.location.origin + '/avaliar/' + uuid + '/';
         navigator.clipboard.writeText(url).then(() => {
-            Swal.fire({ icon: 'success', title: 'Copiado!', text: 'Link de avaliação na área de transferência.', timer: 1500, showConfirmButton: false });
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Link de Avaliação!', 
+                text: 'Link copiado com sucesso.', 
+                timer: 1500, 
+                showConfirmButton: false 
+            });
         });
     }
 
-    // 3. GESTÃO DE SENHA
+    // Busca no backend e copia o link de recuperação de senha
     function copiarLinkSenha(id) {
         fetch(`/admin/core/userprofile/${id}/gerar-link-senha/`)
             .then(response => response.json())
             .then(data => {
-                navigator.clipboard.writeText(data.link).then(() => {
-                    Swal.fire({ icon: 'success', title: 'Link Gerado!', text: 'Link de recuperação copiado.', timer: 2000, showConfirmButton: false });
-                });
-            });
+                if (data.link) {
+                    navigator.clipboard.writeText(data.link).then(() => {
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Link de Senha!', 
+                            text: 'Copiado para o seu WhatsApp/E-mail.', 
+                            timer: 2000, 
+                            showConfirmButton: false 
+                        });
+                    });
+                }
+            })
+            .catch(err => console.error("Erro ao gerar link de senha:", err));
     }
 
-    // Chamadas para as funções globais do admin_custom.js
+    // Gatilhos para as funções do arquivo admin_custom.js
     function handleCopiaZap() { window.copiarInformacoesPerfil(PROMOTOR_DATA); }
     function handleCopiaLink() { window.configurarLinkPublico(PROMOTOR_DATA); }
 </script>
 
 <style>
     /* ============================================================
-       ESTILOS CRM (VISUALIZAÇÃO E BACKEND)
+       3. ESTILIZAÇÃO DO CRM (INTERFACE E FIXES)
        ============================================================ */
     .content-wrapper { background-color: #f4f6f9 !important; }
     
+    /* Navegação Superior */
+    .back-nav-container { margin-bottom: 25px; }
     .back-nav-link { 
-        display: inline-flex; align-items: center; color: #666; text-decoration: none; 
-        font-weight: 700; margin-bottom: 20px; transition: 0.2s; font-size: 0.8rem;
+        display: inline-flex; align-items: center; color: #7f8c8d; text-decoration: none; 
+        font-weight: 800; font-size: 0.75rem; text-transform: uppercase; transition: 0.2s;
     }
     .back-nav-link:hover { color: #009688; transform: translateX(-5px); }
 
+    /* Card de Cabeçalho */
     .crm-header-card { 
-        background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; 
-        border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        background: white; border-radius: 18px; padding: 35px; margin-bottom: 30px; 
+        border: 1px solid #eee; box-shadow: 0 4px 25px rgba(0,0,0,0.03);
     }
 
-    /* FIX DEFINITIVO: Dropdown que não some ao descer o mouse */
+    /* FIX DEFINITIVO: Menu Dropdown que não some */
     .btn-group-custom { 
         position: relative; display: inline-block; 
-        padding-bottom: 20px; /* Área de contato extra */
+        padding-bottom: 20px; /* Cria área de contato para o mouse */
         margin-bottom: -20px; 
     }
-    /* Ponte invisível entre o botão e o menu */
+    /* Ponte invisível para o hover não quebrar entre botão e menu */
     .btn-group-custom::before {
-        content: ""; position: absolute; top: 100%; left: 0; width: 100%; height: 25px; z-index: 1;
+        content: ""; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; z-index: 1;
     }
     .dropdown-content {
         display: none; position: absolute; background-color: white; min-width: 250px;
-        box-shadow: 0 10px 35px rgba(0,0,0,0.15); z-index: 9999; border-radius: 12px; 
-        border: 1px solid #eee; top: 50px; left: 0; overflow: hidden; animation: fadeIn 0.3s;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.18); z-index: 9999; border-radius: 12px; 
+        border: 1px solid #eee; top: 50px; left: 0; overflow: hidden; animation: fadeIn 0.3s ease;
     }
     .btn-group-custom:hover .dropdown-content { display: block !important; }
 
     .dropdown-content a, .dropdown-content button {
-        width: 100%; text-align: left; padding: 14px 20px; border: none; background: none;
-        font-size: 0.85rem; font-weight: 700; color: #333; display: flex; align-items: center; cursor: pointer;
+        width: 100%; text-align: left; padding: 15px 22px; border: none; background: none;
+        font-size: 0.85rem; font-weight: 700; color: #2c3e50; display: flex; align-items: center; cursor: pointer;
     }
     .dropdown-content a:hover, .dropdown-content button:hover { background-color: #f8f9fa; color: #009688; }
 
-    .btn-crm { 
-        padding: 12px 25px; border-radius: 50px; font-weight: 800; font-size: 0.75rem;
-        cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px;
-        transition: 0.2s; text-decoration: none !important; color: white !important;
+    /* Botões Padrão CRM */
+    .btn-crm-main { 
+        padding: 13px 25px; border-radius: 50px; font-weight: 800; font-size: 0.72rem;
+        cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 10px;
+        transition: 0.3s; text-decoration: none !important; color: white !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
+    .btn-crm-main:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
 
-    /* Grid de Resumo */
-    .info-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-    .info-summary-box { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 20px; position: relative; }
-    .info-summary-box h4 { font-size: 0.75rem; font-weight: 900; color: #009688; border-bottom: 2px solid #f9f9f9; padding-bottom: 10px; margin-bottom: 15px; }
-    .edit-pencil { position: absolute; right: 20px; top: 20px; color: #ccc; cursor: pointer; transition: 0.2s; }
-    .edit-pencil:hover { color: #009688; transform: scale(1.2); }
+    /* Summary Info Cards */
+    .info-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 35px; }
+    .info-card-box { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 25px; position: relative; transition: 0.3s; }
+    .info-card-box:hover { border-color: #009688; box-shadow: 0 8px 25px rgba(0,150,136,0.04); }
+    .info-card-box h4 { font-size: 0.75rem; font-weight: 900; color: #009688; border-bottom: 2px solid #f9f9f9; padding-bottom: 12px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .icon-edit-pencil { position: absolute; right: 25px; top: 25px; color: #ddd; cursor: pointer; transition: 0.2s; }
+    .icon-edit-pencil:hover { color: #009688; transform: rotate(15deg) scale(1.2); }
 
-    /* FORMULÁRIO DE EDIÇÃO (LIBERAÇÃO DE SELECTS) */
-    #edit-form-container { background: white; border-radius: 16px; border: 2px solid #e0f2f1; padding: 30px; margin-top: 25px; }
+    /* Form de Edição (Backend Destravado) */
+    #edit-form-container { background: white; border-radius: 20px; border: 2px solid #e0f2f1; padding: 40px; margin-top: 30px; }
     
-    /* Força o estilo dos ChoiceFields (Gênero, Etnia, etc) */
-    .fieldset-body-edit select, .fieldset-body-edit input {
+    /* GARANTE QUE SELECTS (GÊNERO, ETNIA) APAREÇAM PARA EDIÇÃO */
+    .fieldset-body-edit select, .fieldset-body-edit input, .fieldset-body-edit textarea {
         display: block !important; visibility: visible !important; width: 100% !important;
-        min-height: 45px !important; border: 1px solid #ddd !important; border-radius: 8px !important;
-        padding: 0 15px !important; appearance: auto !important; -webkit-appearance: listbox !important;
+        min-height: 48px !important; border: 1px solid #ddd !important; border-radius: 10px !important;
+        padding: 0 18px !important; appearance: auto !important; -webkit-appearance: listbox !important;
+        background-color: #fff !important; font-size: 0.9rem !important; color: #333 !important;
     }
+    .form-group-edit label { font-weight: 800 !important; color: #666; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px; display: block; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
@@ -146,62 +192,67 @@
 {% block content %}
 <div class="container-fluid" style="padding: 20px;">
     
-    <a href="/admin/core/userprofile/" class="back-nav-link">
-        <i class="fas fa-arrow-left mr-2"></i> VOLTAR PARA LISTAGEM
-    </a>
+    <div class="back-nav-container">
+        <a href="/admin/core/userprofile/" class="back-nav-link">
+            <i class="fas fa-long-arrow-alt-left mr-2" style="font-size: 1.2rem;"></i> VOLTAR PARA BASE DE PROMOTORES
+        </a>
+    </div>
 
     <div class="crm-header-card">
         <div class="row align-items-center">
             <div class="col-auto">
-                {% if original.foto_rosto %}
-                    <img src="{{ original.foto_rosto.url }}" style="width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 5px solid #fcfcfc;">
-                {% else %}
-                    <div style="width: 130px; height: 130px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user fa-4x text-muted"></i>
-                    </div>
-                {% endif %}
+                <div class="avatar-wrapper">
+                    {% if original.foto_rosto %}
+                        <img src="{{ original.foto_rosto.url }}" style="width: 145px; height: 145px; border-radius: 50%; object-fit: cover; border: 6px solid #fcfcfc; box-shadow: 0 8px 25px rgba(0,0,0,0.06);">
+                    {% else %}
+                        <div style="width: 145px; height: 145px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border: 3px dashed #ccc;">
+                            <i class="fas fa-user-circle fa-5x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="col ml-3">
-                <h1 style="font-weight: 900; margin: 0; color: #1a2a3a; font-size: 2.5rem;">{{ original.nome_completo|upper }}</h1>
-                <div class="mt-2">
-                    <span style="background: #e0f2f1; color: #009688; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;">
-                        {{ original.get_status_display }}
+            <div class="col ml-4">
+                <h1 style="font-weight: 900; margin: 0; color: #1e272e; font-size: 2.7rem; letter-spacing: -1px;">{{ original.nome_completo|upper }}</h1>
+                <div class="mt-2 d-flex align-items-center">
+                    <span style="background: #e0f2f1; color: #00796b; padding: 7px 20px; border-radius: 50px; font-weight: 900; font-size: 0.75rem; text-transform: uppercase;">
+                        Status: {{ original.get_status_display }}
                     </span>
-                    <span class="mx-3 text-muted">|</span> <small class="text-muted">ID: {{ original.uuid }}</small>
+                    <span class="mx-3 text-muted">|</span> 
+                    <small class="text-muted" style="letter-spacing: 1px;">UUID: {{ original.uuid }}</small>
                 </div>
 
-                <div class="mt-4 d-flex flex-wrap" style="gap: 10px;">
-                    <a href="{% url 'admin:userprofile_aprovar' original.pk %}" class="btn-crm" style="background: #2ecc71;">
-                        <i class="fas fa-check"></i> APROVAR
+                <div class="mt-4 d-flex flex-wrap" style="gap: 12px;">
+                    <a href="{% url 'admin:userprofile_aprovar' original.pk %}" class="btn-crm-main" style="background: #27ae60;">
+                        <i class="fas fa-check-circle"></i> APROVAR CADASTRO
                     </a>
 
-                    <button onclick="abrirModalReprovacao('{{ original.pk }}', event)" class="btn-crm" style="background: #e74c3c;">
-                        <i class="fas fa-times"></i> REPROVAR / AJUSTE
+                    <button onclick="abrirModalReprovacao('{{ original.pk }}', event)" class="btn-crm-main" style="background: #c0392b;">
+                        <i class="fas fa-times-circle"></i> REPROVAR / AJUSTE
                     </button>
 
-                    <button onclick="copiarLinkAvaliacao('{{ original.uuid }}')" class="btn-crm" style="background: #9b59b6;">
-                        <i class="fas fa-star"></i> LINK AVALIAÇÃO
+                    <button onclick="copiarLinkAvaliacao('{{ original.uuid }}')" class="btn-crm-main" style="background: #8e44ad;">
+                        <i class="fas fa-star-half-alt"></i> LINK AVALIAÇÃO
                     </button>
 
                     {% if original.whatsapp %}
-                    <a href="https://wa.me/55{{ original.whatsapp|phone_digits }}" target="_blank" class="btn-crm" style="background: #25D366;">
+                    <a href="https://wa.me/55{{ original.whatsapp|phone_digits }}" target="_blank" class="btn-crm-main" style="background: #25D366;">
                         <i class="fab fa-whatsapp"></i> CONVERSAR
                     </a>
                     {% endif %}
 
                     <div class="btn-group-custom">
-                        <button class="btn-crm" style="background: #f1c40f; color: #222 !important;">
-                            <i class="fas fa-key"></i> ACESSO/SENHA <i class="fas fa-chevron-down ml-1"></i>
+                        <button class="btn-crm-main" style="background: #f39c12; color: #222 !important;">
+                            <i class="fas fa-key"></i> ACESSO/SENHA <i class="fas fa-chevron-down ml-2" style="font-size: 0.6rem;"></i>
                         </button>
                         <div class="dropdown-content">
-                            <a href="{% url 'admin:userprofile_enviar_senha' original.pk %}"><i class="fas fa-envelope mr-2"></i> Enviar por E-mail</a>
+                            <a href="{% url 'admin:userprofile_enviar_senha' original.pk %}"><i class="fas fa-envelope-open mr-2"></i> Mandar por E-mail</a>
                             <button onclick="copiarLinkSenha('{{ original.pk }}')"><i class="fas fa-copy mr-2"></i> Copiar Link Manual</button>
                         </div>
                     </div>
 
                     <div class="btn-group-custom">
-                        <button class="btn-crm" style="background: #34495e;">
-                            <i class="fas fa-share-alt"></i> ENVIAR CLIENTE <i class="fas fa-chevron-down ml-1"></i>
+                        <button class="btn-crm-main" style="background: #2c3e50;">
+                            <i class="fas fa-share-alt"></i> ENVIAR CLIENTE <i class="fas fa-chevron-down ml-2" style="font-size: 0.6rem;"></i>
                         </button>
                         <div class="dropdown-content">
                             <button onclick="handleCopiaZap()"><i class="fab fa-whatsapp mr-2" style="color: #25D366;"></i> Gerar Texto Seletivo</button>
@@ -213,53 +264,58 @@
         </div>
     </div>
 
-    <div class="info-summary-grid">
-        <div class="info-summary-box">
-            <i class="fas fa-pencil-alt edit-pencil" onclick="toggleEditForm()"></i>
-            <h4>PESSOAL</h4>
-            <p><strong>Nacionalidade:</strong> {{ original.get_nacionalidade_display }}</p>
-            <p><strong>Gênero:</strong> {{ original.get_genero_display }}</p>
-            <p><strong>Etnia:</strong> {{ original.get_etnia_display }}</p>
-            <p><strong>CPF:</strong> {{ original.cpf }}</p>
+    <div class="info-grid-container">
+        <div class="info-card-box">
+            <i class="fas fa-user-edit icon-edit-pencil" onclick="toggleEditForm()"></i>
+            <h4>Dados de Identificação</h4>
+            <p><strong>Nacionalidade:</strong> {{ original.get_nacionalidade_display|default:"---" }}</p>
+            <p><strong>Gênero:</strong> {{ original.get_genero_display|default:"---" }}</p>
+            <p><strong>Etnia:</strong> {{ original.get_etnia_display|default:"---" }}</p>
+            <p><strong>CPF:</strong> {{ original.cpf|default:"---" }}</p>
         </div>
-        <div class="info-summary-box">
-            <i class="fas fa-pencil-alt edit-pencil" onclick="toggleEditForm()"></i>
-            <h4>FÍSICO</h4>
+        <div class="info-card-box">
+            <i class="fas fa-ruler-combined icon-edit-pencil" onclick="toggleEditForm()"></i>
+            <h4>Perfil Físico & Tamanhos</h4>
             <p><strong>Medidas:</strong> {{ original.altura }}m | {{ original.peso }}kg</p>
-            <p><strong>Vestuário:</strong> Camiseta {{ original.get_tamanho_camiseta_display }} | Sapato {{ original.calcado }}</p>
-            <p><strong>Cabelo:</strong> {{ original.get_cabelo_tipo_display }} ({{ original.get_cabelo_comprimento_display }})</p>
+            <p><strong>Tamanhos:</strong> Camiseta {{ original.get_tamanho_camiseta_display }} | Sapato {{ original.calcado }}</p>
+            <p><strong>Visual:</strong> Olhos {{ original.get_olhos_display }} | Cabelo {{ original.get_cabelo_tipo_display }}</p>
         </div>
-        <div class="info-summary-box">
-            <i class="fas fa-pencil-alt edit-pencil" onclick="toggleEditForm()"></i>
-            <h4>PROFISSIONAL</h4>
-            <p><strong>Inglês:</strong> {{ original.get_nivel_ingles_display }}</p>
+        <div class="info-card-box">
+            <i class="fas fa-briefcase icon-edit-pencil" onclick="toggleEditForm()"></i>
+            <h4>Profissional e Idiomas</h4>
+            <p><strong>Inglês:</strong> {{ original.get_nivel_ingles_display|default:"Não informado" }}</p>
             <p><strong>Disponibilidade:</strong> {{ original.get_disponibilidade_display }}</p>
-            <p><strong>Última Atividade:</strong> {{ original.criado_em|date:"d/m/Y" }}</p>
+            <p><strong>Cadastro em:</strong> {{ original.criado_em|date:"d/m/Y H:i" }}</p>
         </div>
     </div>
 
     <div id="edit-form-container" style="display: none;">
-        <div class="alert alert-info d-flex justify-content-between align-items-center" style="border: none; border-radius: 12px;">
-            <span><i class="fas fa-edit mr-2"></i> <b>MODO DE EDIÇÃO ATIVO:</b> Altere os dados e salve para aplicar.</span>
-            <button class="btn btn-sm btn-dark" onclick="toggleEditForm()">FECHAR</button>
+        <div class="alert alert-info d-flex justify-content-between align-items-center" style="border: none; border-radius: 12px; background: #e3f2fd; color: #0d47a1; font-weight: 800;">
+            <span><i class="fas fa-edit mr-3"></i> MODO DE EDIÇÃO ATIVO: Todos os dropdowns estão liberados para alteração.</span>
+            <button class="btn btn-sm btn-outline-primary" onclick="toggleEditForm()" style="border-radius: 20px; font-weight: 900;">FECHAR</button>
         </div>
         
         <form {% if has_file_field %}enctype="multipart/form-data" {% endif %} action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>
             {% csrf_token %}
             
             {% for fieldset in adminform %}
-                <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; margin-bottom: 25px; overflow: hidden;">
-                    {% if fieldset.name %}<div style="background: #f8f9fa; padding: 12px 20px; border-bottom: 1px solid #eee;"><h2 style="font-size: 0.85rem; font-weight: 800; color: #555; margin:0;">{{ fieldset.name }}</h2></div>{% endif %}
-                    <div class="fieldset-body-edit" style="padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div class="fieldset-card-wrapper" style="background: #fff; border: 1px solid #eee; border-radius: 15px; margin-bottom: 30px; overflow: hidden;">
+                    {% if fieldset.name %}<div style="background: #fcfcfc; padding: 15px 25px; border-bottom: 1px solid #f1f1f1;"><h2 style="font-size: 0.9rem; font-weight: 900; color: #444; margin:0;">{{ fieldset.name }}</h2></div>{% endif %}
+                    <div class="fieldset-body-edit" style="padding: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
                         {% for line in fieldset %}
                             {% for field in line %}
-                                <div class="form-group-crm">
-                                    <label style="font-weight: 800; color: #666; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 5px; display: block;">{{ field.label_tag }}</label>
+                                <div class="form-group-edit">
+                                    <label>{{ field.label_tag }}</label>
                                     {% if field.is_readonly %}
-                                        <div style="padding: 10px; background: #fafafa; border-radius: 8px; border: 1px solid #eee; font-weight: 600;">{{ field.contents }}</div>
+                                        <div style="padding: 12px; background: #fafafa; border-radius: 10px; border: 1px solid #eee; font-weight: 600; color: #666;">
+                                            {{ field.contents }}
+                                        </div>
                                     {% else %}
-                                        {{ field.field }} {% endif %}
-                                    <div class="text-danger small">{{ field.errors }}</div>
+                                        <div class="field-editable-content">
+                                            {{ field.field }} 
+                                        </div>
+                                    {% endif %}
+                                    <div class="text-danger small mt-1" style="font-weight: bold;">{{ field.errors }}</div>
                                 </div>
                             {% endfor %}
                         {% endfor %}
@@ -267,8 +323,8 @@
                 </div>
             {% endfor %}
 
-            <div style="text-align: right; padding: 40px 0;">
-                <input type="submit" value="SALVAR PERFIL AGORA" name="_save" style="background: #009688; color: white; border: none; padding: 18px 80px; border-radius: 50px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 25px rgba(0,150,136,0.3);">
+            <div class="submit-row-crm" style="text-align: right; padding: 40px 0;">
+                <input type="submit" value="SALVAR PERFIL ATUALIZADO" name="_save" style="background: #009688; color: white; border: none; padding: 20px 100px; border-radius: 50px; font-weight: 900; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(0,150,136,0.3); cursor: pointer; transition: 0.3s;">
             </div>
         </form>
     </div>
