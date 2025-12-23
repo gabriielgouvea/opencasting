@@ -566,6 +566,16 @@
     function setupUI() {
         ensureDjangoActionsCounter();
 
+        // Marca contexto da página para CSS responsivo (PythonAnywhere/mobile)
+        try {
+            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+            if (document.body && document.body.classList) {
+                if (path.includes('/admin/core/userprofile/') && document.body.classList.contains('change-list')) {
+                    document.body.classList.add('oc-userprofile-changelist');
+                }
+            }
+        } catch(e) {}
+
         // Cria o botão "Filtros" se ainda não existir
         if (!document.getElementById('custom-filter-toolbar')) {
             const form = document.getElementById('changelist-form');

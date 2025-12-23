@@ -55,6 +55,132 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
     margin-left: 10px;
 }
 
+/* ============================================================
+   RESPONSIVIDADE (MOBILE)
+   Mantém o Admin utilizável no celular (Jazzmin + customizações).
+   ============================================================ */
+
+@media (max-width: 768px) {
+    #custom-filter-toolbar {
+        margin: 12px 12px 8px 12px;
+        width: auto;
+    }
+
+    #custom-filter-toolbar .toolbar-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    #oc-live-search {
+        width: 100%;
+        max-width: 100%;
+        height: 46px;
+    }
+
+    #custom-filter-toolbar #btn-open-sidebar {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Sidebar de filtros vira tela cheia no mobile */
+    #custom-sidebar-filter {
+        width: 100vw;
+        right: -100vw;
+        max-width: 100vw;
+    }
+
+    .sidebar-header {
+        padding: 18px;
+    }
+
+    #sidebar-content {
+        padding: 16px;
+    }
+
+    .filter-group-box {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* Tabela de resultados: evita “bagunça” e quebra de layout */
+    #changelist-form .results,
+    .changelist .results {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Base de Promotores (UserProfile): no celular, mostrar só Nome/Status */
+    body.oc-userprofile-changelist #result_list thead {
+        display: none !important;
+    }
+
+    body.oc-userprofile-changelist #result_list,
+    body.oc-userprofile-changelist #result_list tbody,
+    body.oc-userprofile-changelist #result_list tr,
+    body.oc-userprofile-changelist #result_list td {
+        display: block;
+        width: 100%;
+    }
+
+    body.oc-userprofile-changelist #result_list tr {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 0 0 12px 0;
+        box-shadow: none;
+    }
+
+    body.oc-userprofile-changelist #result_list td {
+        padding: 0;
+        border: 0 !important;
+    }
+
+    /* Esconde campos que poluem no mobile */
+    body.oc-userprofile-changelist #result_list td.action-checkbox,
+    body.oc-userprofile-changelist #result_list td.field-exibir_foto,
+    body.oc-userprofile-changelist #result_list td.field-whatsapp_link,
+    body.oc-userprofile-changelist #result_list td.field-acoes_rapidas {
+        display: none !important;
+    }
+
+    /* Nome em cima + Status embaixo (mais estável no mobile) */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status {
+        display: flex !important;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        width: 100% !important;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.25;
+    }
+
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span:first-child {
+        display: block;
+        width: 100%;
+    }
+
+    /* Badge (status) abaixo do nome */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span:last-child {
+        display: inline-block;
+        margin: 0 !important;
+        font-size: 10px !important;
+        max-width: 100%;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 420px) {
+    .btn-filtros-avancados {
+        padding: 12px 18px;
+        font-size: 0.8rem;
+    }
+}
+
 #oc-live-search {
     width: 420px;
     max-width: 55vw;
