@@ -123,7 +123,9 @@ class UserProfileAdmin(admin.ModelAdmin):
     Controlador Master da Base de Promotores.
     Focado em triagem absoluta e filtros de alta precisão.
     """
-    change_list_template = "admin/change_list.html"
+    # A linha abaixo foi comentada para evitar conflito com o Jazzmin.
+    # O Jazzmin gerencia a lista automaticamente e garante que os filtros sejam renderizados.
+    # change_list_template = "admin/change_list.html"
     change_form_template = "admin/core/userprofile/change_form.html"
     
     # Remove contador nativo para dar lugar à barra de botões customizada
@@ -170,19 +172,32 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         # Filtro de Idade
         if p.get('idade_min'): 
-            qs = qs.filter(data_nascimento__lte=date.today().replace(year=date.today().year - int(p.get('idade_min'))))
+            try:
+                idade_min = int(p.get('idade_min'))
+                data_limite = date.today().replace(year=date.today().year - idade_min)
+                qs = qs.filter(data_nascimento__lte=data_limite)
+            except (ValueError, TypeError):
+                pass
+        
         if p.get('idade_max'): 
-            qs = qs.filter(data_nascimento__gt=date.today().replace(year=date.today().year - int(p.get('idade_max')) - 1))
+            try:
+                idade_max = int(p.get('idade_max'))
+                data_limite = date.today().replace(year=date.today().year - idade_max - 1)
+                qs = qs.filter(data_nascimento__gt=data_limite)
+            except (ValueError, TypeError):
+                pass
 
         # Função auxiliar para aplicar faixas numéricas
         def apply_range(queryset, p_min, p_max, db_field):
             v_min = clean_number(p.get(p_min))
             v_max = clean_number(p.get(p_max))
-            if v_min: queryset = queryset.filter(**{f"{db_field}__gte": v_min})
-            if v_max: queryset = queryset.filter(**{f"{db_field}__lte": v_max})
+            if v_min is not None: 
+                queryset = queryset.filter(**{f"{db_field}__gte": v_min})
+            if v_max is not None: 
+                queryset = queryset.filter(**{f"{db_field}__lte": v_max})
             return queryset
 
-        # Processamento das Faixas Solicitadas (Peso corrigido de weight para peso)
+        # Processamento das Faixas Solicitadas
         qs = apply_range(qs, 'altura_min', 'altura_max', 'altura')
         qs = apply_range(qs, 'peso_min', 'peso_max', 'peso')
         qs = apply_range(qs, 'sapato_min', 'sapato_max', 'calcado')

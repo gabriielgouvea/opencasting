@@ -1,18 +1,25 @@
 /**
- * OPENCASTING CRM - GESTOR V15 (SEQUENCIAL & COMPLETO)
+ * OPENCASTING CRM - GESTOR V16 (JAZZMIN BOOTSTRAP SUPPORT)
  * ------------------------------------------------------------------
- * 1. VISIBILIDADE: Filtros nativos carregam visíveis (para o JS ler).
- * 2. CLONAGEM: JS copia para a sidebar.
- * 3. LIMPEZA: JS esconde os originais da tela principal.
- * 4. TOOLS: WhatsApp, Link Cliente e Reprovação em Massa.
+ * 1. SUPORTE JAZZMIN: Lê filtros dentro de Cards/Bootstraps.
+ * 2. VISIBILIDADE: Garante que os filtros sejam encontrados.
+ * 3. FERRAMENTAS: WhatsApp, Links e Ações em Massa.
  */
 
 (function() {
     'use strict';
 
-    const CHECK_INTERVAL = 300;
+    // Evita carregar/executar duas vezes (Jazzmin às vezes injeta assets duplicados)
+    if (window.__opencasting_admin_custom_loaded) {
+        return;
+    }
+    window.__opencasting_admin_custom_loaded = true;
+
+    const CHECK_INTERVAL = 500;
     let isSidebarBuilt = false;
     let searchDebounceTimer = null;
+    let liveSearchAbortController = null;
+    let liveSearchLastApplied = null;
 
     // Garante SweetAlert2
     if (typeof Swal === 'undefined') {
@@ -21,21 +28,17 @@
         document.head.appendChild(script);
     }
 
-    // ============================================================
-    // 1. FUNÇÕES GLOBAIS (ACESSÍVEIS PELOS BOTÕES HTML)
-    // ============================================================
-
-    // Abertura da Sidebar
+    // --- FUNÇÕES GLOBAIS ---
     window.openCastingFilters = function() {
         const sidebar = document.getElementById('custom-sidebar-filter');
         const backdrop = document.getElementById('filter-backdrop');
         if (sidebar && backdrop) {
             sidebar.classList.add('active');
             backdrop.style.display = 'block';
+            try { fixSelectWidgetsInSidebar(); } catch(e) {}
         } else {
-            console.log("Forçando construção da Sidebar...");
             buildFilterSidebar();
-            setTimeout(() => window.openCastingFilters(), 150);
+            setTimeout(() => window.openCastingFilters(), 200);
         }
     };
 
@@ -46,120 +49,55 @@
         if(backdrop) backdrop.style.display = 'none';
     };
 
-    // Auxiliar: Checkbox "Selecionar Tudo" no Popup
-    window.selecionarTudo = (status) => { 
-        document.querySelectorAll('.swal-copy-grid input[type="checkbox"]').forEach(c => c.checked = status); 
-    };
-    
-    // HTML do Popup de Seleção
-    function gerarCheckboxesPopUp(dados) {
-        return `
-            <div style="text-align: left; font-family: sans-serif;">
-                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                    <button type="button" class="swal2-confirm swal2-styled" style="background:#444; font-size: 0.7rem; padding: 8px 12px;" onclick="selecionarTudo(true)">TUDO</button>
-                    <button type="button" class="swal2-confirm swal2-styled" style="background:#009688; font-size: 0.7rem; padding: 8px 12px;" onclick="selecionarTudo(false)">LIMPAR</button>
-                </div>
-                <div class="swal-copy-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: 8px;">
-                    <div class="cp-item"><input type="checkbox" id="cp-nome" data-field="Nome" data-val="${dados.nome}" checked> <label for="cp-nome">Nome</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-idade" data-field="Idade" data-val="${dados.idade}" checked> <label for="cp-idade">Idade</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-zap" data-field="WhatsApp" data-val="${dados.whatsapp}"> <label for="cp-zap">WhatsApp</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-altura" data-field="Altura" data-val="${dados.altura}m"> <label for="cp-altura">Altura</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-peso" data-field="Peso" data-val="${dados.peso}kg"> <label for="cp-peso">Peso</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-manequim" data-field="Manequim" data-val="${dados.manequim}"> <label for="cp-manequim">Manequim</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-calcado" data-field="Calçado" data-val="${dados.calcado}"> <label for="cp-calcado">Calçado</label></div>
-                    <div class="cp-item"><input type="checkbox" id="cp-pix" data-field="PIX" data-val="${dados.pix}"> <label for="cp-pix">PIX</label></div>
-                </div>
-            </div>
-        `;
+    // Proteção: alguns temas removem/alteram markup e o actions.js do Django quebra.
+    // Criamos um .action-counter “inofensivo” se não existir.
+    function ensureDjangoActionsCounter() {
+        const existing = document.querySelector('.action-counter');
+        if (existing) return;
+        const actions = document.querySelector('.actions') || document.body;
+        const counter = document.createElement('span');
+        counter.className = 'action-counter';
+        counter.dataset.actionsIcnt = '0';
+        counter.style.display = 'none';
+        actions.prepend(counter);
     }
 
-    // Ação: Copiar WhatsApp
-    window.copiarInformacoesPerfil = function(dados) {
-        Swal.fire({
-            title: 'ENVIAR WHATSAPP',
-            html: gerarCheckboxesPopUp(dados),
-            showCancelButton: true,
-            confirmButtonText: 'COPIAR TEXTO',
-            confirmButtonColor: '#25D366',
-            preConfirm: () => {
-                let msg = `*APRESENTAÇÃO ${dados.nome}*\n\n`;
-                const checks = document.querySelectorAll('.swal-copy-grid input[type="checkbox"]:checked');
-                if (!checks.length) return Swal.showValidationMessage('Selecione ao menos um dado!');
-                checks.forEach(c => { msg += `*${c.getAttribute('data-field')}:* ${c.getAttribute('data-val')}\n`; });
-                return msg;
-            }
-        }).then((res) => { 
-            if (res.isConfirmed) { 
-                navigator.clipboard.writeText(res.value); 
-                Swal.fire({ icon:'success', title:'Copiado!', timer:1500, showConfirmButton:false }); 
-            } 
-        });
-    };
+    // Select2/Bootstrap selects podem “sumir” quando movidos para um container com z-index alto.
+    // Aqui reinicializamos os selects já-controlados por Select2 para usar a sidebar como dropdownParent.
+    function fixSelectWidgetsInSidebar() {
+        const sidebarEl = document.getElementById('custom-sidebar-filter');
+        if (!sidebarEl) return;
 
-    // Ação: Gerar Link Público
-    window.configurarLinkPublico = function(dados) {
-        Swal.fire({
-            title: 'GERAR LINK CLIENTE',
-            html: gerarCheckboxesPopUp(dados),
-            showCancelButton: true,
-            confirmButtonText: 'GERAR LINK',
-            confirmButtonColor: '#3498db',
-            preConfirm: () => {
-                const checks = document.querySelectorAll('.swal-copy-grid input[type="checkbox"]:checked');
-                if (!checks.length) return Swal.showValidationMessage('Selecione campos!');
-                const sel = Array.from(checks).map(c => c.id.replace('cp-', '')).join(',');
-                return `${window.location.origin}/perfil/${dados.uuid}/?show=${sel}`;
-            }
-        }).then((res) => { 
-            if (res.isConfirmed) { 
-                navigator.clipboard.writeText(res.value); 
-                Swal.fire({ icon:'success', title:'Link Copiado!', timer:1500, showConfirmButton:false }); 
-            } 
-        });
-    };
+        const $ = (window.django && window.django.jQuery) ? window.django.jQuery : null;
+        if (!$ || !$.fn) return;
+        if (!$.fn.select2) return;
 
-    // Ação: Reprovação em Massa
-    window.abrirModalReprovacaoMassa = function() {
-        Swal.fire({
-            title: 'REPROVAR SELECIONADOS',
-            html: `
-                <div style="text-align: left;">
-                    <label style="font-weight:bold;">Motivo:</label>
-                    <select id="m-motivo" class="swal2-select" style="width:100%;">
-                        <option value="fotos_ruins">Fotos Ruins / Escuras</option>
-                        <option value="dados_incompletos">Dados Incompletos</option>
-                        <option value="perfil">Perfil não compatível</option>
-                        <option value="outros">Outros</option>
-                    </select>
-                    <label style="font-weight:bold; margin-top:10px; display:block;">Obs (Mensagem pro modelo):</label>
-                    <textarea id="m-obs" class="swal2-textarea" placeholder="Descreva o que precisa ser ajustado..."></textarea>
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonColor: '#c0392b',
-            confirmButtonText: 'CONFIRMAR REPROVAÇÃO',
-            preConfirm: () => { 
-                return { m: document.getElementById('m-motivo').value, o: document.getElementById('m-obs').value }; 
-            }
-        }).then((res) => {
-            if (res.isConfirmed) {
-                const f = document.getElementById('changelist-form');
-                let i1 = document.createElement('input'); i1.type='hidden'; i1.name='motivo_massa'; i1.value=res.value.m;
-                let i2 = document.createElement('input'); i2.type='hidden'; i2.name='obs_massa'; i2.value=res.value.o;
-                f.appendChild(i1); f.appendChild(i2);
-                document.querySelector('select[name="action"]').value = 'reprovar_modelos_massa';
-                f.submit();
-            }
-        });
-    };
+        const $sidebar = $(sidebarEl);
+        $sidebar.find('select').each(function() {
+            const $sel = $(this);
 
-    // ============================================================
-    // 2. CONSTRUTOR DA SIDEBAR (SCANNER SEQUENCIAL)
-    // ============================================================
+            // Só mexe nos selects que JÁ eram Select2 (evita transformar selects nativos)
+            const isSelect2 = $sel.hasClass('select2-hidden-accessible') || !!$sel.data('select2') || $sel.is('[data-select2-id]');
+            if (!isSelect2) return;
+
+            try {
+                $sel.select2('destroy');
+            } catch (e) {}
+
+            try {
+                $sel.select2({
+                    width: '100%',
+                    dropdownParent: $sidebar
+                });
+            } catch (e) {}
+        });
+    }
+
+    // --- SIDEBAR BUILDER ---
     function buildFilterSidebar() {
         if (document.getElementById('custom-sidebar-filter')) return;
 
-        // 1. Cria Estrutura
+        // 1. ESTRUTURA
         const sidebar = document.createElement('div');
         sidebar.id = 'custom-sidebar-filter';
         sidebar.innerHTML = `
@@ -168,23 +106,14 @@
                 <button type="button" id="btn-close-sidebar">&times;</button>
             </div>
             <div id="sidebar-content">
-                <div class="range-section">
-                    <div class="filter-group-box"><label>Idade (Anos)</label><div class="range-inputs"><input type="number" id="f-idade-min" placeholder="Min"><span>até</span><input type="number" id="f-idade-max" placeholder="Max"></div></div>
-                    <div class="filter-group-box"><label>Peso (KG)</label><div class="range-inputs"><input type="number" id="f-peso-min" placeholder="Min"><span>até</span><input type="number" id="f-peso-max" placeholder="Max"></div></div>
-                    <div class="filter-group-box"><label>Altura (M)</label><div class="range-inputs"><input type="text" id="f-altura-min" placeholder="1.60"><span>até</span><input type="text" id="f-altura-max" placeholder="1.95"></div></div>
-                    <div class="filter-group-box"><label>Sapato</label><div class="range-inputs"><input type="number" id="f-sapato-min" placeholder="34"><span>até</span><input type="number" id="f-sapato-max" placeholder="44"></div></div>
-                </div>
-                <hr style="margin: 20px 0; border-top: 1px solid #eee;">
-                
                 <div id="django-filters-target"></div>
-
                 <div style="padding: 20px 0;">
-                    <button type="button" id="btn-apply-advanced">APLICAR FILTROS AGORA</button>
                     <a href="." class="btn-clear-all" style="display:block; text-align:center; margin-top:15px; font-weight:bold; color:#f39c12; font-size:11px; text-decoration:none;">LIMPAR TUDO</a>
                 </div>
             </div>
         `;
         document.body.appendChild(sidebar);
+        // Sidebar criada
 
         const backdrop = document.createElement('div');
         backdrop.id = 'filter-backdrop';
@@ -193,160 +122,523 @@
         document.getElementById('btn-close-sidebar').onclick = window.closeSidebar;
         backdrop.onclick = window.closeSidebar;
 
-        // Recupera valores da URL
-        const p = new URLSearchParams(window.location.search);
-        ['idade', 'peso', 'altura', 'sapato'].forEach(key => {
-            if(p.get(key+'_min')) document.getElementById('f-'+key+'-min').value = p.get(key+'_min');
-            if(p.get(key+'_max')) document.getElementById('f-'+key+'-max').value = p.get(key+'_max');
-        });
-
-        // 2. SCANNER SEQUENCIAL
+        // 2. SCANNER INTELIGENTE (SUPORTE A CARD DO JAZZMIN)
         const target = document.getElementById('django-filters-target');
-        const containers = [
-            document.getElementById('changelist-filter'),
-            document.querySelector('.jazzmin-sidebar-filter'),
-            document.querySelector('#jazzy-filters')
-        ];
+        const container = document.getElementById('changelist-filter');
 
-        let foundSource = false;
+        if (container) {
+            let foundItems = false;
 
-        containers.forEach(div => {
-            if (div && !foundSource) {
-                // Verifica se tem conteúdo
-                const items = div.querySelectorAll('h3, ul, details');
-                if (items.length > 0) {
-                    foundSource = true;
+            // ESTRATÉGIA A: Filtros Padrão Django (H3 + UL)
+            const h3Elements = container.querySelectorAll('h3');
+            const ulElements = container.querySelectorAll('ul');
+            
+            console.log('🔎 Procurando filtros - H3:', h3Elements.length, 'UL:', ulElements.length);
+            
+            if (h3Elements.length > 0 || ulElements.length > 0) {
+                // Processa TODOS os H3 e UL
+                let lastH3 = null;
+                
+                container.querySelectorAll('h3, ul').forEach((el, idx) => {
+                    const txt = el.innerText.toLowerCase().trim();
                     
-                    // Copia os itens
-                    items.forEach(el => {
-                        const txt = el.innerText.toLowerCase();
-                        if (txt.includes('idade m') || txt.includes('peso m') || txt.includes('altura m') || txt.includes('sapato m')) return;
-                        
-                        const clone = el.cloneNode(true);
-                        
-                        // Estilos
-                        if (clone.tagName === 'H3') {
-                            clone.style.fontSize = '0.75rem'; clone.style.fontWeight = '800'; 
-                            clone.style.marginTop = '15px'; clone.style.color = '#555'; 
-                            clone.style.textTransform = 'uppercase';
-                        }
-                        if (clone.tagName === 'UL') {
-                            clone.style.paddingLeft = '0'; clone.style.listStyle = 'none';
-                            clone.querySelectorAll('li a').forEach(a => {
-                                a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#666';
-                                if (a.parentElement.classList.contains('selected')) { a.style.color = '#009688'; a.style.fontWeight = 'bold'; }
-                            });
-                        }
-                        if (clone.tagName === 'DETAILS') { clone.open = true; clone.style.width = '100%'; }
-                        
-                        target.appendChild(clone);
-                    });
+                    // Skip Ghost Filters (Ranges)
+                    if (txt.includes('idade m') || txt.includes('peso m') || txt.includes('altura m') || txt.includes('sapato m')) {
+                        console.log('⏭️ Pulando GhostFilter:', txt);
+                        return;
+                    }
+                    
+                    if (el.tagName === 'H3') {
+                        console.log('📌 Encontrado H3:', txt);
+                        const titleClone = el.cloneNode(true);
+                        titleClone.style.fontSize = '0.75rem';
+                        titleClone.style.fontWeight = '800';
+                        titleClone.style.marginTop = '15px';
+                        titleClone.style.color = '#555';
+                        titleClone.style.textTransform = 'uppercase';
+                        titleClone.style.marginBottom = '8px';
+                        target.appendChild(titleClone);
+                        lastH3 = titleClone;
+                        foundItems = true;
+                    } else if (el.tagName === 'UL') {
+                        console.log('📋 Encontrado UL com', el.children.length, 'items');
+                        const cloneUl = el.cloneNode(true);
+                        cloneUl.style.paddingLeft = '0';
+                        cloneUl.style.listStyle = 'none';
+                        cloneUl.style.marginBottom = '12px';
+                        cloneUl.querySelectorAll('li').forEach(li => {
+                            li.style.marginBottom = '2px';
+                            const a = li.querySelector('a');
+                            if (a) {
+                                a.style.display = 'block';
+                                a.style.padding = '6px 0';
+                                a.style.color = '#666';
+                                a.style.fontSize = '0.85rem';
+                                a.style.textDecoration = 'none';
+                                a.style.transition = '0.2s';
+                            }
+                            if (li.classList.contains('selected')) {
+                                if (a) {
+                                    a.style.color = '#009688';
+                                    a.style.fontWeight = 'bold';
+                                }
+                            }
+                        });
+                        target.appendChild(cloneUl);
+                        foundItems = true;
+                    }
+                });
+            }
 
-                    // IMPORTANTE: Esconde o original AGORA, depois de copiar
-                    div.style.display = 'none';
+            // ESTRATÉGIA B: Filtros Jazzmin Bootstrap (Card + Card-Header + Card-Body)
+            if (!foundItems) {
+                const cards = container.querySelectorAll('.card');
+                console.log('🎴 Procurando Cards Jazzmin:', cards.length);
+                if (cards.length > 0) {
+                    processJazzminCards(cards, target);
+                    foundItems = true;
                 }
             }
-        });
 
-        if (!foundSource) {
-            target.innerHTML = "<p style='text-align:center; color:#999; font-size:12px; margin-top:20px;'>Filtros nativos não detectados.<br>O Django gerou eles?</p>";
+            if (foundItems) {
+                console.log('✅ Filtros encontrados e copiados para sidebar');
+                // Esconde o container original SOMENTE se achamos e copiamos algo
+                try { container.style.display = 'none'; } catch(e){}
+            } else {
+                console.log('⚠️ Nenhum filtro encontrado');
+                target.innerHTML = "<p style='text-align:center; color:#999; font-size:11px;'>Nenhum filtro padrão encontrado.</p>";
+            }
+        } else {
+            // Jazzmin pode não usar #changelist-filter. Sem drama: seguimos com os selects do topo.
+            target.innerHTML = "";
         }
 
-        // Botão Aplicar
-        document.getElementById('btn-apply-advanced').onclick = function() {
-            const params = new URLSearchParams(window.location.search);
-            ['idade', 'peso', 'altura', 'sapato'].forEach(key => {
-                const min = document.getElementById('f-'+key+'-min').value;
-                const max = document.getElementById('f-'+key+'-max').value;
-                if(min) params.set(key+'_min', min); else params.delete(key+'_min');
-                if(max) params.set(key+'_max', max); else params.delete(key+'_max');
-            });
-            params.delete('p');
-            window.location.search = params.toString();
-        };
+        // Além dos filtros padrão, mover selects/inputs visíveis da área principal para a sidebar
+        try { copyVisibleSelectFiltersToTarget(target); } catch(e){ console.warn('copyVisibleSelectFiltersToTarget error', e); }
 
         isSidebarBuilt = true;
     }
 
-    // ============================================================
-    // 3. UI: TOOLBAR, BUSCA E HOVER
-    // ============================================================
-    function setupUI() {
-        // Fix Hover
-        document.querySelectorAll('.btn-group-custom').forEach(g => {
-            const d = g.querySelector('.dropdown-content');
-            if(d) { g.onmouseenter = () => d.style.display='block'; g.onmouseleave = () => d.style.display='none'; }
+    // Copia selects e inputs visíveis da área principal para a sidebar
+    function copyVisibleSelectFiltersToTarget(target){
+        if(!target) return;
+
+        // 1) Melhor opção: mover o painel inteiro do topo (mantém o botão PESQUISAR e o layout original)
+        if (moveMainFilterPanelIntoSidebar(target)) {
+            // Se movemos o painel completo, não precisamos clonar itens soltos
+            return;
+        }
+
+        // busca selects visíveis no formulário de listagem
+        const form = document.getElementById('changelist-form');
+        const candidates = [];
+        if(form){
+            form.querySelectorAll('select, input[type="text"], input[type="number"]').forEach(el => candidates.push(el));
+            // também verifica elementos acima do form (alguns temas colocam filtros fora)
+            let node = form.previousElementSibling;
+            for(let i=0;i<3 && node;i++){ node.querySelectorAll && node.querySelectorAll('select, input[type="text"]').forEach(el=>candidates.push(el)); node = node.previousElementSibling; }
+        }
+
+        // fallback: pega selects visíveis na página, mas evita o select de ações
+        if(candidates.length===0){
+            document.querySelectorAll('select, input[type="text"], input[type="number"]').forEach(el=>candidates.push(el));
+        }
+
+        const movedContainers = new Set();
+        candidates.forEach(el => {
+            if(!el.offsetParent) return; // invisível
+            if(el.name === 'action') return; // não mover dropdown de ações
+            // evitar mover selects que já estão dentro da sidebar
+            if(el.closest && el.closest('#custom-sidebar-filter')) return;
+            // determinar bloco representativo para mover
+            let block = el.closest('.filter-group-box') || el.closest('.field') || el.closest('label') || el.parentElement;
+            if(!block) block = el.parentElement;
+            if(movedContainers.has(block)) return;
+            movedContainers.add(block);
+
+            // clona e adiciona ao target
+            const clone = block.cloneNode(true);
+            // limpa ids duplicados
+            clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+            const wrapper = document.createElement('div');
+            wrapper.className = 'filter-group-box';
+            // se block já tem um título, tenta extrair
+            const titleText = (block.querySelector('label') && block.querySelector('label').innerText) || (block.querySelector('h3') && block.querySelector('h3').innerText) || '';
+            if(titleText){
+                const lbl = document.createElement('label'); lbl.innerText = titleText.trim(); wrapper.appendChild(lbl);
+            }
+            wrapper.appendChild(clone);
+            target.appendChild(wrapper);
+
+            // esconde o original para limpar a tela
+            try { block.classList.add('hidden'); } catch(e){}
         });
 
-        // Toolbar
+        // por fim, tenta esconder o painel inteiro de filtros do topo (quando existir)
+        hideMainFilterPanel();
+    }
+
+    // Encontra o painel principal de filtros (grid de selects + botão PESQUISAR)
+    // mesmo quando estiver oculto (oc-main-filters-hidden).
+    function findMainFilterPanelContainer() {
+        // Prioridade 1: botão conhecido (id usado no CSS do projeto)
+        const knownBtn = document.getElementById('btn-realizar-busca');
+        if (knownBtn && !(knownBtn.closest && knownBtn.closest('#custom-sidebar-filter'))) {
+            let node = knownBtn.parentElement;
+            let guard = 0;
+            while (node && guard++ < 14) {
+                if (node.closest && node.closest('#custom-sidebar-filter')) break;
+                const selectCount = node.querySelectorAll ? node.querySelectorAll('select').length : 0;
+                if (selectCount >= 3) return node;
+                node = node.parentElement;
+            }
+        }
+
+        // Fallback: acha um botão/submit com texto PESQUISAR fora da sidebar e sobe até um container com muitos selects
+        const searchButtons = Array.from(document.querySelectorAll('button, input[type="submit"], input[type="button"]'))
+            .filter(b => {
+                if (!b) return false;
+                if (b.closest && b.closest('#custom-sidebar-filter')) return false;
+                const txt = ((b.innerText || b.value || '') + '').toLowerCase();
+                return txt.includes('pesquisar');
+            });
+
+        let best = null;
+        let bestScore = 0;
+        for (const btn of searchButtons) {
+            let node = btn.parentElement;
+            let guard = 0;
+            while (node && guard++ < 14) {
+                if (node.closest && node.closest('#custom-sidebar-filter')) break;
+                const selects = node.querySelectorAll ? Array.from(node.querySelectorAll('select')).filter(s => s && s.name !== 'action').length : 0;
+                if (selects >= 3) {
+                    const score = selects * 10 + 100;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        best = node;
+                    }
+                }
+                node = node.parentElement;
+            }
+        }
+        return best;
+    }
+
+    // Move o painel de filtros do topo (grid de selects + botão PESQUISAR) para dentro da sidebar.
+    // Retorna true se conseguiu mover.
+    function moveMainFilterPanelIntoSidebar(target) {
+        if (!target) return false;
+        // evita mover duas vezes
+        if (target.querySelector && target.querySelector('.oc-moved-main-filters')) return true;
+
+        // Não depende de visibilidade: o painel pode estar oculto pela classe oc-main-filters-hidden
+        const best = findMainFilterPanelContainer();
+        if (!best) return false;
+
+        // Move o painel para a sidebar
+        const wrapper = document.createElement('div');
+        wrapper.className = 'filter-group-box oc-moved-main-filters';
+        const label = document.createElement('label');
+        label.innerText = 'Filtros';
+        wrapper.appendChild(label);
+
+        // Marca o painel original para estilização dentro da sidebar (sem esconder)
+        try {
+            best.classList.add('oc-main-filters-panel');
+            best.classList.remove('oc-main-filters-hidden');
+        } catch(e){}
+        wrapper.appendChild(best);
+        target.appendChild(wrapper);
+        return true;
+    }
+
+    // Esconde o painel de filtros do topo (onde ficam vários selects + botão PESQUISAR)
+    function hideMainFilterPanel() {
+        const panel = findMainFilterPanelContainer();
+        if (!panel) return;
+        // Não ocultar se já estiver dentro da sidebar
+        if (panel.closest && panel.closest('#custom-sidebar-filter')) return;
+        if (!(panel.classList && panel.classList.contains('oc-main-filters-hidden'))) {
+            panel.classList.add('oc-main-filters-hidden');
+        }
+    }
+
+    // --- PROCESSADORES DE HTML ---
+    
+    function processJazzminCards(cards, target) {
+        cards.forEach(card => {
+            const header = card.querySelector('.card-header');
+            const body = card.querySelector('.card-body');
+            
+            if (header && body) {
+                // Título
+                const title = document.createElement('h3');
+                title.innerText = header.innerText.trim();
+                const txt = title.innerText.toLowerCase();
+                if (txt.includes('idade m') || txt.includes('peso m') || txt.includes('altura m') || txt.includes('sapato m')) return;
+
+                title.style.fontSize = '0.75rem'; title.style.fontWeight = '800'; 
+                title.style.marginTop = '15px'; title.style.color = '#555'; 
+                title.style.textTransform = 'uppercase';
+                target.appendChild(title);
+
+                // Lista
+                const ul = body.querySelector('ul');
+                if (ul) {
+                    const cloneUl = ul.cloneNode(true);
+                    cloneUl.style.paddingLeft = '0'; cloneUl.style.listStyle = 'none';
+                    cloneUl.querySelectorAll('li a').forEach(a => {
+                        a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#666';
+                        if (a.parentElement.classList.contains('selected')) { a.style.color = '#009688'; a.style.fontWeight = 'bold'; }
+                    });
+                    target.appendChild(cloneUl);
+                }
+            }
+        });
+    }
+
+    // --- SETUP UI & TOOLS ---
+
+    function buildLiveSearchUrl(query) {
+        const q = (query || '').toString().trim();
+        const url = new URL(window.location.href);
+        if (q) url.searchParams.set('q', q);
+        else url.searchParams.delete('q');
+        // volta pra primeira página quando muda busca
+        url.searchParams.delete('p');
+        return url;
+    }
+
+    async function applyLiveSearch(query) {
+        const nextQ = (query || '').toString().trim();
+        const currentQ = new URLSearchParams(window.location.search).get('q') || '';
+
+        if (nextQ === currentQ && nextQ === liveSearchLastApplied) return;
+        liveSearchLastApplied = nextQ;
+
+        const url = buildLiveSearchUrl(nextQ);
+
+        // Mantém o foco e cursor no input enquanto atualiza a lista
+        const input = document.getElementById('oc-live-search');
+        const selectionStart = input ? input.selectionStart : null;
+        const selectionEnd = input ? input.selectionEnd : null;
+        const hadFocus = input ? (document.activeElement === input) : false;
+
+        // Cancela a requisição anterior (digitação rápida)
+        try {
+            if (liveSearchAbortController) liveSearchAbortController.abort();
+        } catch (e) {}
+        liveSearchAbortController = new AbortController();
+
+        function storeRestoreForReload() {
+            try {
+                const payload = {
+                    v: nextQ,
+                    t: Date.now(),
+                    s: input ? input.selectionStart : null,
+                    e: input ? input.selectionEnd : null,
+                    f: input ? (document.activeElement === input) : false
+                };
+                sessionStorage.setItem('__oc_live_search_restore', JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        try {
+            const res = await fetch(url.toString(), {
+                signal: liveSearchAbortController.signal,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+
+            let didUpdate = false;
+
+            // Preferência 1: trocar o bloco .results
+            const newResults = doc.querySelector('#changelist-form .results') || doc.querySelector('.results');
+            const curResults = document.querySelector('#changelist-form .results') || document.querySelector('.results');
+            if (newResults && curResults) {
+                curResults.replaceWith(newResults);
+                didUpdate = true;
+            } else {
+                // Preferência 2: trocar só a tabela #result_list (Jazzmin/Django)
+                const newTable = doc.querySelector('#result_list');
+                const curTable = document.querySelector('#result_list');
+                if (newTable && curTable) {
+                    const newWrap = newTable.closest('.results') || newTable.parentElement;
+                    const curWrap = curTable.closest('.results') || curTable.parentElement;
+                    if (newWrap && curWrap) {
+                        curWrap.replaceWith(newWrap);
+                        didUpdate = true;
+                    }
+                }
+            }
+
+            const newPaginator = doc.querySelector('.paginator');
+            const curPaginator = document.querySelector('.paginator');
+            if (newPaginator && curPaginator) {
+                curPaginator.replaceWith(newPaginator);
+            } else if (newPaginator && !curPaginator) {
+                // alguns temas só renderizam paginator em certos casos
+                const changelist = document.getElementById('changelist') || document.body;
+                changelist.appendChild(newPaginator);
+            } else if (!newPaginator && curPaginator) {
+                curPaginator.remove();
+            }
+
+            // Se não conseguimos atualizar a lista no DOM, faz fallback para reload normal
+            if (!didUpdate) {
+                throw new Error('DOM update failed');
+            }
+
+            // Atualiza a URL sem recarregar (evita perder foco)
+            window.history.replaceState({}, '', url.toString());
+
+            // Reaplica regras de UI que podem depender do DOM (pós-replace)
+            try { ensureDjangoActionsCounter(); } catch(e) {}
+            try { hideMainFilterPanel(); } catch(e) {}
+
+            // Mantém o foco no input
+            if (input && hadFocus) {
+                input.focus({ preventScroll: true });
+                if (selectionStart !== null && selectionEnd !== null) {
+                    try { input.setSelectionRange(selectionStart, selectionEnd); } catch(e) {}
+                }
+            }
+        } catch (e) {
+            // Se foi abort, ignora
+            if (e && (e.name === 'AbortError')) return;
+            // fallback: navega normalmente (evita ficar sem atualizar)
+            try {
+                storeRestoreForReload();
+                window.location.assign(url.toString());
+            } catch (err) {}
+        }
+    }
+
+    function ensureLiveSearchInput() {
+        const input = document.getElementById('oc-live-search');
+        if (!input) return;
+        if (input.dataset.bound === '1') return;
+        input.dataset.bound = '1';
+
+        // pré-preenche com a busca atual
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const currentQ = params.get('q') || '';
+            if (currentQ && !input.value) input.value = currentQ;
+        } catch(e) {}
+
+        input.addEventListener('input', () => {
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                applyLiveSearch(input.value);
+            }, 350);
+        });
+
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                applyLiveSearch(input.value);
+            }
+        });
+
+        // Restaura foco/cursor após reload disparado pela busca
+        try {
+            const raw = sessionStorage.getItem('__oc_live_search_restore');
+            if (raw) {
+                const payload = JSON.parse(raw);
+                sessionStorage.removeItem('__oc_live_search_restore');
+                if (payload && payload.t && (Date.now() - payload.t) <= 5000) {
+                    if (typeof payload.v === 'string' && payload.v && !input.value) input.value = payload.v;
+                    if (payload.f) {
+                        input.focus({ preventScroll: true });
+                        const s = (payload.s !== null && payload.s !== undefined) ? payload.s : input.value.length;
+                        const e = (payload.e !== null && payload.e !== undefined) ? payload.e : input.value.length;
+                        try { input.setSelectionRange(s, e); } catch(ex) {}
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    function setupUI() {
+        ensureDjangoActionsCounter();
+
+        // Cria o botão "Filtros" se ainda não existir
         if (!document.getElementById('custom-filter-toolbar')) {
             const form = document.getElementById('changelist-form');
             if (form) {
                 const toolbar = document.createElement('div');
                 toolbar.id = 'custom-filter-toolbar';
                 toolbar.innerHTML = `
-                    <div class="toolbar-search-container">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="toolbar-search-input" placeholder="Pesquisar...">
-                    </div>
                     <div class="toolbar-actions">
-                        <button type="button" onclick="window.openCastingFilters()" id="btn-trigger-filter">
-                            <i class="fas fa-filter"></i> FILTRAGEM AVANÇADA
-                        </button>
+                        <input id="oc-live-search" type="search" placeholder="Pesquisar (nome, CPF, WhatsApp...)" autocomplete="off" />
+                        <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
                     </div>
                 `;
                 form.parentNode.insertBefore(toolbar, form);
-                
-                // Busca Real-time
-                const inp = document.getElementById('toolbar-search-input');
-                const p = new URLSearchParams(window.location.search);
-                if(p.get('q')) inp.value = p.get('q');
-                
-                inp.oninput = (e) => {
-                    clearTimeout(searchDebounceTimer);
-                    searchDebounceTimer = setTimeout(() => {
-                        const pp = new URLSearchParams(window.location.search);
-                        if(e.target.value) pp.set('q', e.target.value); else pp.delete('q');
-                        pp.delete('p');
-                        window.location.search = pp.toString();
-                    }, 800);
-                };
-
-                // Botões de Ação
-                const actDiv = document.querySelector('.actions');
-                const actSel = document.querySelector('select[name="action"]');
-                if (actDiv && actSel) {
-                    actSel.style.display = 'none';
-                    const grp = document.createElement('div');
-                    grp.className = 'custom-action-buttons';
-                    grp.innerHTML = '<span style="font-weight:900; color:#009688; margin-right:15px; font-size:11px;">AÇÕES:</span>';
-                    Array.from(actSel.options).forEach(o => {
-                        if (!o.value) return;
-                        const b = document.createElement('button'); b.type = 'button'; b.className = 'action-btn-custom';
-                        const txt = o.text.toLowerCase();
-                        if (txt.includes('aprov')) { b.innerHTML = '<i class="fas fa-check"></i> APROVAR'; b.classList.add('btn-act-approve'); }
-                        else if (txt.includes('reprov')) { b.innerHTML = '<i class="fas fa-times"></i> REPROVAR'; b.classList.add('btn-act-reject'); }
-                        else if (txt.includes('excluir')) { b.innerHTML = '<i class="fas fa-trash"></i> EXCLUIR'; b.classList.add('btn-act-delete'); }
-                        else { b.innerText = o.text.toUpperCase(); }
-                        b.onclick = () => {
-                            if (txt.includes('reprov')) window.abrirModalReprovacaoMassa();
-                            else { if (txt.includes('excluir') && !confirm('Tem certeza?')) return; actSel.value = o.value; form.submit(); }
-                        };
-                        grp.appendChild(b);
-                    });
-                    actDiv.appendChild(grp);
-                    const toggleBtns = () => { grp.style.display = document.querySelectorAll('.action-select:checked').length > 0 ? 'flex' : 'none'; };
-                    document.body.addEventListener('change', toggleBtns);
-                    toggleBtns();
-                }
+                const btn = document.getElementById('btn-open-sidebar');
+                if (btn) btn.addEventListener('click', () => window.openCastingFilters());
             }
         }
+
+        // garante o live-search mesmo se o toolbar já existia
+        ensureLiveSearchInput();
+
+        // Hover Menus
+        document.querySelectorAll('.btn-group-custom').forEach(g => {
+            const d = g.querySelector('.dropdown-content');
+            if(d) { g.onmouseenter = () => d.style.display='block'; g.onmouseleave = () => d.style.display='none'; }
+        });
+
+        // Garante que o painel do topo fique oculto SEMPRE (inclusive após clicar em PESQUISAR e recarregar)
+        try { hideMainFilterPanel(); } catch(e){}
     }
 
-    // Loop
-    setInterval(() => {
+    // --- FERRAMENTAS EXTRAS ---
+    window.selecionarTudo = (s) => document.querySelectorAll('.swal-copy-grid input').forEach(c => c.checked = s);
+    function checkHtml(d) {
+        return `<div class="swal-copy-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;">
+        <div class="cp-item"><input type="checkbox" data-f="Nome" data-v="${d.nome}" checked> Nome</div>
+        <div class="cp-item"><input type="checkbox" data-f="Zap" data-v="${d.whatsapp}"> Zap</div>
+        <div class="cp-item"><input type="checkbox" data-f="Altura" data-v="${d.altura}m"> Altura</div>
+        <div class="cp-item"><input type="checkbox" data-f="Peso" data-v="${d.peso}kg"> Peso</div></div>`;
+    }
+    window.copiarInformacoesPerfil = function(d) {
+        Swal.fire({ title:'WHATSAPP', html: checkHtml(d), showCancelButton:true, confirmButtonText:'COPIAR', preConfirm:()=>{
+            let m=`*${d.nome}*\n`; document.querySelectorAll('.swal-copy-grid input:checked').forEach(c=>{m+=`*${c.dataset.f}:* ${c.dataset.v}\n`}); return m;
+        }}).then(r=>{if(r.isConfirmed){navigator.clipboard.writeText(r.value);Swal.fire('Copiado!');}});
+    };
+    window.configurarLinkPublico = function(d) {
+        Swal.fire({ title:'LINK', html: checkHtml(d), showCancelButton:true, confirmButtonText:'GERAR', preConfirm:()=>{return `${window.location.origin}/perfil/${d.uuid}/`;}}).then(r=>{if(r.isConfirmed){navigator.clipboard.writeText(r.value);Swal.fire('Copiado!');}});
+    };
+    window.abrirModalReprovacaoMassa = function() {
+        Swal.fire({ title:'REPROVAR', html: '<select id="m-m" class="swal2-select"><option value="fotos_ruins">Fotos Ruins</option><option value="dados_incompletos">Dados Incompletos</option><option value="perfil">Perfil Incompatível</option><option value="outros">Outros</option></select><textarea id="m-o" class="swal2-textarea"></textarea>', showCancelButton:true, confirmButtonText:'CONFIRMAR', preConfirm:()=>{return {m:document.getElementById('m-m').value, o:document.getElementById('m-o').value}} }).then(r=>{if(r.isConfirmed){
+            const f=document.getElementById('changelist-form');
+            f.insertAdjacentHTML('beforeend', `<input type="hidden" name="motivo_massa" value="${r.value.m}"><input type="hidden" name="obs_massa" value="${r.value.o}">`);
+            document.querySelector('select[name="action"]').value='reprovar_modelos_massa'; f.submit();
+        }});
+    };
+
+    // --- LOOP (sem spam no console) ---
+    // Evita criar múltiplos intervals caso o JS seja injetado duas vezes.
+    if (window.__opencasting_admin_custom_interval) {
+        clearInterval(window.__opencasting_admin_custom_interval);
+    }
+    let setupCount = 0;
+    window.__opencasting_admin_custom_interval = setInterval(() => {
+        setupCount++;
         setupUI();
-        if(!isSidebarBuilt) buildFilterSidebar();
+        // Sidebar só é construída quando o usuário clica em "Filtros" (openCastingFilters)
+        // mas deixamos um fallback seguro para a primeira carga.
+        if(!isSidebarBuilt) {
+            // não cria a sidebar automaticamente para não aparecer “vazia”
+        }
+        if(setupCount > 40) {
+            clearInterval(window.__opencasting_admin_custom_interval);
+        }
     }, CHECK_INTERVAL);
 
 })();
