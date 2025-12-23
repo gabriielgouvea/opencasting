@@ -111,7 +111,7 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Base de Promotores (UserProfile): no celular, mostrar só Nome/Status */
+    /* Base de Promotores (UserProfile): no celular, mostrar só o Nome */
     body.oc-userprofile-changelist #result_list thead {
         display: none !important;
     }
@@ -146,31 +146,52 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
         display: none !important;
     }
 
-    /* Nome em cima + Status embaixo (mais estável no mobile) */
+    /* Nome + bolinha de status (sem texto)
+       Observação: como o campo é link (list_display_links), os spans ficam dentro de <a>. */
     body.oc-userprofile-changelist #result_list td.field-nome_com_status {
-        display: flex !important;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-        gap: 8px;
+        display: block !important;
         width: 100% !important;
         white-space: normal;
         word-break: break-word;
         line-height: 1.25;
     }
 
-    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span:first-child {
-        display: block;
-        width: 100%;
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        width: 100% !important;
+        color: inherit;
+        text-decoration: none;
+        flex-wrap: wrap;
     }
 
-    /* Badge (status) abaixo do nome */
-    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span:last-child {
-        display: inline-block;
-        margin: 0 !important;
-        font-size: 10px !important;
-        max-width: 100%;
-        white-space: normal;
+    /* Mantém o nome (primeiro span) */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a > span:first-child {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    /* No mobile queremos apenas o nome: esconde status/badges de forma confiável */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status .oc-status-badge,
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status .oc-status-badge {
+        display: none !important;
+    }
+
+    /* Fallback: se o badge cair fora do <a>, também some */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span.oc-status-badge,
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status > span.oc-status-badge {
+        display: none !important;
+    }
+
+    /* Último fallback: esconde qualquer elemento após o nome dentro do link */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a > *:not(:first-child),
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status > a > *:not(:first-child) {
+        display: none !important;
     }
 }
 

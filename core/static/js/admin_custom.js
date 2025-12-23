@@ -52,14 +52,22 @@
     // Proteção: alguns temas removem/alteram markup e o actions.js do Django quebra.
     // Criamos um .action-counter “inofensivo” se não existir.
     function ensureDjangoActionsCounter() {
-        const existing = document.querySelector('.action-counter');
-        if (existing) return;
-        const actions = document.querySelector('.actions') || document.body;
-        const counter = document.createElement('span');
-        counter.className = 'action-counter';
-        counter.dataset.actionsIcnt = '0';
-        counter.style.display = 'none';
-        actions.prepend(counter);
+        // Tenta encontrar qualquer contador existente
+        let counter = document.querySelector('.action-counter');
+        
+        // Se não existir, cria um
+        if (!counter) {
+            const actions = document.querySelector('.actions') || document.getElementById('changelist-form') || document.body;
+            counter = document.createElement('span');
+            counter.className = 'action-counter';
+            counter.style.display = 'none';
+            actions.prepend(counter);
+        }
+        
+        // Garante que tenha o atributo dataset necessário para o actions.js não quebrar
+        if (!counter.dataset.actionsIcnt) {
+            counter.dataset.actionsIcnt = '0';
+        }
     }
 
     // Select2/Bootstrap selects podem “sumir” quando movidos para um container com z-index alto.
@@ -563,6 +571,51 @@
         } catch(e) {}
     }
 
+    function applyUserProfileStatusDotForMobile() {
+        try {
+            // Verifica se estamos na página correta (mais genérico para garantir)
+            if (!window.location.pathname.includes('/core/userprofile/')) return;
+            
+            // Aumenta o range para pegar tablets e celulares grandes
+            if (window.innerWidth > 900) return;
+
+            const rows = document.querySelectorAll('#result_list tr');
+            rows.forEach(row => {
+                const td = row.querySelector('td.field-nome_com_status');
+                if (!td) return;
+
+                // Se o badge estiver fora do link, também some
+                td.querySelectorAll('.oc-status-badge').forEach(b => {
+                    if (b.getAttribute('data-mobile-processed') === 'true') return;
+                    b.style.setProperty('display', 'none', 'important');
+                    b.setAttribute('data-mobile-processed', 'true');
+                });
+
+                // Tenta pegar o badge (último span dentro do link)
+                const link = td.querySelector('a');
+                if (!link) return;
+                
+                const spans = link.querySelectorAll('span');
+                if (spans.length < 2) return;
+
+                // No mobile queremos apenas o nome: esconde todos os spans após o primeiro
+                let changed = false;
+                spans.forEach((sp, idx) => {
+                    if (idx === 0) return;
+                    if (sp.getAttribute('data-mobile-processed') === 'true') return;
+                    sp.style.setProperty('display', 'none', 'important');
+                    sp.setAttribute('data-mobile-processed', 'true');
+                    changed = true;
+                });
+
+                // Marca o TD também para evitar reprocessamento excessivo
+                if (changed) td.setAttribute('data-mobile-processed', 'true');
+            });
+        } catch(e) {
+            console.error('Erro no fix mobile:', e);
+        }
+    }
+
     function setupUI() {
         ensureDjangoActionsCounter();
 
@@ -596,6 +649,9 @@
 
         // garante o live-search mesmo se o toolbar já existia
         ensureLiveSearchInput();
+
+        // Mobile: usa bolinha colorida no lugar do texto do status
+        applyUserProfileStatusDotForMobile();
 
         // Hover Menus
         document.querySelectorAll('.btn-group-custom').forEach(g => {

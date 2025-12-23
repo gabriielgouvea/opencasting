@@ -207,15 +207,11 @@ class UserProfileAdmin(admin.ModelAdmin):
     # --- MÉTODOS VISUAIS (INTERFACE) ---
 
     def nome_com_status(self, obj):
-        cores = {'pendente': '#f39c12', 'aprovado': '#27ae60', 'reprovado': '#c0392b', 'correcao': '#3498db'}
-        cor_badge = cores.get(obj.status, '#7f8c8d')
-        badge = format_html(
-            '<span style="background:{}; color:white; padding:3px 10px; border-radius:12px; '
-            'font-size:9px; font-weight:900; margin-left:12px; text-transform:uppercase;">{}</span>',
-            cor_badge, obj.get_status_display()
+        return format_html(
+            '<span class="oc-nome" style="font-weight:700; color:#2c3e50;">{}</span>',
+            obj.nome_completo.upper(),
         )
-        return format_html('<span style="font-weight:700; color:#2c3e50;">{}</span> {}', obj.nome_completo.upper(), badge)
-    nome_com_status.short_description = "Promotor / Status Atual"
+    nome_com_status.short_description = "Promotor"
 
     def exibir_foto(self, obj):
         if obj.foto_rosto:
@@ -226,7 +222,13 @@ class UserProfileAdmin(admin.ModelAdmin):
     def whatsapp_link(self, obj):
         if obj.whatsapp:
             num = re.sub(r'\D', '', str(obj.whatsapp))
-            return format_html('<a href="https://wa.me/55{}" target="_blank" style="color:#25D366; font-weight:800; font-size:12px;"><i class="fab fa-whatsapp"></i> Chat Direto</a>', num)
+            # Exibe o número (como pedido) e mantém o link do WhatsApp
+            return format_html(
+                '<a href="https://wa.me/55{}" target="_blank" style="color:#25D366; font-weight:800; font-size:12px;">'
+                '<i class="fab fa-whatsapp"></i> {}</a>',
+                num,
+                str(obj.whatsapp),
+            )
         return "---"
     whatsapp_link.short_description = "Contato"
 
