@@ -93,6 +93,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Importante: Onde o Django busca seus CSS/JS personalizados
 STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'core/static'),
 ]
 

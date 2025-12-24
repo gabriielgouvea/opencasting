@@ -5,9 +5,72 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 from .models import Job, Candidatura, UserProfile, Pergunta, Resposta, Avaliacao
 from .forms import CadastroForm
 import datetime
+
+from pathlib import Path
+from django.templatetags.static import static
+from django.utils.encoding import iri_to_uri
+
+
+def _get_landing_gallery_items(max_items: int = 18):
+    base_dir = Path(settings.BASE_DIR)
+    static_dir = base_dir / 'static' / 'images' / 'promotores'
+
+    # Fallback para o diretório original, caso o static não exista (dev).
+    fallback_dir = base_dir / 'imagens_promotores_paginainicial'
+
+    image_dir = static_dir if static_dir.exists() else fallback_dir
+    if not image_dir.exists():
+        return []
+
+    exts = {'.jpg', '.jpeg', '.png', '.webp'}
+    filenames = sorted(
+        [p.name for p in image_dir.iterdir() if p.is_file() and p.suffix.lower() in exts]
+    )
+
+    client_names = [
+        'Mercado Livre',
+        'Assaí Atacadista',
+        'L’Oréal',
+        'Google',
+        'Disney+',
+        'Uber',
+        'Vivo',
+        'Petz',
+        'Asics',
+        'Oxxo',
+        'Nubank',
+        'Logitech',
+    ]
+
+    role_names = [
+        'Equipe',
+        'Promoção',
+        'Recepção',
+        'Captação de leads',
+        'Ativação de marca',
+    ]
+
+    items = []
+    for idx, name in enumerate(filenames[:max_items]):
+        # Se veio do fallback_dir, ainda assim geramos URL de static (se o deploy usar copy, funciona).
+        raw_url = (
+            static(f'images/promotores/{name}')
+            if image_dir == static_dir
+            else f'/imagens_promotores_paginainicial/{name}'
+        )
+        image_url = iri_to_uri(raw_url)
+        items.append(
+            {
+                'image_url': image_url,
+                'client_name': client_names[idx % len(client_names)],
+                'role_name': role_names[idx % len(role_names)],
+            }
+        )
+    return items
 
 # --- 1. HOME (LANDING PAGE) ---
 def home(request):
@@ -21,7 +84,10 @@ def home(request):
         except UserProfile.DoesNotExist:
             pass 
             
-    return render(request, 'landing.html')
+    context = {
+        'landing_gallery': _get_landing_gallery_items(max_items=18),
+    }
+    return render(request, 'landing.html', context)
 
 # --- 2. DASHBOARD / MURAL DE VAGAS ---
 @login_required(login_url='/login/')
