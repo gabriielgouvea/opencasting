@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, CpfBanido
 from datetime import datetime
+import re
 
 class CadastroForm(forms.ModelForm):
     # ==========================================================================
@@ -236,6 +237,13 @@ class CadastroForm(forms.ModelForm):
             'foto_rosto', 'foto_corpo',
             'termo_uso_imagem', 'termo_comunicacao'
         ]
+
+    def clean_cpf(self):
+        cpf = (self.cleaned_data.get('cpf') or '').strip()
+        cpf_digits = re.sub(r'\D', '', cpf)
+        if cpf_digits and CpfBanido.objects.filter(cpf=cpf_digits).exists():
+            raise forms.ValidationError('Este CPF está bloqueado e não pode se cadastrar novamente.')
+        return cpf
 
     def clean(self):
         cleaned_data = super().clean()

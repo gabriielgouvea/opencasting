@@ -637,6 +637,11 @@
                 toolbar.id = 'custom-filter-toolbar';
                 toolbar.innerHTML = `
                     <div class="toolbar-actions">
+                        <div class="oc-status-tabs" id="oc-status-tabs" style="display:none;">
+                            <a class="oc-status-tab" id="oc-tab-aprovados" href="/admin/core/userprofile/aprovados/">Aprovados</a>
+                            <a class="oc-status-tab" id="oc-tab-pendentes" href="/admin/core/userprofile/pendentes/">Pendentes</a>
+                            <a class="oc-status-tab" id="oc-tab-correcao" href="/admin/core/userprofile/aguardando-ajuste/">Aguardando ajuste</a>
+                        </div>
                         <input id="oc-live-search" type="search" placeholder="Pesquisar (nome, CPF, WhatsApp...)" autocomplete="off" />
                         <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
                     </div>
@@ -646,6 +651,25 @@
                 if (btn) btn.addEventListener('click', () => window.openCastingFilters());
             }
         }
+
+        // Tabs Aprovados/Pendentes no topo (somente na Base de Promotores)
+        try {
+            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+            if (path.includes('/admin/core/userprofile/')) {
+                const tabs = document.getElementById('oc-status-tabs');
+                if (tabs) {
+                    tabs.style.display = 'flex';
+                    const sp = new URLSearchParams(window.location.search || '');
+                    const st = (sp.get('status__exact') || sp.get('status') || 'aprovado').toLowerCase();
+                    const a = document.getElementById('oc-tab-aprovados');
+                    const p = document.getElementById('oc-tab-pendentes');
+                    const c = document.getElementById('oc-tab-correcao');
+                    if (a) a.classList.toggle('is-active', st === 'aprovado');
+                    if (p) p.classList.toggle('is-active', st === 'pendente');
+                    if (c) c.classList.toggle('is-active', st === 'correcao');
+                }
+            }
+        } catch(e) {}
 
         // garante o live-search mesmo se o toolbar já existia
         ensureLiveSearchInput();
@@ -666,19 +690,147 @@
     // --- FERRAMENTAS EXTRAS ---
     window.selecionarTudo = (s) => document.querySelectorAll('.swal-copy-grid input').forEach(c => c.checked = s);
     function checkHtml(d) {
-        return `<div class="swal-copy-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;">
-        <div class="cp-item"><input type="checkbox" data-f="Nome" data-v="${d.nome}" checked> Nome</div>
-        <div class="cp-item"><input type="checkbox" data-f="Zap" data-v="${d.whatsapp}"> Zap</div>
-        <div class="cp-item"><input type="checkbox" data-f="Altura" data-v="${d.altura}m"> Altura</div>
-        <div class="cp-item"><input type="checkbox" data-f="Peso" data-v="${d.peso}kg"> Peso</div></div>`;
+        // Normaliza para suportar chaves antigas/novas do template
+        const normalized = {
+            ...d,
+            is_pcd: d?.is_pcd ?? d?.pcd,
+            descricao_pcd: d?.descricao_pcd ?? d?.pcd_desc,
+            pix: d?.pix ?? d?.chave_pix,
+            tipo_chave_pix: d?.tipo_chave_pix,
+        };
+
+        const enderecoCompleto = [d.endereco, d.numero, d.bairro, d.cidade, d.estado, d.cep]
+            .filter(Boolean)
+            .join(', ')
+            .replace(/\s+,/g, ',');
+
+        const fields = [
+            // Padrão (pré-selecionado): nome, cpf, endereço, sexo
+            { k: 'nome', f: 'Nome', v: d.nome, on: true },
+            { k: 'cpf', f: 'CPF', v: d.cpf, on: true },
+            { k: 'endereco', f: 'Endereço', v: enderecoCompleto || '---', on: true },
+            { k: 'sexo', f: 'Sexo', v: d.genero, on: true },
+
+            // Contato
+            { k: 'whatsapp', f: 'WhatsApp', v: d.whatsapp },
+            { k: 'email', f: 'E-mail', v: d.email },
+            { k: 'instagram', f: 'Instagram', v: d.instagram },
+
+            // Pessoal
+            { k: 'nascimento', f: 'Nascimento', v: d.nascimento },
+            { k: 'idade', f: 'Idade', v: d.idade },
+            { k: 'rg', f: 'RG', v: d.rg },
+            { k: 'nacionalidade', f: 'Nacionalidade', v: d.nacionalidade },
+            { k: 'etnia', f: 'Cor/Etnia', v: d.etnia },
+            { k: 'pcd', f: 'PCD', v: normalized.is_pcd },
+            { k: 'pcd_desc', f: 'Descrição PCD', v: normalized.descricao_pcd },
+
+            // Medidas & visual
+            { k: 'altura', f: 'Altura', v: d.altura },
+            { k: 'peso', f: 'Peso', v: d.peso },
+            { k: 'manequim', f: 'Manequim', v: d.manequim },
+            { k: 'camiseta', f: 'Camiseta', v: d.camiseta },
+            { k: 'calcado', f: 'Calçado', v: d.calcado },
+            { k: 'olhos', f: 'Olhos', v: d.olhos },
+            { k: 'cabelo', f: 'Cabelo', v: d.cabelo },
+
+            // Profissional
+            { k: 'experiencia', f: 'Experiência', v: d.experiencia },
+            { k: 'disponibilidade', f: 'Disponibilidade', v: d.disponibilidade },
+            { k: 'areas', f: 'Áreas de atuação', v: d.areas_atuacao },
+
+            // Idiomas
+            { k: 'ingles', f: 'Inglês', v: d.ingles },
+            { k: 'espanhol', f: 'Espanhol', v: d.espanhol },
+            { k: 'frances', f: 'Francês', v: d.frances },
+            { k: 'outros_idiomas', f: 'Outros idiomas', v: d.outros_idiomas },
+
+            // Bancário
+            { k: 'banco', f: 'Banco', v: d.banco },
+            { k: 'tipo_conta', f: 'Tipo de conta', v: d.tipo_conta },
+            { k: 'agencia', f: 'Agência', v: d.agencia },
+            { k: 'conta', f: 'Conta', v: d.conta },
+            { k: 'pix_tipo', f: 'Tipo chave PIX', v: normalized.tipo_chave_pix },
+            { k: 'pix', f: 'Chave PIX', v: normalized.pix },
+
+            // Meta
+            { k: 'uuid', f: 'UUID', v: d.uuid },
+        ].filter(x => x && x.f);
+
+        const items = fields.map(x => {
+            const safeValue = (x.v === undefined || x.v === null || String(x.v).trim() === '') ? '---' : String(x.v);
+            const checked = x.on ? 'checked' : '';
+            return `
+                <label class="cp-item" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #eee; border-radius:12px; background:#fff;">
+                    <input type="checkbox" data-k="${x.k}" data-f="${x.f}" data-v="${safeValue.replace(/"/g, '&quot;')}" ${checked} style="margin-top:2px;">
+                    <span style="display:block;">
+                        <div style="font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#566;">${x.f}</div>
+                        <div style="font-weight:700; color:#2c3e50; word-break:break-word;">${safeValue}</div>
+                    </span>
+                </label>
+            `;
+        }).join('');
+
+        return `
+            <div>
+                <div class="oc-swal-actions">
+                    <button type="button" class="oc-swal-chip" id="oc-btn-select-all">Selecionar tudo</button>
+                    <button type="button" class="oc-swal-chip primary" id="oc-btn-preset">Informações padrão</button>
+                </div>
+                <div class="swal-copy-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left; max-height:55vh; overflow:auto; padding-right:4px;">
+                    ${items}
+                </div>
+            </div>
+        `;
+    }
+
+    function applyPresetPadrao() {
+        // padrão: nome, cpf, endereco, sexo
+        const keys = new Set(['nome', 'cpf', 'endereco', 'sexo']);
+        document.querySelectorAll('.swal-copy-grid input[type="checkbox"]').forEach(c => {
+            c.checked = keys.has(c.dataset.k);
+        });
     }
     window.copiarInformacoesPerfil = function(d) {
-        Swal.fire({ title:'WHATSAPP', html: checkHtml(d), showCancelButton:true, confirmButtonText:'COPIAR', preConfirm:()=>{
-            let m=`*${d.nome}*\n`; document.querySelectorAll('.swal-copy-grid input:checked').forEach(c=>{m+=`*${c.dataset.f}:* ${c.dataset.v}\n`}); return m;
-        }}).then(r=>{if(r.isConfirmed){navigator.clipboard.writeText(r.value);Swal.fire('Copiado!');}});
+        Swal.fire({
+            title: 'Enviar Informações',
+            html: `<div class="oc-swal-form">${checkHtml(d)}</div>`,
+            width: 'min(980px, 94vw)',
+            heightAuto: false,
+            scrollbarPadding: false,
+            customClass: { popup: 'oc-swal-popup' },
+            showCancelButton: true,
+            confirmButtonText: 'COPIAR',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                try {
+                    const btnAll = document.getElementById('oc-btn-select-all');
+                    const btnPreset = document.getElementById('oc-btn-preset');
+                    if (btnAll) btnAll.addEventListener('click', () => window.selecionarTudo(true));
+                    if (btnPreset) btnPreset.addEventListener('click', () => applyPresetPadrao());
+                    // já abre no preset padrão
+                    applyPresetPadrao();
+                } catch(e) {}
+            },
+            preConfirm: () => {
+                let m = `*${d.nome}*\n`;
+                document.querySelectorAll('.swal-copy-grid input:checked').forEach(c => {
+                    m += `*${c.dataset.f}:* ${c.dataset.v}\n`;
+                });
+                return m;
+            }
+        }).then(r => {
+            if (r.isConfirmed) {
+                navigator.clipboard.writeText(r.value);
+                Swal.fire({ icon: 'success', title: 'Copiado!', timer: 1200, showConfirmButton: false, heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+            }
+        });
     };
     window.configurarLinkPublico = function(d) {
-        Swal.fire({ title:'LINK', html: checkHtml(d), showCancelButton:true, confirmButtonText:'GERAR', preConfirm:()=>{return `${window.location.origin}/perfil/${d.uuid}/`;}}).then(r=>{if(r.isConfirmed){navigator.clipboard.writeText(r.value);Swal.fire('Copiado!');}});
+        const url = `${window.location.origin}/perfil/${d.uuid}/`;
+        navigator.clipboard.writeText(url).then(() => {
+            Swal.fire({ icon: 'success', title: 'Link copiado!', text: 'Link do perfil copiado.', timer: 1500, showConfirmButton: false, heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+        });
     };
     window.abrirModalReprovacaoMassa = function() {
         Swal.fire({ title:'REPROVAR', html: '<select id="m-m" class="swal2-select"><option value="fotos_ruins">Fotos Ruins</option><option value="dados_incompletos">Dados Incompletos</option><option value="perfil">Perfil Incompatível</option><option value="outros">Outros</option></select><textarea id="m-o" class="swal2-textarea"></textarea>', showCancelButton:true, confirmButtonText:'CONFIRMAR', preConfirm:()=>{return {m:document.getElementById('m-m').value, o:document.getElementById('m-o').value}} }).then(r=>{if(r.isConfirmed){
@@ -686,6 +838,223 @@
             f.insertAdjacentHTML('beforeend', `<input type="hidden" name="motivo_massa" value="${r.value.m}"><input type="hidden" name="obs_massa" value="${r.value.o}">`);
             document.querySelector('select[name="action"]').value='reprovar_modelos_massa'; f.submit();
         }});
+    };
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Reprovação individual (popup no botão do perfil)
+    window.abrirModalReprovacao = function(id, ev) {
+        try { if (ev && ev.preventDefault) ev.preventDefault(); } catch(e) {}
+        if (typeof Swal === 'undefined') {
+            alert('SweetAlert não carregou.');
+            return;
+        }
+
+        const html = `
+            <div class="oc-swal-form">
+                <div class="oc-swal-section">
+                    <label class="oc-swal-label">Motivo</label>
+                    <select id="oc-reprovar-motivo" class="swal2-select">
+                        <option value="fotos_ruins">Fotos fora do padrão</option>
+                        <option value="dados_incompletos">Dados incompletos/incorretos</option>
+                        <option value="documentos">Documentos/infos ilegíveis</option>
+                        <option value="menor_idade">Menor de idade / idade inconsistente</option>
+                        <option value="perfil">Perfil não compatível no momento</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="oc-swal-section">
+                    <label class="oc-swal-label">Mensagem (opcional)</label>
+                    <textarea id="oc-reprovar-obs" class="swal2-textarea" placeholder="Escreva uma orientação curta para o candidato..."></textarea>
+                </div>
+
+                <div class="oc-swal-section">
+                    <label class="oc-swal-inline">
+                        <input type="checkbox" id="oc-permitir-ajuste" checked>
+                        <span>A pessoa pode corrigir e tentar novamente agora</span>
+                    </label>
+
+                    <div id="oc-dias-wrapper" style="display:none; margin-top:12px;">
+                        <label class="oc-swal-label">Em quantos dias poderá tentar novamente?</label>
+                        <input id="oc-dias" class="swal2-input" type="number" min="1" placeholder="Ex: 90">
+                        <div class="oc-swal-help">Durante esse período, ao fazer login, verá quantos dias faltam.</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        Swal.fire({
+            title: 'Reprovar / Ajuste',
+            html,
+            width: 'min(560px, 92vw)',
+            heightAuto: false,
+            scrollbarPadding: false,
+            customClass: { popup: 'oc-swal-popup' },
+            showCancelButton: true,
+            confirmButtonText: 'CONFIRMAR',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                try {
+                    const popup = Swal.getPopup();
+                    if (popup) popup.style.overflowX = 'hidden';
+                    const htmlContainer = Swal.getHtmlContainer();
+                    if (htmlContainer) htmlContainer.style.overflowX = 'hidden';
+                } catch(e) {}
+                const chk = document.getElementById('oc-permitir-ajuste');
+                const wrap = document.getElementById('oc-dias-wrapper');
+                const sync = () => {
+                    const allow = chk && chk.checked;
+                    if (wrap) wrap.style.display = allow ? 'none' : 'block';
+                };
+                if (chk) chk.addEventListener('change', sync);
+                sync();
+            },
+            preConfirm: () => {
+                const motivo = (document.getElementById('oc-reprovar-motivo') || {}).value || 'outros';
+                const observacao = (document.getElementById('oc-reprovar-obs') || {}).value || '';
+                const permitir_ajuste = !!(document.getElementById('oc-permitir-ajuste') || {}).checked;
+                const dias_bloqueio = (document.getElementById('oc-dias') || {}).value || '';
+
+                if (!permitir_ajuste) {
+                    const n = parseInt(dias_bloqueio, 10);
+                    if (!n || n < 1) {
+                        Swal.showValidationMessage('Informe em quantos dias poderá tentar novamente.');
+                        return false;
+                    }
+                }
+
+                return { motivo, observacao, permitir_ajuste, dias_bloqueio };
+            }
+        }).then(async (r) => {
+            if (!r.isConfirmed) return;
+            const payload = r.value || {};
+
+            try {
+                const fd = new FormData();
+                fd.append('motivo', payload.motivo || 'outros');
+                fd.append('observacao', payload.observacao || '');
+                fd.append('permitir_ajuste', payload.permitir_ajuste ? '1' : '0');
+                if (!payload.permitir_ajuste) fd.append('dias_bloqueio', payload.dias_bloqueio || '');
+
+                const res = await fetch(`/admin/core/userprofile/${id}/reprovar/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken') || ''
+                    },
+                    body: fd
+                });
+
+                if (!res.ok) throw new Error('Falha ao reprovar');
+                const data = await res.json();
+                if (data && data.ok) {
+                    Swal.fire({ icon: 'success', title: 'Atualizado!', timer: 1200, showConfirmButton: false })
+                        .then(() => window.location.reload());
+                } else {
+                    throw new Error('Resposta inválida');
+                }
+            } catch (e) {
+                console.error(e);
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível concluir a reprovação.', heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+            }
+        });
+    };
+
+    async function postAdminAction(url) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken') || ''
+            }
+        });
+        if (!res.ok) throw new Error('Falha na ação');
+        return await res.json();
+    }
+
+    // Voltar perfil aprovado para análise
+    window.voltarParaAnalise = function(id) {
+        Swal.fire({
+            title: 'Voltar para análise?',
+            text: 'O cadastro voltará para PENDENTE.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SIM, VOLTAR',
+            cancelButtonText: 'Cancelar',
+            heightAuto: false,
+            customClass: { popup: 'oc-swal-popup' }
+        }).then(async r => {
+            if (!r.isConfirmed) return;
+            try {
+                const data = await postAdminAction(`/admin/core/userprofile/${id}/voltar-analise/`);
+                if (data && data.ok) {
+                    Swal.fire({ icon: 'success', title: 'Atualizado!', timer: 1000, showConfirmButton: false, heightAuto: false, customClass: { popup: 'oc-swal-popup' } })
+                        .then(() => window.location.reload());
+                } else {
+                    throw new Error('Resposta inválida');
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível voltar para análise.', heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+            }
+        });
+    };
+
+    // Excluir cadastro
+    window.excluirCadastro = function(id) {
+        Swal.fire({
+            title: 'Excluir cadastro?',
+            text: 'Essa ação é permanente.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SIM, EXCLUIR',
+            cancelButtonText: 'Cancelar',
+            heightAuto: false,
+            customClass: { popup: 'oc-swal-popup' }
+        }).then(async r => {
+            if (!r.isConfirmed) return;
+            try {
+                const data = await postAdminAction(`/admin/core/userprofile/${id}/excluir/`);
+                if (data && data.ok) {
+                    window.location.href = '/admin/core/userprofile/';
+                } else {
+                    throw new Error('Resposta inválida');
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível excluir.', heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+            }
+        });
+    };
+
+    // Excluir e banir CPF
+    window.excluirEBanirCPF = function(id) {
+        Swal.fire({
+            title: 'Excluir e banir CPF?',
+            html: '<div style="text-align:left;">Isso exclui o cadastro e impede novo cadastro com o mesmo CPF.</div>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SIM, BANIR',
+            cancelButtonText: 'Cancelar',
+            heightAuto: false,
+            customClass: { popup: 'oc-swal-popup' }
+        }).then(async r => {
+            if (!r.isConfirmed) return;
+            try {
+                const data = await postAdminAction(`/admin/core/userprofile/${id}/banir-cpf/`);
+                if (data && data.ok) {
+                    window.location.href = '/admin/core/userprofile/';
+                } else {
+                    throw new Error('Resposta inválida');
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível banir CPF.', heightAuto: false, customClass: { popup: 'oc-swal-popup' } });
+            }
+        });
     };
 
     // --- LOOP (sem spam no console) ---

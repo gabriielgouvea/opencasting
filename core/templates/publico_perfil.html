@@ -27,10 +27,72 @@
         <span class="stat-badge"><i class="material-icons" style="font-size:14px; vertical-align:middle;">check_circle</i> Verificado</span>
     </div>
 
-    <div style="display: flex; justify-content: center; gap: 40px; color: #666; margin-top: 20px;">
-        <div><strong>Altura</strong><br>{{ perfil.altura }}m</div>
-        <div><strong>Manequim</strong><br>{{ perfil.manequim }}</div>
-        <div><strong>Calçado</strong><br>{{ perfil.calcado }}</div>
+    <div style="display: flex; justify-content: center; gap: 40px; color: #666; margin-top: 20px; flex-wrap: wrap;">
+        <div><strong>Altura</strong><br>{{ perfil.altura|default:'---' }}m</div>
+        <div><strong>Peso</strong><br>{{ perfil.peso|default:'---' }}kg</div>
+        <div><strong>Manequim</strong><br>{{ perfil.manequim|default:'---' }}</div>
+        <div><strong>Calçado</strong><br>{{ perfil.calcado|default:'---' }}</div>
+    </div>
+</div>
+
+<div style="max-width: 980px; margin: 30px auto 0 auto;">
+    <div style="background:#fff; border-radius: 14px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+        <h3 style="margin:0 0 14px 0; color:#009688;">📋 Informações</h3>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; color:#444;">
+            <div><strong>WhatsApp:</strong> {{ perfil.whatsapp|default:'---' }}</div>
+            <div><strong>Instagram:</strong> {{ perfil.instagram|default:'---' }}</div>
+            <div><strong>E-mail:</strong> {{ perfil.user.email|default:'---' }}</div>
+
+            <div class="full" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px;"></div>
+
+            <div>
+                <strong>Idade:</strong>
+                {% if perfil.data_nascimento %}{{ perfil.data_nascimento|timesince|truncatewords:1 }} anos{% else %}---{% endif %}
+            </div>
+            <div><strong>Gênero:</strong> {{ perfil.get_genero_display|default:'---' }}</div>
+            <div><strong>Cor/Etnia:</strong> {{ perfil.get_etnia_display|default:'---' }}</div>
+            <div><strong>Nacionalidade:</strong> {{ perfil.get_nacionalidade_display|default:'---' }}</div>
+            <div><strong>PCD:</strong> {% if perfil.is_pcd %}Sim{% else %}Não{% endif %}</div>
+            {% if perfil.is_pcd and perfil.descricao_pcd %}
+                <div><strong>Descrição PCD:</strong> {{ perfil.descricao_pcd }}</div>
+            {% endif %}
+
+            <div class="full" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px;"></div>
+
+            <div style="grid-column: 1 / -1;">
+                <strong>Endereço:</strong>
+                {{ perfil.endereco|default:'---' }}{% if perfil.numero %}, {{ perfil.numero }}{% endif %}
+                {% if perfil.bairro %} - {{ perfil.bairro }}{% endif %}
+                {% if perfil.cidade %} - {{ perfil.cidade }}{% endif %}
+                {% if perfil.estado %}/{{ perfil.estado }}{% endif %}
+                {% if perfil.cep %} ({{ perfil.cep }}){% endif %}
+            </div>
+
+            <div class="full" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px;"></div>
+
+            <div><strong>Olhos:</strong> {{ perfil.get_olhos_display|default:'---' }}</div>
+            <div><strong>Cabelo:</strong> {{ perfil.get_cabelo_tipo_display|default:'---' }} {% if perfil.get_cabelo_comprimento_display %}({{ perfil.get_cabelo_comprimento_display }}){% endif %}</div>
+            <div><strong>Camiseta:</strong> {{ perfil.get_tamanho_camiseta_display|default:'---' }}</div>
+
+            <div class="full" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px;"></div>
+
+            <div><strong>Experiência:</strong> {{ perfil.get_experiencia_display|default:'---' }}</div>
+            <div><strong>Disponibilidade:</strong> {{ perfil.get_disponibilidade_display|default:'---' }}</div>
+            <div style="grid-column: 1 / -1;"><strong>Áreas de atuação:</strong> {{ perfil.areas_atuacao|default:'---' }}</div>
+
+            <div class="full" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 12px;"></div>
+
+            <div><strong>Inglês:</strong> {{ perfil.get_nivel_ingles_display|default:'---' }}</div>
+            <div><strong>Espanhol:</strong> {{ perfil.get_nivel_espanhol_display|default:'---' }}</div>
+            <div><strong>Francês:</strong> {{ perfil.get_nivel_frances_display|default:'---' }}</div>
+            {% if perfil.outros_idiomas %}
+                <div style="grid-column: 1 / -1;"><strong>Outros idiomas:</strong> {{ perfil.outros_idiomas }}</div>
+            {% endif %}
+        </div>
+        <p style="margin: 14px 0 0 0; color:#888; font-size: 0.85rem;">
+            Observação: dados sensíveis (CPF/RG e dados bancários) não são exibidos neste link.
+        </p>
     </div>
 </div>
 

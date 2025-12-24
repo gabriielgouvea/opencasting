@@ -7,6 +7,7 @@ Desenvolvido para: Gabriel Gouvêa com suporte de IA.
 """
 
 import re
+from datetime import timedelta
 from datetime import date
 from django.contrib import admin
 from django.contrib.auth.models import User
@@ -21,10 +22,14 @@ from django.http import JsonResponse
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db import transaction
 
 # Importação dos Modelos do Sistema OpenCasting
 from .models import (
     UserProfile, 
+    CpfBanido,
     Job, 
     JobDia, 
     Candidatura, 
@@ -204,6 +209,41 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         return qs
 
+    # --- NAVEGAÇÃO: APROVADOS / PENDENTES ---
+    def changelist_view(self, request, extra_context=None):
+        """Por padrão, a Base de Promotores abre em APROVADOS.
+
+        Também suporta o parâmetro legado ?status=... (dashboard antigo) convertendo
+        para o parâmetro padrão do Django Admin (?status__exact=...).
+        """
+        try:
+            params = request.GET
+            # Legado: /admin/core/userprofile/?status=pendente
+            if 'status' in params and 'status__exact' not in params:
+                q = params.copy()
+                q['status__exact'] = q.get('status')
+                q.pop('status', None)
+                return redirect(f"{request.path}?{q.urlencode()}")
+
+            # Default: se não informou status, abre apenas APROVADOS
+            if 'status__exact' not in params:
+                q = params.copy()
+                q['status__exact'] = 'aprovado'
+                return redirect(f"{request.path}?{q.urlencode()}")
+        except Exception:
+            pass
+
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def aprovados_view(self, request):
+        return redirect('/admin/core/userprofile/?status__exact=aprovado')
+
+    def pendentes_view(self, request):
+        return redirect('/admin/core/userprofile/?status__exact=pendente')
+
+    def correcao_view(self, request):
+        return redirect('/admin/core/userprofile/?status__exact=correcao')
+
     # --- MÉTODOS VISUAIS (INTERFACE) ---
 
     def nome_com_status(self, obj):
@@ -241,9 +281,17 @@ class UserProfileAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
+            # Páginas (atalhos) da Base
+            path('aprovados/', self.admin_site.admin_view(self.aprovados_view), name='userprofile_aprovados'),
+            path('pendentes/', self.admin_site.admin_view(self.pendentes_view), name='userprofile_pendentes'),
+            path('aguardando-ajuste/', self.admin_site.admin_view(self.correcao_view), name='userprofile_correcao'),
+
+            # Ações por objeto
             path('<int:object_id>/aprovar/', self.admin_site.admin_view(self.aprovar_view), name='userprofile_aprovar'),
             path('<int:object_id>/reprovar/', self.admin_site.admin_view(self.reprovar_view), name='userprofile_reprovar'),
             path('<int:object_id>/excluir/', self.admin_site.admin_view(self.excluir_view), name='userprofile_excluir'),
+            path('<int:object_id>/voltar-analise/', self.admin_site.admin_view(self.voltar_analise_view), name='userprofile_voltar_analise'),
+            path('<int:object_id>/banir-cpf/', self.admin_site.admin_view(self.banir_cpf_view), name='userprofile_banir_cpf'),
             path('<int:object_id>/enviar-senha/', self.admin_site.admin_view(self.enviar_senha_view), name='userprofile_enviar_senha'),
             path('<int:object_id>/gerar-link-senha/', self.admin_site.admin_view(self.gerar_link_senha_view), name='userprofile_gerar_link_senha'),
         ]
@@ -262,12 +310,158 @@ class UserProfileAdmin(admin.ModelAdmin):
         return redirect(request.META.get('HTTP_REFERER', '..'))
 
     def reprovar_view(self, request, object_id):
-        p = get_object_or_404(UserProfile, pk=object_id); p.status = 'reprovar'; p.save()
-        messages.warning(request, f"{p.nome_completo} reprovado.")
+        p = get_object_or_404(UserProfile, pk=object_id)
+
+        # Espera POST vindo do popup
+        if request.method != 'POST':
+            messages.error(request, "A reprovação deve ser enviada pelo formulário.")
+            return redirect(request.META.get('HTTP_REFERER', '..'))
+
+        motivo = (request.POST.get('motivo') or 'outros').strip()
+        obs = (request.POST.get('observacao') or '').strip()
+        permitir_ajuste_raw = (request.POST.get('permitir_ajuste') or '1').strip().lower()
+        permitir_ajuste = permitir_ajuste_raw in ['1', 'true', 'on', 'yes', 'sim']
+        dias_bloqueio_raw = (request.POST.get('dias_bloqueio') or '').strip()
+
+        p.motivo_reprovacao = motivo
+        p.observacao_admin = obs
+        p.data_reprovacao = timezone.now()
+
+        # 1) Pode ajustar: vai para CORRECAO e recebe e-mail com link de edição
+        if permitir_ajuste:
+            p.status = 'correcao'
+            p.bloqueado_ate = None
+            p.save()
+
+            try:
+                if p.user and p.user.email:
+                    link_edicao = request.build_absolute_uri(reverse('editar_perfil'))
+                    assunto = 'OpenCasting: Ajustes necessários no seu cadastro'
+                    texto = (
+                        f"Olá {p.nome_completo},\n\n"
+                        f"Identificamos que seu cadastro precisa de ajustes para seguir para análise.\n"
+                        f"Motivo: {p.get_motivo_reprovacao_display()}\n\n"
+                        f"Para corrigir, acesse: {link_edicao}\n"
+                    )
+                    if obs:
+                        texto += f"\nMensagem da agência: {obs}\n"
+                    html = (
+                        f"<p>Olá <strong>{p.nome_completo}</strong>,</p>"
+                        f"<p>Seu cadastro precisa de ajustes para seguir para análise.</p>"
+                        f"<p><strong>Motivo:</strong> {p.get_motivo_reprovacao_display()}</p>"
+                        + (f"<p><strong>Mensagem da agência:</strong> {obs}</p>" if obs else "")
+                        + f"<p><a href=\"{link_edicao}\" style=\"display:inline-block;padding:12px 18px;border-radius:999px;background:#009688;color:#fff;text-decoration:none;font-weight:800;\">Corrigir cadastro</a></p>"
+                    )
+                    send_mail(
+                        assunto,
+                        texto,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [p.user.email],
+                        fail_silently=True,
+                        html_message=html,
+                    )
+            except Exception:
+                pass
+
+        # 2) Não pode ajustar agora: reprovado + bloqueio por N dias
+        else:
+            dias_bloqueio = None
+            try:
+                dias_bloqueio = int(dias_bloqueio_raw)
+            except (TypeError, ValueError):
+                dias_bloqueio = None
+
+            if not dias_bloqueio or dias_bloqueio < 1:
+                dias_bloqueio = 90
+
+            p.status = 'reprovado'
+            p.bloqueado_ate = (timezone.now().date() + timedelta(days=dias_bloqueio))
+            p.save()
+
+            try:
+                if p.user and p.user.email:
+                    assunto = 'OpenCasting: Atualização do seu cadastro'
+                    texto = (
+                        f"Olá {p.nome_completo},\n\n"
+                        f"Analisamos seu cadastro e, no momento, não foi possível aprovar.\n"
+                        f"Motivo: {p.get_motivo_reprovacao_display()}\n\n"
+                        f"Você poderá tentar novamente em {dias_bloqueio} dias.\n"
+                    )
+                    if obs:
+                        texto += f"\nMensagem da agência: {obs}\n"
+                    send_mail(
+                        assunto,
+                        texto,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [p.user.email],
+                        fail_silently=True,
+                    )
+            except Exception:
+                pass
+
+        # Resposta AJAX (popup) ou redirect normal
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'status': p.status})
+
+        messages.warning(request, f"{p.nome_completo} atualizado para: {p.get_status_display()}.")
         return redirect(request.META.get('HTTP_REFERER', '..'))
 
     def excluir_view(self, request, object_id):
-        p = get_object_or_404(UserProfile, pk=object_id); p.user.delete()
+        if request.method != 'POST':
+            messages.error(request, "A exclusão deve ser confirmada.")
+            return redirect(request.META.get('HTTP_REFERER', '..'))
+
+        p = get_object_or_404(UserProfile, pk=object_id)
+        try:
+            p.user.delete()
+        except Exception:
+            # fallback
+            p.delete()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
+        return redirect('/admin/core/userprofile/')
+
+    def voltar_analise_view(self, request, object_id):
+        if request.method != 'POST':
+            messages.error(request, "A ação deve ser confirmada.")
+            return redirect(request.META.get('HTTP_REFERER', '..'))
+
+        p = get_object_or_404(UserProfile, pk=object_id)
+        p.status = 'pendente'
+        p.motivo_reprovacao = None
+        p.observacao_admin = ''
+        p.data_reprovacao = None
+        p.bloqueado_ate = None
+        p.save()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'status': p.status})
+        return redirect(request.META.get('HTTP_REFERER', '..'))
+
+    def banir_cpf_view(self, request, object_id):
+        if request.method != 'POST':
+            messages.error(request, "A ação deve ser confirmada.")
+            return redirect(request.META.get('HTTP_REFERER', '..'))
+
+        p = get_object_or_404(UserProfile, pk=object_id)
+        cpf_raw = (p.cpf or '').strip()
+        cpf_digits = re.sub(r'\D', '', cpf_raw)
+        if not cpf_digits:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': 'CPF não informado.'}, status=400)
+            messages.error(request, "Não foi possível banir: CPF não informado.")
+            return redirect(request.META.get('HTTP_REFERER', '..'))
+
+        with transaction.atomic():
+            CpfBanido.objects.get_or_create(cpf=cpf_digits, defaults={'motivo': 'Banido pelo admin'})
+            try:
+                p.user.delete()
+            except Exception:
+                p.delete()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
         return redirect('/admin/core/userprofile/')
 
     def gerar_link_senha_view(self, request, object_id):
@@ -297,5 +491,6 @@ admin.site.register(Pergunta)
 admin.site.register(Resposta)
 admin.site.register(Avaliacao)
 admin.site.register(ConfiguracaoSite)
+admin.site.register(CpfBanido)
 
 # FIM DO ARQUIVO ADMIN.PY V6.0

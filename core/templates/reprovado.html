@@ -20,10 +20,15 @@
     </div>
     
     <br><br>
-    <p style="color: #777; font-size: 0.9rem;">Você pode corrigir as informações e tentar novamente.</p>
-    
-    <a href="{% url 'editar_perfil' %}" class="btn" style="background-color: #c62828; color: white; display: inline-block; width: auto; padding: 10px 30px; margin-top: 15px; text-decoration: none; border-radius: 25px;">
-        Corrigir Cadastro
-    </a>
+    {% if dias_restantes %}
+        <p style="color: #777; font-size: 0.95rem; max-width: 520px; margin: 0 auto; line-height: 1.6;">
+            Você poderá tentar novamente em <strong>{{ dias_restantes }}</strong> dia(s).
+        </p>
+    {% else %}
+        <p style="color: #777; font-size: 0.9rem;">Você pode corrigir as informações e tentar novamente.</p>
+        <a href="{% url 'editar_perfil' %}" class="btn" style="background-color: #c62828; color: white; display: inline-block; width: auto; padding: 10px 30px; margin-top: 15px; text-decoration: none; border-radius: 25px;">
+            Corrigir Cadastro
+        </a>
+    {% endif %}
 </div>
 {% endblock %}

@@ -44,6 +44,157 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
     box-shadow: none;
 }
 
+/* Abas Aprovados / Pendentes (Base de Promotores) */
+.oc-status-tabs {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.oc-status-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    color: var(--dark);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 0.75rem;
+}
+
+.oc-status-tab.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ============================================================
+   SWEETALERT (POPUPS)
+   ============================================================ */
+.swal2-popup.oc-swal-popup {
+    border-radius: 18px !important;
+    padding: 18px 18px 14px 18px !important;
+    max-width: 96vw !important;
+    overflow-x: hidden !important;
+    border-top: 6px solid var(--primary) !important;
+}
+
+.swal2-popup.oc-swal-popup .swal2-title {
+    font-weight: 900 !important;
+    letter-spacing: -0.5px;
+}
+
+.swal2-popup.oc-swal-popup .swal2-html-container {
+    margin: 12px 0 0 0 !important;
+    overflow-x: hidden !important;
+}
+
+.oc-swal-form {
+    text-align: left;
+    display: grid;
+    gap: 12px;
+}
+
+.oc-swal-section {
+    background: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.oc-swal-label {
+    display: block;
+    font-weight: 900;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #5f6a6a;
+    margin-bottom: 6px;
+}
+
+.swal2-popup.oc-swal-popup .swal2-select,
+.swal2-popup.oc-swal-popup .swal2-input,
+.swal2-popup.oc-swal-popup .swal2-textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* IMPORTANTE: não forçar display aqui.
+   O SweetAlert2 usa display:none para esconder inputs padrão quando não são usados;
+   se a gente forçar display, surgem “campos de digitar” em qualquer popup (copiado/sucesso/etc). */
+
+.oc-swal-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+}
+
+.oc-swal-inline input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.oc-swal-help {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.oc-swal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.oc-swal-chip {
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.oc-swal-chip.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.swal2-popup.oc-swal-popup .swal2-confirm {
+    border-radius: 999px !important;
+    font-weight: 900 !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    background: var(--primary) !important;
+}
+
+.swal2-popup.oc-swal-popup .swal2-cancel {
+    border-radius: 999px !important;
+    font-weight: 900 !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    background: #f1f3f5 !important;
+    color: #2c3e50 !important;
+}
+
+@media (max-width: 480px) {
+    .swal2-popup.oc-swal-popup {
+        padding: 14px !important;
+    }
+}
+
 /* Campo de busca (ao digitar) */
 #custom-filter-toolbar .toolbar-actions {
     display: flex;

@@ -5,6 +5,19 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Avg
 
+
+class CpfBanido(models.Model):
+    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF (banido)")
+    motivo = models.CharField(max_length=200, blank=True, null=True, verbose_name="Motivo")
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Banido em")
+
+    class Meta:
+        verbose_name = "CPF Banido"
+        verbose_name_plural = "CPFs Banidos"
+
+    def __str__(self):
+        return self.cpf
+
 # ==============================================================================
 # 1. PERFIL DO PROMOTOR (BASE DE TALENTOS)
 # ==============================================================================
@@ -176,6 +189,8 @@ class UserProfile(models.Model):
     MOTIVOS_REPROVACAO = [
         ('fotos_ruins', 'Fotos fora do padrão (Escuras/Selfie/Espelho)'),
         ('dados_incompletos', 'Dados incompletos ou incorretos'),
+        ('documentos', 'Documentos/Informações ilegíveis ou inconsistentes'),
+        ('menor_idade', 'Menor de idade / inconsistência de idade'),
         ('perfil', 'Perfil não compatível no momento'),
         ('outros', 'Outros (Ver observação)'),
     ]
@@ -184,6 +199,7 @@ class UserProfile(models.Model):
     motivo_reprovacao = models.CharField(max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, verbose_name="Motivo (Se reprovado)")
     observacao_admin = models.TextField(blank=True, null=True, verbose_name="Mensagem para a Modelo")
     data_reprovacao = models.DateTimeField(blank=True, null=True, verbose_name="Data da Reprovação")
+    bloqueado_ate = models.DateField(blank=True, null=True, verbose_name="Bloqueado até")
 
     # Termos
     termo_uso_imagem = models.BooleanField(default=False, verbose_name="Aceito uso de imagem")
@@ -215,12 +231,6 @@ class UserProfile(models.Model):
                     send_mail(
                         'OpenCasting: Cadastro Aprovado! 🎉',
                         f'Olá {self.nome_completo}, seu perfil foi aprovado.',
-                        settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
-                    )
-                elif antigo.status != self.status and self.status in ['reprovado', 'correcao']:
-                    send_mail(
-                        'OpenCasting: Atualização do Cadastro',
-                        f'Olá {self.nome_completo}, precisamos de ajustes no perfil.\nMotivo: {self.get_motivo_reprovacao_display()}',
                         settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
                     )
             except Exception: pass

@@ -108,6 +108,18 @@
         <div class="form-card">
             <h2 class="form-title">Editar Dados Pessoais</h2>
 
+            {% if perfil and perfil.status == 'correcao' %}
+                <div class="alert-error" style="border-color:#b2dfdb; background:#e0f2f1; color:#00695c;">
+                    <strong>Ajustes necessários:</strong>
+                    <div style="margin-top:8px;">
+                        <div><strong>Motivo:</strong> {{ perfil.get_motivo_reprovacao_display }}</div>
+                        {% if perfil.observacao_admin %}
+                            <div style="margin-top:6px;"><strong>Mensagem da agência:</strong> {{ perfil.observacao_admin }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
             {% if form.errors %}
                 <div class="alert-error">
                     <strong>Ops! Verifique os campos:</strong>

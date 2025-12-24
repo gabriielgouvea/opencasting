@@ -40,8 +40,23 @@ def lista_vagas(request):
     # Redireciona se não aprovado
     if perfil.status == 'pendente':
         return render(request, 'aguardando_aprovacao.html')
+    elif perfil.status == 'correcao':
+        messages.warning(request, "Seu cadastro precisa de ajustes antes de seguir.")
+        return redirect('editar_perfil')
     elif perfil.status == 'reprovado':
-        return render(request, 'reprovado.html', {'perfil': perfil})
+        hoje = timezone.now().date()
+        # Se existe bloqueio e já expirou, volta para pendente automaticamente
+        if getattr(perfil, 'bloqueado_ate', None) and perfil.bloqueado_ate <= hoje:
+            perfil.status = 'pendente'
+            perfil.bloqueado_ate = None
+            perfil.save()
+            messages.info(request, "Você já pode tentar novamente. Atualize seu cadastro.")
+            return redirect('editar_perfil')
+
+        dias_restantes = None
+        if getattr(perfil, 'bloqueado_ate', None) and perfil.bloqueado_ate > hoje:
+            dias_restantes = (perfil.bloqueado_ate - hoje).days
+        return render(request, 'reprovado.html', {'perfil': perfil, 'dias_restantes': dias_restantes})
 
     # --- LÓGICA DO DASHBOARD ---
     
@@ -168,13 +183,22 @@ def editar_perfil(request):
     if request.method == 'POST':
         form = CadastroForm(request.POST, request.FILES, instance=perfil)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+            # Se estava em correção, ao salvar volta para pendente (reanálise)
+            if obj.status == 'correcao':
+                obj.status = 'pendente'
+                obj.motivo_reprovacao = None
+                obj.observacao_admin = None
+                obj.data_reprovacao = None
+                if hasattr(obj, 'bloqueado_ate'):
+                    obj.bloqueado_ate = None
+            obj.save()
             messages.success(request, "Perfil atualizado com sucesso!")
             return redirect('lista_vagas')
     else:
         form = CadastroForm(instance=perfil)
 
-    return render(request, 'editar_perfil.html', {'form': form})
+    return render(request, 'editar_perfil.html', {'form': form, 'perfil': perfil})
 
 # --- 7. PERFIL PÚBLICO ---
 def perfil_publico(request, uuid):
