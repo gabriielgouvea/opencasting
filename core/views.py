@@ -231,7 +231,12 @@ def cadastro(request):
                 if resposta: Resposta.objects.create(perfil=perfil, pergunta=pergunta, texto_resposta=resposta)
 
             login(request, user)
-            messages.success(request, f"Bem-vinda, {perfil.nome_completo}! Aguarde a análise.")
+            saudacao = "Bem-vindo(a)"
+            if perfil.genero == 'feminino':
+                saudacao = "Bem-vinda"
+            elif perfil.genero == 'masculino':
+                saudacao = "Bem-vindo"
+            messages.success(request, f"{saudacao}, {perfil.nome_completo}! Aguarde a análise.")
             return redirect('lista_vagas')
     else:
         form = CadastroForm()

@@ -103,6 +103,39 @@
         border-color: #e53935; 
         box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.1); 
     }
+
+    /* Senha: olhinho + checklist */
+    .password-wrap { position: relative; }
+    .password-wrap .form-control { padding-right: 52px; }
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid #e6e6e6;
+        background: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+    }
+    .toggle-password:hover { border-color: #009688; color: #009688; }
+    .password-rules {
+        margin-top: 12px;
+        background: #f5fcfb;
+        border: 1px solid #b2dfdb;
+        border-radius: 10px;
+        padding: 14px;
+        color: #444;
+    }
+    .password-rules ul { margin: 10px 0 0 0; padding-left: 0; list-style: none; }
+    .password-rules li { display: flex; gap: 10px; align-items: center; margin: 6px 0; }
+    .rule-icon { font-size: 18px; color: #9e9e9e; }
+    .rule-ok .rule-icon { color: #2e7d32; }
     
     /* Botões de Navegação */
     .btn { 
@@ -310,12 +343,32 @@
             
             <div class="form-group">
                 <label class="form-label">Senha *</label>
-                {{ form.password }}
+                <div class="password-wrap">
+                    {{ form.password }}
+                    <button type="button" class="toggle-password" data-target="id_password" aria-label="Mostrar senha">
+                        <i class="material-icons" aria-hidden="true">visibility</i>
+                    </button>
+                </div>
+                <div class="password-rules" id="passwordRulesCadastro">
+                    <strong>Regras de segurança da senha:</strong>
+                    <ul>
+                        <li data-rule="len"><i class="material-icons rule-icon">radio_button_unchecked</i> 8+ caracteres</li>
+                        <li data-rule="upper"><i class="material-icons rule-icon">radio_button_unchecked</i> 1 letra maiúscula</li>
+                        <li data-rule="lower"><i class="material-icons rule-icon">radio_button_unchecked</i> 1 letra minúscula</li>
+                        <li data-rule="digit"><i class="material-icons rule-icon">radio_button_unchecked</i> 1 número</li>
+                        <li data-rule="symbol"><i class="material-icons rule-icon">radio_button_unchecked</i> 1 símbolo (ex: ! @ #)</li>
+                    </ul>
+                </div>
             </div>
             
             <div class="form-group">
                 <label class="form-label">Confirmar Senha *</label>
-                {{ form.confirm_password }}
+                <div class="password-wrap">
+                    {{ form.confirm_password }}
+                    <button type="button" class="toggle-password" data-target="id_confirm_password" aria-label="Mostrar senha">
+                        <i class="material-icons" aria-hidden="true">visibility</i>
+                    </button>
+                </div>
             </div>
             
             <button type="button" class="btn" onclick="nextStep(2)">Próximo Passo</button>
@@ -522,6 +575,10 @@
                     <li>Envie fotos recentes e com boa iluminação.</li>
                     <li>Evite óculos escuros, bonés ou fotos em grupo.</li>
                     <li>Fundo neutro é sempre melhor.</li>
+                    <li>Proibido foto no espelho (selfie no espelho reprova).</li>
+                    <li>Evite filtros pesados e fotos muito editadas.</li>
+                    <li>Fotos borradas/escurecidas ou com “print de tela” não são aceitas.</li>
+                    <li>Mostre bem o rosto e o corpo (sem cortes).</li>
                 </ul>
             </div>
 
@@ -645,6 +702,51 @@
                 document.getElementById('btnLoading').style.display = 'block';
             });
         }
+
+        // Senha: checklist + olhinho
+        const passwordInput = document.getElementById('id_password');
+        const rulesBox = document.getElementById('passwordRulesCadastro');
+
+        function getPasswordRulesState(pw) {
+            const value = pw || '';
+            return {
+                len: value.length >= 8,
+                upper: /[A-Z]/.test(value),
+                lower: /[a-z]/.test(value),
+                digit: /\d/.test(value),
+                symbol: /[^A-Za-z0-9]/.test(value),
+            };
+        }
+
+        function updateRulesUI(state) {
+            if (!rulesBox) return;
+            const items = rulesBox.querySelectorAll('li[data-rule]');
+            items.forEach(li => {
+                const rule = li.getAttribute('data-rule');
+                const ok = !!state[rule];
+                li.classList.toggle('rule-ok', ok);
+                const icon = li.querySelector('.rule-icon');
+                if (icon) icon.textContent = ok ? 'check_circle' : 'radio_button_unchecked';
+            });
+        }
+
+        if (passwordInput && rulesBox) {
+            updateRulesUI(getPasswordRulesState(passwordInput.value));
+            passwordInput.addEventListener('input', () => updateRulesUI(getPasswordRulesState(passwordInput.value)));
+        }
+
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                const icon = this.querySelector('i.material-icons');
+                if (icon) icon.textContent = isPassword ? 'visibility_off' : 'visibility';
+                this.setAttribute('aria-label', isPassword ? 'Ocultar senha' : 'Mostrar senha');
+            });
+        });
     });
 
     // Função auxiliar para os uploads

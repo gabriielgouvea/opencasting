@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import UserProfile, CpfBanido
 from datetime import datetime
 import re
@@ -249,6 +251,12 @@ class CadastroForm(forms.ModelForm):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
+
+        if password:
+            try:
+                validate_password(password)
+            except DjangoValidationError as exc:
+                self.add_error('password', exc.messages)
 
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("As senhas não conferem.")
