@@ -109,6 +109,11 @@
 
     .empty-state { text-align: center; padding: 60px 20px; color: #999; background: white; border-radius: 12px; border: 2px dashed #eee; }
 
+    .fit-line { margin-top: 6px; font-weight: 800; font-size: 0.85rem; }
+    .fit-good { color: #2e7d32; }
+    .fit-almost { color: #ef6c00; }
+    .fit-bad { color: #c62828; }
+
     /* Mobile */
     @media (max-width: 900px) {
         .dashboard-grid { grid-template-columns: 1fr; }
@@ -204,7 +209,7 @@
             </div>
 
             <div class="tabs-header">
-                <div class="tab-link active" onclick="openTab(event, 'tab-vagas')">Vagas Disponíveis</div>
+                        <div class="tab-link active" onclick="openTab(event, 'tab-vagas')">Trabalhos Disponíveis</div>
                 <div class="tab-link" onclick="openTab(event, 'tab-historico')">Minhas Atividades</div>
             </div>
 
@@ -213,10 +218,26 @@
                     <div class="job-card">
                         <div class="job-info">
                             <h3>{{ job.titulo }}</h3>
+                            {% if job.empresa %}<div style="color:#555; font-weight:700; margin-top:4px;">{{ job.empresa }}</div>{% endif %}
+                            {% if job.fit %}
+                                <div class="fit-line fit-{{ job.fit.status }}">{{ job.fit.message }}</div>
+                            {% endif %}
                             <div class="job-meta">
-                                <span><i class="material-icons">place</i> {{ job.local }}</span>
+                                <span><i class="material-icons">place</i> {{ job.endereco_formatado }}</span>
+                                {% if job.distance_km %}
+                                    <span><i class="material-icons">near_me</i> a {{ job.distance_km }}km de você</span>
+                                {% endif %}
+                                {% if job.next_dia %}
+                                    <span><i class="material-icons">event</i> {{ job.next_dia.data|date:"d/m" }}</span>
+                                    {% if job.next_dia.hora_inicio and job.next_dia.hora_fim %}
+                                        <span><i class="material-icons">schedule</i> {{ job.next_dia.hora_inicio|time:"H:i" }} - {{ job.next_dia.hora_fim|time:"H:i" }}</span>
+                                    {% endif %}
+                                {% endif %}
                                 <span><i class="material-icons">payments</i> R$ {{ job.dias.first.valor|floatformat:2 }}</span>
                                 <span><i class="material-icons">event</i> {{ job.dias.count }} diária(s)</span>
+                                {% if job.data_pagamento %}
+                                    <span><i class="material-icons">calendar_month</i> Pagamento: {{ job.data_pagamento|date:"d/m" }}</span>
+                                {% endif %}
                             </div>
                         </div>
                         <a href="{% url 'detalhe_vaga' job.id %}" class="btn-job">Ver Detalhes</a>
@@ -225,7 +246,7 @@
                     <div class="empty-state">
                         <i class="material-icons">check_circle</i>
                         <h3>Tudo conferido!</h3>
-                        <p>No momento não há novas vagas para o seu perfil.</p>
+                        <p>No momento não há novos trabalhos para o seu perfil.</p>
                     </div>
                 {% endfor %}
             </div>

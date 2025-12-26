@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Avg
+from django.utils import timezone
 
 
 class CpfBanido(models.Model):
@@ -103,6 +104,10 @@ class UserProfile(models.Model):
     bairro = models.CharField(max_length=100, blank=True, null=True, verbose_name="Bairro")
     cidade = models.CharField(max_length=100, blank=True, null=True, verbose_name="Cidade")
     estado = models.CharField(max_length=2, blank=True, null=True, verbose_name="UF")
+
+    # Coordenadas (para distância até trabalhos). Preenchimento best-effort via geocoding.
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name="Latitude")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name="Longitude")
     
     # --- 5. MEDIDAS E APARÊNCIA ---
     altura = models.DecimalField(max_digits=3, decimal_places=2, help_text="Ex: 1.70", null=True, blank=True, verbose_name="Altura (m)")
@@ -152,6 +157,22 @@ class UserProfile(models.Model):
         ('muita', 'Sim, há bastante tempo (Expert)'),
     ]
     experiencia = models.CharField(max_length=20, choices=EXPERIENCIA_CHOICES, default='sem_experiencia', verbose_name="Experiência")
+
+    AREAS_ATUACAO_CHOICES = [
+        ('recepcao', 'Recepção'),
+        ('degustacao', 'Degustação'),
+        ('bartender', 'Bartender'),
+        ('garcom', 'Garçom/Garçonete'),
+        ('modelo', 'Modelo'),
+        ('seguranca', 'Segurança'),
+        ('mascote', 'Mascote'),
+        ('controle_acesso', 'Controle de Acesso'),
+        ('limpeza', 'Limpeza'),
+        ('dj', 'DJ'),
+        ('fotografo', 'Fotógrafo'),
+        ('apresentador', 'Apresentador/Locutor'),
+        ('outros', 'Outros (Descrever abaixo)'),
+    ]
 
     areas_atuacao = models.TextField(blank=True, null=True, verbose_name="Áreas de Interesse")
     
@@ -234,6 +255,31 @@ class UserProfile(models.Model):
                         settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
                     )
             except Exception: pass
+
+        # Geocoding (best-effort): tenta preencher lat/lng quando estiverem vazios.
+        # Mantém silencioso para não quebrar o fluxo caso o serviço externo falhe.
+        if (self.latitude is None or self.longitude is None) and any([self.endereco, self.bairro, self.cidade, self.estado, self.cep]):
+            try:
+                from geopy.geocoders import Nominatim
+
+                parts = [
+                    (self.endereco or '').strip(),
+                    (self.numero or '').strip(),
+                    (self.bairro or '').strip(),
+                    (self.cidade or '').strip(),
+                    (self.estado or '').strip(),
+                    (self.cep or '').strip(),
+                    'Brasil',
+                ]
+                query = ', '.join([p for p in parts if p])
+                if query:
+                    geolocator = Nominatim(user_agent='opencasting')
+                    location = geolocator.geocode(query, timeout=5)
+                    if location:
+                        self.latitude = round(float(location.latitude), 6)
+                        self.longitude = round(float(location.longitude), 6)
+            except Exception:
+                pass
         super().save(*args, **kwargs)
 
 # ==============================================================================
@@ -258,17 +304,112 @@ class Resposta(models.Model):
 
 class Job(models.Model):
     STATUS_CHOICES = [('aberto', 'Casting Aberto'), ('analise', 'Em Análise'), ('finalizado', 'Finalizado')]
-    titulo = models.CharField(max_length=200, verbose_name="Título da Vaga")
-    local = models.CharField(max_length=200, verbose_name="Local", blank=True, null=True) # CORRIGIDO PARA MIGRAÇÃO
-    descricao = models.TextField(verbose_name="Descrição", blank=True, null=True) # CORRIGIDO PARA MIGRAÇÃO
+
+    titulo = models.CharField(max_length=200, verbose_name="Título do Trabalho")
+    empresa = models.CharField(max_length=120, blank=True, null=True, verbose_name="Empresa")
+
+    # Endereço do trabalho
+    cep = models.CharField(max_length=9, blank=True, null=True, verbose_name="CEP")
+    endereco = models.CharField(max_length=200, blank=True, null=True, verbose_name="Endereço")
+    numero = models.CharField(max_length=20, blank=True, null=True, verbose_name="Número")
+    bairro = models.CharField(max_length=100, blank=True, null=True, verbose_name="Bairro")
+    cidade = models.CharField(max_length=100, blank=True, null=True, verbose_name="Cidade")
+    estado = models.CharField(max_length=2, blank=True, null=True, verbose_name="UF")
+
+    # Campo legado
+    local = models.CharField(max_length=200, verbose_name="Local (legado)", blank=True, null=True)
+
+    # Tipo de serviço (usa as mesmas opções do cadastro)
+    tipo_servico = models.TextField(blank=True, null=True, verbose_name="Tipo de Serviço")
+    tipo_servico_outros = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Outros (descrever)",
+    )
+
+    # Pagamento e descrição
+    data_pagamento = models.DateField(blank=True, null=True, verbose_name="Data prevista de pagamento")
+    descricao = models.TextField(verbose_name="Descrição (opcional)", blank=True, null=True)
+    uniforme_fornecido = models.BooleanField(default=False, verbose_name="Uniforme fornecido pela empresa?")
+    uniforme = models.TextField(blank=True, null=True, verbose_name="Uniforme (legado)")
+
+    # Requisitos (opcionais: se vazio, não aparece para o promotor)
+    requer_experiencia = models.BooleanField(default=False, verbose_name="Precisa de experiência?")
+    generos_aceitos = models.TextField(blank=True, null=True, verbose_name="Sexo/Gênero (aceitos)")
+    etnias_aceitas = models.TextField(blank=True, null=True, verbose_name="Cor/Etnia (aceitas)")
+    olhos_aceitos = models.TextField(blank=True, null=True, verbose_name="Cor dos olhos (aceitas)")
+    cabelo_tipos_aceitos = models.TextField(blank=True, null=True, verbose_name="Tipo de cabelo (aceitos)")
+    cabelo_comprimentos_aceitos = models.TextField(blank=True, null=True, verbose_name="Comprimento do cabelo (aceitos)")
+    nivel_ingles_min = models.CharField(max_length=15, blank=True, null=True, choices=UserProfile.NIVEL_IDIOMA, verbose_name="Inglês mínimo")
+
+    # Competências (tags)
+    competencias = models.TextField(blank=True, null=True, verbose_name="Competências")
+
+    # Coordenadas do trabalho (para distância). Preenchimento best-effort via geocoding.
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name="Latitude")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name="Longitude")
+    geocodificado_em = models.DateTimeField(blank=True, null=True, verbose_name="Geocodificado em")
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberto')
     criado_em = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return self.titulo
+
+    class Meta:
+        verbose_name = "Trabalho"
+        verbose_name_plural = "Trabalhos"
+
+    def __str__(self):
+        return self.titulo
+
+    def endereco_formatado(self) -> str:
+        parts = [
+            (self.endereco or '').strip(),
+            (self.numero or '').strip(),
+            (self.bairro or '').strip(),
+            (self.cidade or '').strip(),
+            (self.estado or '').strip(),
+        ]
+        s = ', '.join([p for p in parts if p])
+        return s or (self.local or '').strip()
+
+    def save(self, *args, **kwargs):
+        # Geocoding (best-effort): tenta preencher lat/lng uma vez, quando estiverem vazios.
+        if (self.latitude is None or self.longitude is None) and any([self.endereco, self.bairro, self.cidade, self.estado, self.cep, self.local]):
+            try:
+                from geopy.geocoders import Nominatim
+
+                parts = [
+                    (self.endereco or '').strip() or (self.local or '').strip(),
+                    (self.numero or '').strip(),
+                    (self.bairro or '').strip(),
+                    (self.cidade or '').strip(),
+                    (self.estado or '').strip(),
+                    (self.cep or '').strip(),
+                    'Brasil',
+                ]
+                query = ', '.join([p for p in parts if p])
+                if query:
+                    geolocator = Nominatim(user_agent='opencasting')
+                    location = geolocator.geocode(query, timeout=5)
+                    if location:
+                        self.latitude = round(float(location.latitude), 6)
+                        self.longitude = round(float(location.longitude), 6)
+                        self.geocodificado_em = timezone.now()
+            except Exception:
+                pass
+
+        super().save(*args, **kwargs)
 
 class JobDia(models.Model):
     job = models.ForeignKey(Job, related_name='dias', on_delete=models.CASCADE)
     data = models.DateField()
+    hora_inicio = models.TimeField(blank=True, null=True, verbose_name="Hora início")
+    hora_fim = models.TimeField(blank=True, null=True, verbose_name="Hora fim")
     valor = models.DecimalField(max_digits=8, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Dia do Trabalho"
+        verbose_name_plural = "Dias do Trabalho"
 
 class Candidatura(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
@@ -277,9 +418,64 @@ class Candidatura(models.Model):
     data_candidatura = models.DateTimeField(auto_now_add=True)
 
 class ConfiguracaoSite(models.Model):
-    titulo_site = models.CharField(max_length=100, default="OpenCasting")
-    email_contato = models.EmailField(default="suporte@opencasting.com")
-    def save(self, *args, **kwargs): self.pk=1; super().save(*args, **kwargs)
+    titulo_site = models.CharField(max_length=100, default="OpenCasting", verbose_name="Nome do Site")
+
+    # Contatos (Rodapé)
+    email_contato = models.EmailField(default="contato@opencasting.com.br", verbose_name="E-mail de Contato")
+    telefone_contato = models.CharField(max_length=30, blank=True, null=True, default="(11) 99999-9999", verbose_name="Telefone / WhatsApp")
+    endereco_contato = models.CharField(max_length=120, blank=True, null=True, default="Alphaville, Barueri - SP", verbose_name="Endereço (Rodapé)")
+
+    instagram_link = models.URLField(blank=True, null=True, verbose_name="Link do Instagram")
+
+    texto_sobre_curto = models.TextField(
+        blank=True,
+        null=True,
+        default="Conectamos as melhores marcas aos profissionais mais qualificados.",
+        verbose_name="Resumo (Rodapé)",
+        help_text="Texto curto que aparece no rodapé/coluna institucional.",
+    )
+
+    # Páginas institucionais
+    titulo_quem_somos = models.CharField(max_length=60, default="Quem Somos", verbose_name="Título - Quem Somos")
+    texto_quem_somos = models.TextField(
+        blank=True,
+        null=True,
+        default=(
+            "A OpenCasting é uma agência focada em conectar marcas e talentos com agilidade e transparência.\n\n"
+            "Trabalhamos com uma base de profissionais verificados para eventos, ações promocionais e ativações de marca.\n\n"
+            "Nossa missão é simplificar a seleção e elevar o padrão de entrega em campo."
+        ),
+        verbose_name="Texto - Quem Somos",
+    )
+
+    titulo_servicos = models.CharField(max_length=60, default="Serviços", verbose_name="Título - Serviços")
+    texto_servicos = models.TextField(
+        blank=True,
+        null=True,
+        default=(
+            "Oferecemos soluções completas para seleção e gestão de equipes para eventos.\n\n"
+            "• Casting e recrutamento\n"
+            "• Triagem e aprovação de talentos\n"
+            "• Gestão de disponibilidade\n"
+            "• Acompanhamento e avaliações\n"
+        ),
+        verbose_name="Texto - Serviços",
+    )
+
+    titulo_privacidade = models.CharField(max_length=60, default="Privacidade", verbose_name="Título - Privacidade")
+    texto_privacidade = models.TextField(
+        blank=True,
+        null=True,
+        default=(
+            "Nós respeitamos sua privacidade. Utilizamos os dados cadastrados apenas para fins de seleção, contato e gestão de oportunidades.\n\n"
+            "Você pode solicitar atualização ou exclusão dos seus dados entrando em contato pelos canais oficiais da agência."
+        ),
+        verbose_name="Texto - Privacidade",
+    )
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
     @classmethod
     def load(cls):
         obj, created = cls.objects.get_or_create(pk=1)

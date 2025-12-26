@@ -190,8 +190,62 @@
     .fieldset-body-edit select, .fieldset-body-edit input, .fieldset-body-edit textarea {
         display: block !important; visibility: visible !important; width: 100% !important;
         min-height: 48px !important; border: 1px solid #ddd !important; border-radius: 10px !important;
-        padding: 0 18px !important; appearance: auto !important; -webkit-appearance: listbox !important;
+        padding: 0 18px !important; appearance: auto !important; -webkit-appearance: auto !important;
         background-color: #fff !important; font-size: 0.9rem !important; color: #333 !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+    }
+    /* Checkbox e input de arquivo não podem herdar altura/padding de input normal */
+    .fieldset-body-edit input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+        min-height: 18px !important;
+        padding: 0 !important;
+        border-radius: 4px !important;
+        -webkit-appearance: checkbox !important;
+        appearance: checkbox !important;
+    }
+    .fieldset-body-edit input[type="file"] {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 10px 12px !important;
+        line-height: 1.2;
+    }
+    .fieldset-body-edit textarea {
+        padding: 12px 18px !important;
+        min-height: 140px !important;
+        line-height: 1.35;
+        resize: vertical;
+    }
+    .form-group-edit { min-width: 0; }
+    #edit-form-container .fieldset-body-edit {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        align-items: start;
+    }
+    #edit-form-container .fieldset-body-edit img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* Widgets de múltipla escolha (checkboxes) alinhadas */
+    #edit-form-container .field-editable-content ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #edit-form-container .field-editable-content li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+    }
+    #edit-form-container .field-editable-content li label {
+        margin: 0;
+        font-weight: 700;
+        text-transform: none;
+        font-size: 0.9rem;
+        color: #333;
     }
     .form-group-edit label { font-weight: 800 !important; color: #666; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px; display: block; }
 
@@ -354,6 +408,13 @@
                             <i class="fas fa-ellipsis-h"></i> MAIS AÇÕES <i class="fas fa-chevron-down ml-2" style="font-size: 0.6rem;"></i>
                         </button>
                         <div class="dropdown-content">
+                            {% if original.foto_rosto %}
+                                <a href="{% url 'admin:userprofile_download_foto_rosto' original.pk %}"><i class="fas fa-download mr-2" style="color: #3498db;"></i> Baixar foto rosto</a>
+                            {% endif %}
+                            {% if original.foto_corpo %}
+                                <a href="{% url 'admin:userprofile_download_foto_corpo' original.pk %}"><i class="fas fa-download mr-2" style="color: #3498db;"></i> Baixar foto corpo</a>
+                            {% endif %}
+                            <a href="{% url 'admin:userprofile_download_pdf' original.pk %}"><i class="fas fa-file-pdf mr-2" style="color: #c0392b;"></i> Baixar ficha em PDF</a>
                             {% if original.status == 'aprovado' %}
                                 <button onclick="voltarParaAnalise('{{ original.pk }}')"><i class="fas fa-undo mr-2" style="color: #34495e;"></i> Voltar p/ análise</button>
                             {% endif %}
@@ -407,7 +468,7 @@
                         {% for line in fieldset %}
                             {% for field in line %}
                                 <div class="form-group-edit">
-                                    <label>{{ field.label_tag }}</label>
+                                    {{ field.label_tag }}
                                     {% if field.is_readonly %}
                                         <div style="padding: 12px; background: #fafafa; border-radius: 10px; border: 1px solid #eee; font-weight: 600; color: #666;">
                                             {{ field.contents }}

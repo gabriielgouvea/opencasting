@@ -7,8 +7,26 @@
 
     <div class="card" style="border-left: none; border-top: 5px solid #009688;">
         <h1 style="font-size: 1.5rem; margin-top: 0;">{{ job.titulo }}</h1>
+        {% if job.empresa %}
+            <p style="margin-top: 6px; font-size: 1rem; color: #444;"><strong>{{ job.empresa }}</strong></p>
+        {% endif %}
         <p style="font-size: 1.1rem; color: #333;"><strong>R$ Total a calcular</strong></p>
-        <p style="color: #757575;"><i class="material-icons" style="vertical-align: bottom;">place</i> {{ job.local }}</p>
+        <p style="color: #757575;"><i class="material-icons" style="vertical-align: bottom;">place</i> {{ job.endereco_formatado }}</p>
+        {% if distance_km %}
+            <p style="color: #757575;"><i class="material-icons" style="vertical-align: bottom;">near_me</i> a {{ distance_km }}km de você</p>
+        {% endif %}
+
+        {% if fit %}
+            <div style="margin-top: 12px; font-weight: 900;">
+                {% if fit.status == 'good' %}
+                    <span style="color:#2e7d32;">{{ fit.message }}</span>
+                {% elif fit.status == 'almost' %}
+                    <span style="color:#ef6c00;">{{ fit.message }}</span>
+                {% else %}
+                    <span style="color:#c62828;">{{ fit.message }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 
     <h3 style="color: #009688;">Datas e Cachês</h3>
@@ -25,14 +43,35 @@
     {% endfor %}
 
     <div class="card" style="margin-top: 20px;">
+        {% if requirements %}
+            <h3 style="color: #009688;">Exigências</h3>
+            <ul style="margin: 0; padding-left: 18px; color:#444; line-height:1.7;">
+                {% for item in requirements %}
+                    <li><strong>{{ item.0 }}:</strong> {{ item.1 }}</li>
+                {% endfor %}
+            </ul>
+            <hr style="border:none; border-top: 1px solid #eee; margin: 18px 0;">
+        {% endif %}
+
         <h3 style="color: #009688;">Descrição</h3>
-        <p>{{ job.descricao|linebreaks }}</p>
+        {% if job.descricao %}
+            <p>{{ job.descricao|linebreaks }}</p>
+        {% else %}
+            <p style="color:#777;">Sem descrição.</p>
+        {% endif %}
         
         <h3 style="color: #009688; margin-top: 20px;">Uniforme</h3>
-        <p>{{ job.uniforme|linebreaks }}</p>
+        <p>
+            Uniforme fornecido pela empresa:
+            <strong>{% if job.uniforme_fornecido %}Sim{% else %}Não{% endif %}</strong>
+        </p>
 
         <h3 style="color: #009688; margin-top: 20px;">Pagamento</h3>
-        <p>Previsão: {{ job.data_pagamento|date:"d/m/Y" }}</p>
+        {% if job.data_pagamento %}
+            <p>Previsão: {{ job.data_pagamento|date:"d/m/Y" }}</p>
+        {% else %}
+            <p style="color:#777;">Não informado.</p>
+        {% endif %}
     </div>
 
     <br><br><br> <div style="position: fixed; bottom: 60px; left: 0; width: 100%; padding: 15px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); box-sizing: border-box;">

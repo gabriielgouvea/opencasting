@@ -22,6 +22,8 @@ urlpatterns = [
     # --- INSTITUCIONAL (SITE) ---
     path('', views.home, name='home'),
     path('quem-somos/', views.quem_somos, name='quem_somos'),  # <--- NOVA ROTA PARA A PÁGINA
+    path('servicos/', views.servicos, name='servicos'),
+    path('privacidade/', views.privacidade, name='privacidade'),
 
     # --- ÁREA DO CANDIDATO (Logado) ---
     path('cadastro/', views.cadastro, name='cadastro'),

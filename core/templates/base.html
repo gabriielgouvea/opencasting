@@ -235,7 +235,7 @@
                 <div class="footer-col">
                     <h5 style="color:var(--primary);">{{ config_site.titulo_site|default:"OpenCasting" }}</h5>
                     <p style="font-size:0.9rem; line-height:1.6;">
-                        {{ config_site.texto_sobre_curto|default:"A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas." }}
+                        {{ config_site.texto_sobre_curto|default:"A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas."|safe }}
                     </p>
                 </div>
 
@@ -249,19 +249,13 @@
                 </div>
 
                 <div class="footer-col">
-                    <h5>
-                        <a href="{% url 'quem_somos' %}" style="color: #333; text-decoration: none;">
-                            {{ config_site.titulo_quem_somos|default:"Quem Somos" }}
-                        </a>
-                    </h5>
+                    <h5>Navegação</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'quem_somos' %}">{{ config_site.titulo_quem_somos|default:"Quem Somos" }}</a></li>
+                        <li><a href="{% url 'servicos' %}">{{ config_site.titulo_servicos|default:"Serviços" }}</a></li>
+                        <li><a href="{% url 'privacidade' %}">{{ config_site.titulo_privacidade|default:"Privacidade" }}</a></li>
+                    </ul>
                     
-                    <p style="font-size:0.9rem; line-height:1.6; margin-bottom:10px;">
-                        {{ config_site.texto_quem_somos|truncatewords:20|default:"Somos apaixonados por conectar marcas e pessoas de forma eficiente e segura." }}
-                    </p>
-                    
-                    <a href="{% url 'quem_somos' %}" style="color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.85rem;">
-                        Ler história completa &rarr;
-                    </a>
                 </div>
 
                 <div class="footer-col">
@@ -273,6 +267,10 @@
                         
                         {% if config_site.telefone_contato %}
                             <li><a href="#"><i class="material-icons" style="font-size:16px;">chat</i> {{ config_site.telefone_contato }}</a></li>
+                        {% endif %}
+
+                        {% if config_site.endereco_contato %}
+                            <li><a href="#"><i class="material-icons" style="font-size:16px;">place</i> {{ config_site.endereco_contato }}</a></li>
                         {% endif %}
 
                         {% if config_site.instagram_link %}

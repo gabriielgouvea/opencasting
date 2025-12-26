@@ -5,12 +5,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-troque-isso-por-algo-seguro-em-producao'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', '1').strip() in {'1', 'true', 'True', 'yes', 'YES'}
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -22,6 +22,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Editor Rich Text (admin)
+    'django_ckeditor_5',
+
     # Apps de Terceiros
     'cloudinary_storage',       # Armazenamento Nuvem
     'cloudinary',
@@ -29,6 +32,37 @@ INSTALLED_APPS = [
     # Seus Apps
     'core.apps.CoreConfig',
 ]
+
+# --- CKEDITOR 5 (Rich Text no Admin) ---
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading',
+            '|',
+            'bold', 'italic', 'underline',
+            '|',
+            'fontColor', 'fontBackgroundColor',
+            '|',
+            'alignment',
+            '|',
+            'link',
+            '|',
+            'bulletedList', 'numberedList',
+            '|',
+            'blockQuote',
+            '|',
+            'undo', 'redo',
+        ],
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Parágrafo', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Título 1', 'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Título 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Título 3', 'class': 'ck-heading_heading3'},
+            ]
+        },
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -103,9 +137,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- CLOUDINARY (FOTOS) ---
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dszogqjjj',
-    'API_KEY': '195742113116927',
-    'API_SECRET': 'TBBhLIVMMdWYvlMmT6lRb-gF4wk',
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', ''),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
@@ -114,9 +148,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'gabriielgouvea@gmail.com'
-EMAIL_HOST_PASSWORD = 'niwdootsbzrabfji'
-DEFAULT_FROM_EMAIL = 'OpenCasting <gabriielgouvea@gmail.com>'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'OpenCasting <no-reply@localhost>')
 
 # --- LOGIN ---
 LOGIN_REDIRECT_URL = 'lista_vagas'
@@ -169,7 +203,10 @@ JAZZMIN_SETTINGS = {
     # Isso obriga o Jazzmin a renderizar os filtros na lista (onde o JS consegue ler)
     "change_list_filter_dropdown": False, 
     "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {"core.userprofile": "collapsible"},
+    "changeform_format_overrides": {
+        "core.userprofile": "collapsible",
+        "core.job": "single",
+    },
 }
 
 JAZZMIN_UI_TWEAKS = {

@@ -1,0 +1,52 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{# Substitui o aviso padrão do Django Admin por um resumo detalhado #}
+{% block errornote %}
+  {% if errors %}
+    <div class="alert alert-danger" style="margin-bottom: 16px;">
+      <strong>{% trans "Por favor corrija os campos abaixo:" %}</strong>
+
+      {% if adminform.form.non_field_errors %}
+        <div style="margin-top: 8px;">
+          {{ adminform.form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <ul style="margin-top: 10px;">
+        {% for field in adminform.form %}
+          {% if field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+
+      {% for inline_admin_formset in inline_admin_formsets %}
+        {% if inline_admin_formset.formset.non_form_errors %}
+          <div style="margin-top: 10px;">
+            <strong>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}:</strong>
+            {{ inline_admin_formset.formset.non_form_errors }}
+          </div>
+        {% endif %}
+
+        {% for f in inline_admin_formset.formset.forms %}
+          {% if f.errors or f.non_field_errors %}
+            <div style="margin-top: 10px;">
+              <strong>{{ inline_admin_formset.opts.verbose_name|capfirst }} (linha {{ forloop.counter }}):</strong>
+              {% if f.non_field_errors %}
+                <div style="margin-top: 6px;">{{ f.non_field_errors }}</div>
+              {% endif %}
+              <ul style="margin-top: 6px;">
+                {% for bf in f %}
+                  {% if bf.errors %}
+                    <li><strong>{{ bf.label }}:</strong> {{ bf.errors|striptags }}</li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

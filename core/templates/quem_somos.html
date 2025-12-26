@@ -17,7 +17,7 @@
             <h3 style="color: #333; font-weight: 700;">Nossa Missão</h3>
             <div style="line-height: 1.8; color: #555; font-size: 1.05rem; text-align: justify;">
                 {% if config_site.texto_quem_somos %}
-                    {{ config_site.texto_quem_somos|linebreaks }}
+                    {{ config_site.texto_quem_somos|safe }}
                 {% else %}
                     <p>A OpenCasting nasceu com o propósito de revolucionar o mercado de eventos. Acreditamos que cada promotor é a face da marca que representa, e por isso investimos em uma seleção rigorosa e humanizada.</p>
                     <p>Nossa tecnologia conecta as melhores empresas aos profissionais mais qualificados do mercado, garantindo agilidade, segurança e transparência em todo o processo de contratação.</p>

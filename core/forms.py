@@ -164,24 +164,9 @@ class CadastroForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Japonês Fluente'})
     )
 
-    AREAS_OPCOES = [
-        ('recepcao', 'Recepção'),
-        ('degustacao', 'Degustação'),
-        ('bartender', 'Bartender'),
-        ('garcom', 'Garçom/Garçonete'),
-        ('modelo', 'Modelo'),
-        ('seguranca', 'Segurança'),
-        ('mascote', 'Mascote'),
-        ('controle_acesso', 'Controle de Acesso'),
-        ('limpeza', 'Limpeza'),
-        ('dj', 'DJ'),
-        ('fotografo', 'Fotógrafo'),
-        ('apresentador', 'Apresentador/Locutor'),
-        ('outros', 'Outros (Descrever abaixo)'),
-    ]
     areas_interesse = forms.MultipleChoiceField(
         label="Áreas de Interesse",
-        choices=AREAS_OPCOES,
+        choices=UserProfile.AREAS_ATUACAO_CHOICES,
         required=False,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input-custom'})
     )

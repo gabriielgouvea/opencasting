@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px;">
+
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="color: #009688; font-weight: 800; font-size: 2.5rem; text-transform: uppercase;">
+            {{ config_site.titulo_privacidade|default:"PRIVACIDADE" }}
+        </h1>
+        <div style="width: 60px; height: 4px; background: #009688; margin: 10px auto;"></div>
+        <p style="color: #666; font-size: 1.1rem;">Como tratamos seus dados.</p>
+    </div>
+
+    <div style="line-height: 1.8; color: #555; font-size: 1.05rem; text-align: justify;">
+        {% if config_site.texto_privacidade %}
+            {{ config_site.texto_privacidade|safe }}
+        {% else %}
+            <p>Nós respeitamos sua privacidade e utilizamos seus dados apenas para fins operacionais da plataforma.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

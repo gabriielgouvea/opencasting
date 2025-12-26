@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views
@@ -35,6 +35,11 @@ urlpatterns = [
     
     # 7. INSTITUCIONAL
     path('quem-somos/', views.quem_somos, name='quem_somos'),
+    path('servicos/', views.servicos, name='servicos'),
+    path('privacidade/', views.privacidade, name='privacidade'),
+    
+     # CKEditor 5 (admin)
+     path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
 
 # CONFIGURAÇÃO PARA ARQUIVOS DE MÍDIA (FOTOS)

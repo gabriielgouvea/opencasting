@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
 
@@ -321,12 +322,16 @@
         <h2>Eleve o nível do seu evento</h2>
         <p>Fale conosco agora pelo WhatsApp.</p>
         <div class="cta-actions">
-            <a href="https://wa.me/5511999999999" target="_blank" class="btn-hero" style="background: white; color: #009688;">
-                <i class="material-icons" style="font-size: 20px;">chat</i> WhatsApp
-            </a>
-            <a href="mailto:contato@opencasting.com.br" class="btn-hero" style="background: transparent; border: 2px solid white; color: white;">
-                <i class="material-icons" style="vertical-align: middle;">email</i> E-mail
-            </a>
+            {% if config_site.telefone_contato %}
+                <a href="https://wa.me/55{{ config_site.telefone_contato|phone_digits }}" target="_blank" class="btn-hero" style="background: white; color: #009688;">
+                    <i class="material-icons" style="font-size: 20px;">chat</i> WhatsApp
+                </a>
+            {% endif %}
+            {% if config_site.email_contato %}
+                <a href="mailto:{{ config_site.email_contato }}" class="btn-hero" style="background: transparent; border: 2px solid white; color: white;">
+                    <i class="material-icons" style="vertical-align: middle;">email</i> E-mail
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -414,28 +419,28 @@
 <footer class="site-footer">
     <div class="footer-content">
         <div class="footer-col">
-            <h4>OpenCasting</h4>
-            <p>Conectamos as melhores marcas aos profissionais mais qualificados.</p>
+            <h4>{{ config_site.titulo_site|default:"OpenCasting" }}</h4>
+            <p>{{ config_site.texto_sobre_curto|default:"Conectamos as melhores marcas aos profissionais mais qualificados."|safe }}</p>
         </div>
         <div class="footer-col">
             <h4>Navegação</h4>
             <ul class="footer-links">
-                <li><a href="#">Quem Somos</a></li>
-                <li><a href="#">Serviços</a></li>
-                <li><a href="#">Privacidade</a></li>
+                <li><a href="{% url 'quem_somos' %}">{{ config_site.titulo_quem_somos|default:"Quem Somos" }}</a></li>
+                <li><a href="{% url 'servicos' %}">{{ config_site.titulo_servicos|default:"Serviços" }}</a></li>
+                <li><a href="{% url 'privacidade' %}">{{ config_site.titulo_privacidade|default:"Privacidade" }}</a></li>
             </ul>
         </div>
         <div class="footer-col">
             <h4>Contato</h4>
             <ul class="footer-links">
-                <li>(11) 99999-9999</li>
-                <li>contato@opencasting.com.br</li>
-                <li>Alphaville, Barueri - SP</li>
+                {% if config_site.telefone_contato %}<li>{{ config_site.telefone_contato }}</li>{% endif %}
+                {% if config_site.email_contato %}<li>{{ config_site.email_contato }}</li>{% endif %}
+                {% if config_site.endereco_contato %}<li>{{ config_site.endereco_contato }}</li>{% endif %}
             </ul>
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; 2025 OpenCasting Agency. Todos os direitos reservados.</p>
+        <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"OpenCasting" }}. Todos os direitos reservados.</p>
         <p>Desenvolvido por <a href="#" class="dev-tag">GOUVEA AUTOMAÇÕES</a></p>
     </div>
 </footer>
