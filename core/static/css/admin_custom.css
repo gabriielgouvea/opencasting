@@ -348,11 +348,22 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
     }
 
     /* Esconde campos que poluem no mobile */
-    body.oc-userprofile-changelist #result_list td.action-checkbox,
     body.oc-userprofile-changelist #result_list td.field-exibir_foto,
     body.oc-userprofile-changelist #result_list td.field-whatsapp_link,
     body.oc-userprofile-changelist #result_list td.field-acoes_rapidas {
         display: none !important;
+    }
+
+    /* No mobile, mantém o checkbox de seleção visível para gerar link */
+    body.oc-userprofile-changelist #result_list td.action-checkbox {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 0 10px 0;
+    }
+
+    body.oc-userprofile-changelist #result_list td.action-checkbox input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
     }
 
     /* Nome + bolinha de status (sem texto)
