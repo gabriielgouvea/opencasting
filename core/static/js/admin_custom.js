@@ -1284,9 +1284,20 @@
         // Importante: este setup roda em interval. Qualquer exceção aqui não pode quebrar a toolbar.
         try { ensureDjangoActionsCounter(); } catch(e) {}
 
+        const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+        const isUserProfileChangeList = path.includes('/admin/core/userprofile/');
+
+        // Se já criamos uma toolbar em outra tela (Trabalhos/Candidaturas/etc), remove.
+        // Regras daqui valem só para Base de Promotores.
+        try {
+            const existingToolbar = document.getElementById('custom-filter-toolbar');
+            if (existingToolbar && !isUserProfileChangeList) {
+                existingToolbar.remove();
+            }
+        } catch (e) {}
+
         // Marca contexto da página para CSS responsivo (PythonAnywhere/mobile)
         try {
-            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
             if (document.body && document.body.classList) {
                 if (path.includes('/admin/core/userprofile/') && document.body.classList.contains('change-list')) {
                     document.body.classList.add('oc-userprofile-changelist');
@@ -1294,9 +1305,11 @@
             }
         } catch(e) {}
 
-        // Cria toolbar (tabs + busca + botão filtros)
+        // Cria toolbar (tabs + busca + botão filtros) - SOMENTE Base de Promotores
         try {
-            if (!document.getElementById('custom-filter-toolbar')) {
+            if (!isUserProfileChangeList) {
+                // não mexer em outras telas
+            } else if (!document.getElementById('custom-filter-toolbar')) {
                 const form = document.getElementById('changelist-form');
                 if (form) {
                     const toolbar = document.createElement('div');
@@ -1304,17 +1317,53 @@
                     toolbar.innerLoc = '1';
                     toolbar.innerHTML = `
                         <div class="toolbar-actions">
-                            <div class="oc-status-tabs" id="oc-status-tabs" style="display:none;">
-                                <a class="oc-status-tab" id="oc-tab-aprovados" href="/admin/core/userprofile/aprovados/">Aprovados</a>
-                                <a class="oc-status-tab" id="oc-tab-pendentes" href="/admin/core/userprofile/pendentes/">Pendentes</a>
-                                <a class="oc-status-tab" id="oc-tab-correcao" href="/admin/core/userprofile/aguardando-ajuste/">Aguardando ajuste</a>
+                            <div class="oc-toolbar-left">
+                                <div class="oc-status-tabs" id="oc-status-tabs" style="display:none;">
+                                    <a class="oc-status-tab" id="oc-tab-aprovados" href="/admin/core/userprofile/aprovados/">Aprovados</a>
+                                    <a class="oc-status-tab" id="oc-tab-pendentes" href="/admin/core/userprofile/pendentes/">Pendentes</a>
+                                    <a class="oc-status-tab" id="oc-tab-correcao" href="/admin/core/userprofile/aguardando-ajuste/">Aguardando ajuste</a>
+                                </div>
                             </div>
-                            <input id="oc-live-search" type="search" placeholder="Pesquisar (nome, CPF, WhatsApp...)" autocomplete="off" />
-                            <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
+
+                            <div class="oc-toolbar-center">
+                                <input id="oc-live-search" type="search" placeholder="Pesquisar (nome, CPF, WhatsApp...)" autocomplete="off" />
+                            </div>
+
+                            <div class="oc-toolbar-right" id="oc-toolbar-right">
+                                <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
+                                <button type="button" id="btn-gerar-apresentacao" class="btn btn-sm btn-primary">Gerar link de apresentação</button>
+                                <button type="button" id="btn-limpar-selecao" class="btn btn-sm btn-light">Limpar seleção</button>
+                            </div>
                         </div>
                     `;
                     if (form.parentNode) {
                         form.parentNode.insertBefore(toolbar, form);
+                    }
+                }
+            }
+
+            // Se a toolbar já existia (de uma versão anterior do JS), injeta botões faltantes
+            if (isUserProfileChangeList) {
+                const toolbar = document.getElementById('custom-filter-toolbar');
+                if (toolbar) {
+                    const rightRow = document.getElementById('oc-toolbar-right') || toolbar.querySelector('.oc-toolbar-right') || toolbar.querySelector('.toolbar-actions') || toolbar;
+
+                    if (!document.getElementById('btn-gerar-apresentacao')) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.id = 'btn-gerar-apresentacao';
+                        b.className = 'btn btn-sm btn-primary';
+                        b.textContent = 'Gerar link de apresentação';
+                        rightRow.appendChild(b);
+                    }
+
+                    if (!document.getElementById('btn-limpar-selecao')) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.id = 'btn-limpar-selecao';
+                        b.className = 'btn btn-sm btn-light';
+                        b.textContent = 'Limpar seleção';
+                        rightRow.appendChild(b);
                     }
                 }
             }
@@ -1325,9 +1374,341 @@
                 btn.dataset.bound = '1';
                 btn.addEventListener('click', () => window.openCastingFilters());
             }
+
+            function getSelectedCount() {
+                try {
+                    return document.querySelectorAll('input[name="_selected_action"]:checked').length;
+                } catch (e) {
+                    return 0;
+                }
+            }
+
+            // Seleção persistente (para poder pesquisar e ir marcando vários)
+            const SELECT_KEY = '__oc_selected_userprofile_ids';
+
+            function readStoredSelectedIds() {
+                try {
+                    const raw = sessionStorage.getItem(SELECT_KEY);
+                    if (!raw) return [];
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) return [];
+                    return parsed.map(String).filter(Boolean);
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function writeStoredSelectedIds(ids) {
+                try {
+                    const unique = Array.from(new Set((ids || []).map(String).filter(Boolean)));
+                    sessionStorage.setItem(SELECT_KEY, JSON.stringify(unique));
+                } catch (e) {}
+            }
+
+            function addStoredSelectedId(id) {
+                const ids = readStoredSelectedIds();
+                const sid = String(id || '').trim();
+                if (!sid) return;
+                if (!ids.includes(sid)) {
+                    ids.push(sid);
+                    writeStoredSelectedIds(ids);
+                }
+            }
+
+            function removeStoredSelectedId(id) {
+                const sid = String(id || '').trim();
+                if (!sid) return;
+                const ids = readStoredSelectedIds().filter(x => x !== sid);
+                writeStoredSelectedIds(ids);
+            }
+
+            function getStoredSelectedCount() {
+                return readStoredSelectedIds().length;
+            }
+
+            function applyStoredSelectionToVisibleRows() {
+                try {
+                    const ids = new Set(readStoredSelectedIds());
+                    const boxes = document.querySelectorAll('input[name="_selected_action"]');
+                    boxes.forEach(b => {
+                        const v = String(b.value || '');
+                        if (!v) return;
+                        if (ids.has(v)) b.checked = true;
+                    });
+                } catch (e) {}
+            }
+
+            function setApresentacaoButtonVisible(flag) {
+                const b = document.getElementById('btn-gerar-apresentacao');
+                if (!b) return;
+                b.style.display = flag ? 'inline-flex' : 'none';
+            }
+
+            function setLimparSelecaoButtonVisible(flag) {
+                const b = document.getElementById('btn-limpar-selecao');
+                if (!b) return;
+                b.style.display = flag ? 'inline-flex' : 'none';
+            }
+
+            function submitAdminAction(actionName) {
+                const form = document.getElementById('changelist-form');
+                if (!form) return false;
+
+                const sel = document.querySelector('select[name="action"]');
+                if (!sel) return false;
+
+                // Injeta inputs ocultos para IDs selecionados que NÃO estão visíveis na tabela atual.
+                // Isso permite selecionar via pesquisa e depois gerar um link com todos.
+                try {
+                    // remove anteriores
+                    form.querySelectorAll('input[data-oc-persist="1"]').forEach(n => n.remove());
+
+                    const stored = readStoredSelectedIds();
+                    if (stored && stored.length) {
+                        const present = new Set();
+                        form.querySelectorAll('input[name="_selected_action"]').forEach(cb => {
+                            if (cb && cb.value) present.add(String(cb.value));
+                        });
+
+                        stored.forEach(id => {
+                            const sid = String(id);
+                            if (!sid) return;
+                            if (present.has(sid)) return; // já existe checkbox na tela
+
+                            const h = document.createElement('input');
+                            h.type = 'hidden';
+                            h.name = '_selected_action';
+                            h.value = sid;
+                            h.setAttribute('data-oc-persist', '1');
+                            form.appendChild(h);
+                        });
+                    }
+                } catch (e) {}
+
+                sel.value = actionName;
+                try {
+                    form.submit();
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Botão de gerar link de apresentação (usa a action do Django por trás)
+            const btnAp = document.getElementById('btn-gerar-apresentacao');
+            if (btnAp && btnAp.dataset.bound !== '1') {
+                btnAp.dataset.bound = '1';
+                btnAp.addEventListener('click', () => {
+                    const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+                    if (!path.includes('/admin/core/userprofile/')) return;
+
+                    const selected = getStoredSelectedCount() || getSelectedCount();
+                    if (!selected) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Selecione pelo menos 1 promotor',
+                                text: 'Marque o checkbox de quem você quer enviar para o cliente.',
+                                heightAuto: false,
+                                customClass: { popup: 'oc-swal-popup' },
+                            });
+                        } else {
+                            alert('Selecione pelo menos 1 promotor (checkbox).');
+                        }
+                        return;
+                    }
+
+                    const ok = submitAdminAction('gerar_link_apresentacao');
+                    if (!ok) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Não foi possível gerar',
+                                text: 'Não encontrei o seletor de ações do Django na página.',
+                                heightAuto: false,
+                                customClass: { popup: 'oc-swal-popup' },
+                            });
+                        } else {
+                            alert('Não foi possível gerar o link (ações do Django não encontradas).');
+                        }
+                    }
+                });
+            }
+
+            // Botão limpar seleção (zera seleção persistida e desmarca visíveis)
+            const btnClearSel = document.getElementById('btn-limpar-selecao');
+            if (btnClearSel && btnClearSel.dataset.bound !== '1') {
+                btnClearSel.dataset.bound = '1';
+                btnClearSel.addEventListener('click', () => {
+                    try {
+                        sessionStorage.removeItem(SELECT_KEY);
+                    } catch (e) {}
+
+                    try {
+                        document.querySelectorAll('input[name="_selected_action"]:checked').forEach(cb => {
+                            cb.checked = false;
+                        });
+                    } catch (e) {}
+
+                    // Desmarca "selecionar todos" se existir
+                    try {
+                        const t = document.getElementById('action-toggle');
+                        if (t) t.checked = false;
+                    } catch (e) {}
+
+                    // Remove hidden persistidos (se existirem)
+                    try {
+                        const form = document.getElementById('changelist-form');
+                        if (form) form.querySelectorAll('input[data-oc-persist="1"]').forEach(n => n.remove());
+                    } catch (e) {}
+
+                    setApresentacaoButtonVisible(false);
+                    setLimparSelecaoButtonVisible(false);
+                });
+            }
+
+            // Mostrar/esconder o botão conforme seleção (sem mexer na posição das abas)
+            try {
+                const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+                if (path.includes('/admin/core/userprofile/')) {
+                    const form = document.getElementById('changelist-form');
+                    // Estado inicial
+                    applyStoredSelectionToVisibleRows();
+                    const hasAny = (getStoredSelectedCount() > 0 || getSelectedCount() > 0);
+                    setApresentacaoButtonVisible(hasAny);
+                    setLimparSelecaoButtonVisible(hasAny);
+
+                    if (form && form.dataset.ocBoundApSel !== '1') {
+                        form.dataset.ocBoundApSel = '1';
+                        // Captura mudanças de qualquer checkbox (inclui "selecionar todos")
+                        form.addEventListener('change', (ev) => {
+                            const t = ev && ev.target;
+                            if (t && t.matches && t.matches('input[name="_selected_action"]')) {
+                                if (t.checked) addStoredSelectedId(t.value);
+                                else removeStoredSelectedId(t.value);
+                                const has = getStoredSelectedCount() > 0;
+                                setApresentacaoButtonVisible(has);
+                                setLimparSelecaoButtonVisible(has);
+                            } else if (t && t.matches && t.matches('#action-toggle')) {
+                                // Selecionar tudo (na visão atual): adiciona/remove os visíveis
+                                const boxes = document.querySelectorAll('input[name="_selected_action"]');
+                                boxes.forEach(cb => {
+                                    if (!cb || !cb.value) return;
+                                    if (t.checked) addStoredSelectedId(cb.value);
+                                    else removeStoredSelectedId(cb.value);
+                                });
+                                const has = getStoredSelectedCount() > 0;
+                                setApresentacaoButtonVisible(has);
+                                setLimparSelecaoButtonVisible(has);
+                            }
+                        }, true);
+                    }
+                }
+            } catch (e) {}
         } catch(e) {
             console.error('setupUI toolbar error', e);
         }
+
+        // Popup bonito do link gerado (substitui a barra verde)
+        try {
+            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+            if (path.includes('/admin/core/userprofile/')) {
+                if (!window.__oc_apresentacao_popup_done) {
+                    const candidates = Array.from(document.querySelectorAll(
+                        '.messagelist li, .messagelist .success, .messagelist .warning, .alert, .alert-success, .alert-warning'
+                    ));
+
+                    let successNode = null;
+                    let warningNode = null;
+                    let href = null;
+
+                    for (const el of candidates) {
+                        const a = el.querySelector && el.querySelector('a[href*="/apresentacao/"]');
+                        if (a && a.getAttribute('href')) {
+                            href = a.getAttribute('href');
+                            successNode = el;
+                            break;
+                        }
+                    }
+
+                    // Pega aviso de "ignorados" se existir
+                    for (const el of candidates) {
+                        const txt = (el.innerText || '').toLowerCase();
+                        if (txt.includes('foram ignorados')) {
+                            warningNode = el;
+                            break;
+                        }
+                    }
+
+                    if (href && successNode && typeof Swal !== 'undefined') {
+                        window.__oc_apresentacao_popup_done = true;
+
+                        // Remove mensagens da tela
+                        try { successNode.remove(); } catch (e) { try { successNode.style.display = 'none'; } catch (e2) {} }
+                        if (warningNode) {
+                            try { warningNode.remove(); } catch (e) { try { warningNode.style.display = 'none'; } catch (e2) {} }
+                        }
+
+                        const warnText = warningNode ? (warningNode.innerText || '').trim() : '';
+                        const safeWarn = warnText ? `<div style="margin-top:10px; font-weight:800; color:#8a6d3b;">${warnText}</div>` : '';
+
+                        const html = `
+                            <div style="text-align:left;">
+                                <div style="font-weight:900; margin-bottom:8px;">Link de apresentação gerado</div>
+                                <div style="font-size:12px; color:#6c757d; margin-bottom:10px;">Este link expira em 7 dias.</div>
+                                <input id="oc-ap-link" class="swal2-input" style="margin:0;" readonly value="${href.replace(/"/g,'&quot;')}">
+                                ${safeWarn}
+                            </div>
+                        `;
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: '',
+                            html,
+                            confirmButtonText: 'Copiar link',
+                            showCancelButton: true,
+                            cancelButtonText: 'Fechar',
+                            heightAuto: false,
+                            customClass: { popup: 'oc-swal-popup' },
+                            didOpen: () => {
+                                try {
+                                    const i = document.getElementById('oc-ap-link');
+                                    if (i) i.select();
+                                } catch (e) {}
+                            },
+                            preConfirm: async () => {
+                                try {
+                                    const text = href;
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        await navigator.clipboard.writeText(text);
+                                        return true;
+                                    }
+                                } catch (e) {}
+
+                                // fallback
+                                try {
+                                    const ta = document.createElement('textarea');
+                                    ta.value = href;
+                                    ta.setAttribute('readonly', 'readonly');
+                                    ta.style.position = 'fixed';
+                                    ta.style.left = '-9999px';
+                                    document.body.appendChild(ta);
+                                    ta.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(ta);
+                                    return true;
+                                } catch (e) {
+                                    return true;
+                                }
+                            }
+                        }).then((r) => {
+                            // Ao clicar em copiar, o Swal fecha automaticamente.
+                            // Nada extra aqui.
+                        });
+                    }
+                }
+            }
+        } catch (e) {}
 
         // Botão pequeno "Limpar filtros" no topo (só aparece quando houver filtros ativos)
         try { ensureTopClearFiltersButton(); } catch(e) {}

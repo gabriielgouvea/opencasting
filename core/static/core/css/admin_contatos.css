@@ -1,0 +1,42 @@
+/* Ajustes de layout para o admin de Contatos (inline em lista) */
+
+/* Evita scroll horizontal dentro do bloco de inlines */
+.inline-group,
+.inline-group fieldset {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Faz os campos ocuparem a largura disponível */
+.inline-group .inline-related .form-row {
+  padding-right: 0;
+}
+
+.inline-group .inline-related .fieldBox,
+.inline-group .inline-related .form-row > div {
+  max-width: 100%;
+}
+
+.inline-group .inline-related input[type="text"],
+.inline-group .inline-related input[type="url"],
+.inline-group .inline-related input[type="email"],
+.inline-group .inline-related select,
+.inline-group .inline-related textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Radios do "Esse número é…" em linha no desktop */
+@media (min-width: 769px) {
+  .inline-group .inline-related .field-telefone_tipo ul {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+  }
+  .inline-group .inline-related .field-telefone_tipo li {
+    list-style: none;
+    margin: 0;
+  }
+}

@@ -19,11 +19,8 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
 
-    # --- INSTITUCIONAL (SITE) ---
+    # --- SITE ---
     path('', views.home, name='home'),
-    path('quem-somos/', views.quem_somos, name='quem_somos'),  # <--- NOVA ROTA PARA A PÁGINA
-    path('servicos/', views.servicos, name='servicos'),
-    path('privacidade/', views.privacidade, name='privacidade'),
 
     # --- ÁREA DO CANDIDATO (Logado) ---
     path('cadastro/', views.cadastro, name='cadastro'),

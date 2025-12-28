@@ -31,8 +31,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
-
-from django_ckeditor_5.widgets import CKEditor5Widget
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 
 # Importação dos Modelos do Sistema OpenCasting
 from .models import (
@@ -44,8 +43,62 @@ from .models import (
     Pergunta, 
     Resposta, 
     Avaliacao, 
-    ConfiguracaoSite
+    ConfiguracaoSite,
+    ContatoSite,
+    Apresentacao,
+    ApresentacaoItem,
 )
+
+
+@admin.action(description='Gerar link de apresentação (7 dias)')
+def gerar_link_apresentacao(modeladmin, request, queryset):
+    selected_ids = request.POST.getlist(ACTION_CHECKBOX_NAME) or []
+    by_id = {str(obj.pk): obj for obj in queryset}
+
+    # Regra: o link só pode ser gerado com aprovados.
+    # Se a lista estiver em pendentes/reprovados e o usuário marcar, nós ignoramos e avisamos.
+    aprovados_ids = set(
+        UserProfile.objects.filter(pk__in=[int(x) for x in selected_ids if str(x).isdigit()], status='aprovado')
+        .values_list('pk', flat=True)
+    )
+
+    nao_aprovados = 0
+    ordem_promotores: list[UserProfile] = []
+
+    # Mantém ordem do POST
+    for pk in selected_ids:
+        obj = by_id.get(str(pk))
+        if not obj:
+            continue
+        if obj.pk not in aprovados_ids:
+            nao_aprovados += 1
+            continue
+        ordem_promotores.append(obj)
+
+    # Fallback: se por algum motivo não vierem IDs (ou seleção vazia), usa o queryset
+    if not ordem_promotores:
+        for obj in queryset:
+            if getattr(obj, 'status', None) == 'aprovado':
+                ordem_promotores.append(obj)
+            else:
+                nao_aprovados += 1
+
+    if not ordem_promotores:
+        messages.error(request, 'Selecione pelo menos 1 promotor APROVADO para gerar o link.')
+        return
+
+    ap = Apresentacao.objects.create(
+        criado_por=getattr(request, 'user', None) if getattr(request, 'user', None) and request.user.is_authenticated else None,
+        expira_em=timezone.now() + timedelta(days=7),
+    )
+
+    for ordem, obj in enumerate(ordem_promotores):
+        ApresentacaoItem.objects.create(apresentacao=ap, promotor=obj, ordem=ordem)
+
+    link = request.build_absolute_uri(reverse('apresentacao_publica', kwargs={'uuid': ap.uuid}))
+    if nao_aprovados:
+        messages.warning(request, f'{nao_aprovados} selecionado(s) não estavam aprovados e foram ignorados.')
+    messages.success(request, format_html('Link gerado (expira em 7 dias): <a href="{}" target="_blank">{}</a>', link, link))
 
 
 class UserProfileAdminForm(forms.ModelForm):
@@ -300,16 +353,43 @@ class JobAdminForm(forms.ModelForm):
         }
 
 
-class ConfiguracaoSiteAdminForm(forms.ModelForm):
+class ContatoSiteInlineForm(forms.ModelForm):
     class Meta:
-        model = ConfiguracaoSite
-        fields = '__all__'
+        model = ContatoSite
+        fields = ('tipo', 'valor', 'telefone_tipo')
         widgets = {
-            'texto_sobre_curto': CKEditor5Widget(config_name='default'),
-            'texto_quem_somos': CKEditor5Widget(config_name='default'),
-            'texto_servicos': CKEditor5Widget(config_name='default'),
-            'texto_privacidade': CKEditor5Widget(config_name='default'),
+            'telefone_tipo': forms.RadioSelect,
         }
+        labels = {
+            'valor': 'Contato',
+            'telefone_tipo': 'Esse número é…',
+        }
+        help_texts = {
+            'valor': 'Para Instagram/Facebook, cole o link. Para telefone, pode ser com DDD (ex: (11) 91234-5678).',
+            'telefone_tipo': 'Escolha como o número será usado (aparece só quando o tipo for Telefone).',
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        tipo = cleaned.get('tipo')
+        telefone_tipo = cleaned.get('telefone_tipo')
+
+        if tipo == 'telefone':
+            if not telefone_tipo:
+                self.add_error('telefone_tipo', 'Selecione uma opção (Telefone, WhatsApp ou Ambos).')
+        else:
+            cleaned['telefone_tipo'] = None
+
+        return cleaned
+
+
+class ContatoSiteInline(admin.StackedInline):
+    model = ContatoSite
+    form = ContatoSiteInlineForm
+    extra = 0
+    ordering = ('ordem', 'id')
+    exclude = ('ordem',)
+    fields = ('tipo', 'valor', 'telefone_tipo')
 
 
 def _safe_filename(value: str, fallback: str = 'arquivo') -> str:
@@ -486,7 +566,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
     
     search_fields = ('nome_completo', 'cpf', 'whatsapp')
-    actions = [aprovar_modelos_massa, reprovar_modelos_massa, excluir_modelos_massa]
+    actions = [aprovar_modelos_massa, reprovar_modelos_massa, excluir_modelos_massa, gerar_link_apresentacao]
     
     readonly_fields = ('preview_rosto', 'preview_corpo', 'data_reprovacao')
 
@@ -1151,26 +1231,25 @@ admin.site.register(Avaliacao)
 
 @admin.register(ConfiguracaoSite)
 class ConfiguracaoSiteAdmin(admin.ModelAdmin):
-    list_display = ('titulo_site', 'email_contato', 'telefone_contato')
-    form = ConfiguracaoSiteAdminForm
+    list_display = ('titulo_site',)
+    inlines = (ContatoSiteInline,)
+    fields = ()
 
-    fieldsets = (
-        ('Geral', {
-            'fields': ('titulo_site', 'texto_sobre_curto', 'instagram_link')
-        }),
-        ('Rodapé - Contato', {
-            'fields': ('telefone_contato', 'email_contato', 'endereco_contato')
-        }),
-        ('Página - Quem Somos', {
-            'fields': ('titulo_quem_somos', 'texto_quem_somos')
-        }),
-        ('Página - Serviços', {
-            'fields': ('titulo_servicos', 'texto_servicos')
-        }),
-        ('Página - Privacidade', {
-            'fields': ('titulo_privacidade', 'texto_privacidade')
-        }),
-    )
+    # Jazzmin: evita tabs/scroll desnecessários
+    changeform_format = 'single'
+
+    change_form_template = 'admin/core/configuracaosite/change_form.html'
+
+    class Media:
+        js = ('core/js/admin_contatos.js',)
+        css = {
+            'all': ('core/css/admin_contatos.css',)
+        }
+
+    def changelist_view(self, request, extra_context=None):
+        # Ao clicar no menu "Contatos", abre direto o singleton.
+        obj = ConfiguracaoSite.load()
+        return redirect(reverse('admin:core_configuracaosite_change', args=(obj.pk,)))
 
     def has_add_permission(self, request):
         # Singleton

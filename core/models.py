@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Avg
 from django.utils import timezone
+from datetime import timedelta
 
 
 class CpfBanido(models.Model):
@@ -473,10 +474,103 @@ class ConfiguracaoSite(models.Model):
         verbose_name="Texto - Privacidade",
     )
 
+    def __str__(self):
+        return "Contatos"
+
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Contatos"
+        verbose_name_plural = "Contatos"
     @classmethod
     def load(cls):
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class ContatoSite(models.Model):
+    TIPO_CHOICES = (
+        ('email', 'E-mail'),
+        ('telefone', 'Telefone'),
+        ('instagram', 'Instagram'),
+        ('facebook', 'Facebook'),
+    )
+
+    TELEFONE_TIPO_CHOICES = (
+        ('telefone', 'Somente telefone'),
+        ('whatsapp', 'Somente WhatsApp'),
+        ('ambos', 'Telefone e WhatsApp'),
+    )
+
+    configuracao = models.ForeignKey(
+        ConfiguracaoSite,
+        related_name='contatos',
+        on_delete=models.CASCADE,
+        verbose_name='Configuração',
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, verbose_name='Tipo')
+    valor = models.CharField(max_length=255, verbose_name='Valor')
+    telefone_tipo = models.CharField(
+        max_length=20,
+        choices=TELEFONE_TIPO_CHOICES,
+        blank=True,
+        null=True,
+        verbose_name='Tipo do número',
+        help_text='Usado apenas quando o tipo for Telefone.',
+    )
+    ordem = models.PositiveSmallIntegerField(default=0, verbose_name='Ordem')
+
+    class Meta:
+        verbose_name = 'Contato'
+        verbose_name_plural = 'Contatos'
+        ordering = ('ordem', 'id')
+
+    def __str__(self):
+        return f"{self.get_tipo_display()}: {self.valor}"
+
+
+def _apresentacao_default_expira_em():
+    return timezone.now() + timedelta(days=7)
+
+
+class Apresentacao(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, verbose_name='Link')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    expira_em = models.DateTimeField(default=_apresentacao_default_expira_em, verbose_name='Expira em')
+    criado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='apresentacoes_criadas',
+        verbose_name='Criado por',
+    )
+
+    class Meta:
+        verbose_name = 'Apresentação'
+        verbose_name_plural = 'Apresentações'
+
+    def __str__(self):
+        return f"Apresentação {self.uuid}"
+
+    def is_expirada(self) -> bool:
+        try:
+            return bool(self.expira_em and self.expira_em <= timezone.now())
+        except Exception:
+            return False
+
+
+class ApresentacaoItem(models.Model):
+    apresentacao = models.ForeignKey(Apresentacao, related_name='itens', on_delete=models.CASCADE)
+    promotor = models.ForeignKey(UserProfile, related_name='apresentacoes', on_delete=models.CASCADE)
+    ordem = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Item da apresentação'
+        verbose_name_plural = 'Itens da apresentação'
+        ordering = ('ordem', 'id')
+
+    def __str__(self):
+        return f"{self.promotor.nome_completo}"

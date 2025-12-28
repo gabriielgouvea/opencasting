@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views
@@ -22,6 +22,9 @@ urlpatterns = [
     
     # 4. AVALIAÇÃO EXTERNA (CRM)
     path('avaliar/<uuid:uuid>/', views.avaliar_promotor, name='avaliar_promotor'),
+
+    # 4.1 APRESENTAÇÃO PÚBLICA (LINK)
+    path('apresentacao/<uuid:uuid>/', views.apresentacao_publica, name='apresentacao_publica'),
     
     # 5. AUTENTICAÇÃO (LOGIN/LOGOUT)
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
@@ -33,13 +36,7 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
     
-    # 7. INSTITUCIONAL
-    path('quem-somos/', views.quem_somos, name='quem_somos'),
-    path('servicos/', views.servicos, name='servicos'),
-    path('privacidade/', views.privacidade, name='privacidade'),
-    
-     # CKEditor 5 (admin)
-     path('ckeditor5/', include('django_ckeditor_5.urls')),
+    # (Rotas institucionais removidas)
 ]
 
 # CONFIGURAÇÃO PARA ARQUIVOS DE MÍDIA (FOTOS)

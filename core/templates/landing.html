@@ -322,13 +322,13 @@
         <h2>Eleve o nível do seu evento</h2>
         <p>Fale conosco agora pelo WhatsApp.</p>
         <div class="cta-actions">
-            {% if config_site.telefone_contato %}
-                <a href="https://wa.me/55{{ config_site.telefone_contato|phone_digits }}" target="_blank" class="btn-hero" style="background: white; color: #009688;">
+            {% if contato_whatsapp_principal %}
+                <a href="https://wa.me/55{{ contato_whatsapp_principal.valor|phone_digits }}" target="_blank" class="btn-hero" style="background: white; color: #009688;">
                     <i class="material-icons" style="font-size: 20px;">chat</i> WhatsApp
                 </a>
             {% endif %}
-            {% if config_site.email_contato %}
-                <a href="mailto:{{ config_site.email_contato }}" class="btn-hero" style="background: transparent; border: 2px solid white; color: white;">
+            {% if contato_email_principal %}
+                <a href="mailto:{{ contato_email_principal.valor }}" class="btn-hero" style="background: transparent; border: 2px solid white; color: white;">
                     <i class="material-icons" style="vertical-align: middle;">email</i> E-mail
                 </a>
             {% endif %}
@@ -425,17 +425,19 @@
         <div class="footer-col">
             <h4>Navegação</h4>
             <ul class="footer-links">
-                <li><a href="{% url 'quem_somos' %}">{{ config_site.titulo_quem_somos|default:"Quem Somos" }}</a></li>
-                <li><a href="{% url 'servicos' %}">{{ config_site.titulo_servicos|default:"Serviços" }}</a></li>
-                <li><a href="{% url 'privacidade' %}">{{ config_site.titulo_privacidade|default:"Privacidade" }}</a></li>
+                <li><a href="{% url 'lista_vagas' %}">Mural de Vagas</a></li>
+                <li><a href="{% url 'cadastro' %}">Cadastro</a></li>
             </ul>
         </div>
         <div class="footer-col">
             <h4>Contato</h4>
             <ul class="footer-links">
-                {% if config_site.telefone_contato %}<li>{{ config_site.telefone_contato }}</li>{% endif %}
-                {% if config_site.email_contato %}<li>{{ config_site.email_contato }}</li>{% endif %}
-                {% if config_site.endereco_contato %}<li>{{ config_site.endereco_contato }}</li>{% endif %}
+                {% if contatos_por_tipo.telefone %}
+                    {% for c in contatos_por_tipo.telefone %}<li>{{ c.valor }}</li>{% endfor %}
+                {% endif %}
+                {% if contatos_por_tipo.email %}
+                    {% for c in contatos_por_tipo.email %}<li>{{ c.valor }}</li>{% endfor %}
+                {% endif %}
             </ul>
         </div>
     </div>

@@ -22,9 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Editor Rich Text (admin)
-    'django_ckeditor_5',
-
     # Apps de Terceiros
     'cloudinary_storage',       # Armazenamento Nuvem
     'cloudinary',
@@ -32,37 +29,6 @@ INSTALLED_APPS = [
     # Seus Apps
     'core.apps.CoreConfig',
 ]
-
-# --- CKEDITOR 5 (Rich Text no Admin) ---
-CKEDITOR_5_CONFIGS = {
-    'default': {
-        'toolbar': [
-            'heading',
-            '|',
-            'bold', 'italic', 'underline',
-            '|',
-            'fontColor', 'fontBackgroundColor',
-            '|',
-            'alignment',
-            '|',
-            'link',
-            '|',
-            'bulletedList', 'numberedList',
-            '|',
-            'blockQuote',
-            '|',
-            'undo', 'redo',
-        ],
-        'heading': {
-            'options': [
-                {'model': 'paragraph', 'title': 'Parágrafo', 'class': 'ck-heading_paragraph'},
-                {'model': 'heading1', 'view': 'h1', 'title': 'Título 1', 'class': 'ck-heading_heading1'},
-                {'model': 'heading2', 'view': 'h2', 'title': 'Título 2', 'class': 'ck-heading_heading2'},
-                {'model': 'heading3', 'view': 'h3', 'title': 'Título 3', 'class': 'ck-heading_heading3'},
-            ]
-        },
-    }
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -206,6 +172,7 @@ JAZZMIN_SETTINGS = {
     "changeform_format_overrides": {
         "core.userprofile": "collapsible",
         "core.job": "single",
+        "core.configuracaosite": "single",
     },
 }
 

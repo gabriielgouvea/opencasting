@@ -1,0 +1,31 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static %}
+
+{# Renderiza somente os contatos (inlines). Não mostra campos do modelo (aba "General"). #}
+{% block field_sets %}
+  <div class="col-12 col-lg-9">
+    <div class="card">
+      <div class="card-body">
+        {% for inline_admin_formset in inline_admin_formsets %}
+          {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  <li>
+    <a href="#" class="addlink" data-add-contato-tipo="email">+ E-mail</a>
+  </li>
+  <li>
+    <a href="#" class="addlink" data-add-contato-tipo="telefone">+ Telefone</a>
+  </li>
+  <li>
+    <a href="#" class="addlink" data-add-contato-tipo="instagram">+ Instagram</a>
+  </li>
+  <li>
+    <a href="#" class="addlink" data-add-contato-tipo="facebook">+ Facebook</a>
+  </li>
+{% endblock %}

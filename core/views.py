@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from .models import Job, Candidatura, UserProfile, Pergunta, Resposta, Avaliacao
+from .models import Job, Candidatura, UserProfile, Pergunta, Resposta, Avaliacao, Apresentacao
 from .forms import CadastroForm
 import datetime
 import math
@@ -89,6 +89,82 @@ def home(request):
         'landing_gallery': _get_landing_gallery_items(max_items=18),
     }
     return render(request, 'landing.html', context)
+
+
+def _idade_em_anos(data_nascimento):
+    if not data_nascimento:
+        return None
+    try:
+        hoje = timezone.now().date()
+        anos = hoje.year - data_nascimento.year
+        if (hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day):
+            anos -= 1
+        return max(0, anos)
+    except Exception:
+        return None
+
+
+def _instagram_normalizado(instagram_raw: str | None):
+    raw = (instagram_raw or '').strip()
+    if not raw:
+        return (None, None)
+
+    text = raw
+    if raw.startswith('http://') or raw.startswith('https://'):
+        return (text, raw)
+
+    handle = raw
+    if handle.startswith('@'):
+        handle = handle[1:]
+    handle = handle.strip().lstrip('/')
+    if not handle:
+        return (text, None)
+
+    url = f"https://instagram.com/{handle}"
+    return (text, url)
+
+
+def apresentacao_publica(request, uuid):
+    ap = get_object_or_404(Apresentacao, uuid=uuid)
+    if ap.expira_em and ap.expira_em <= timezone.now():
+        return render(request, 'apresentacao_expirada.html')
+
+    itens_qs = ap.itens.select_related('promotor').all().order_by('ordem', 'id')
+
+    itens = []
+    for it in itens_qs:
+        p = it.promotor
+
+        foto_rosto_url = None
+        foto_corpo_url = None
+        try:
+            foto_rosto_url = p.foto_rosto.url if getattr(p, 'foto_rosto', None) else None
+        except Exception:
+            foto_rosto_url = None
+        try:
+            foto_corpo_url = p.foto_corpo.url if getattr(p, 'foto_corpo', None) else None
+        except Exception:
+            foto_corpo_url = None
+
+        ig_text, ig_url = _instagram_normalizado(getattr(p, 'instagram', None))
+
+        itens.append(
+            {
+                'nome': getattr(p, 'nome_completo', '') or '',
+                'idade': _idade_em_anos(getattr(p, 'data_nascimento', None)),
+                'altura': str(getattr(p, 'altura', '') or '').replace(',', '.'),
+                'manequim': getattr(p, 'manequim', None),
+                'calcado': getattr(p, 'calcado', None),
+                'cidade': getattr(p, 'cidade', None),
+                'uf': getattr(p, 'estado', None),
+                'instagram': ig_text,
+                'instagram_url': ig_url,
+                'foto_rosto_url': foto_rosto_url,
+                'foto_corpo_url': foto_corpo_url,
+            }
+        )
+
+    return render(request, 'apresentacao_publica.html', {'itens': itens, 'apresentacao': ap})
 
 # --- 2. DASHBOARD / MURAL DE VAGAS ---
 @login_required(login_url='/login/')
@@ -649,14 +725,3 @@ def avaliar_promotor(request, uuid):
             
     return render(request, 'publico_avaliar.html', {'perfil': perfil})
 
-# --- 9. INSTITUCIONAL ---
-def quem_somos(request):
-    return render(request, 'quem_somos.html')
-
-
-def servicos(request):
-    return render(request, 'servicos.html')
-
-
-def privacidade(request):
-    return render(request, 'privacidade.html')
