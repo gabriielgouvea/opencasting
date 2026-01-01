@@ -1512,6 +1512,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
                 'mes_ano': mes_ano,
                 'site_domain': site_domain,
                 'instagram_handle': instagram_handle,
+                'pdf_engine': pdf_engine,
                 # Para o Chromium (Playwright) funciona melhor embutir imagem.
                 # Para xhtml2pdf, usamos STATIC_URL + link_callback.
                 'logo_src': (_static_file_data_uri('images/logo.png') if pdf_engine in {'auto', 'playwright'} else f"{settings.STATIC_URL}images/logo.png"),
@@ -1567,9 +1568,15 @@ class OrcamentoAdmin(admin.ModelAdmin):
             )
 
         def link_callback(uri: str, rel: str | None = None):
-            # Resolve /static/... via django finders (funciona no dev sem collectstatic)
+            # Resolve /static/... via STATIC_ROOT (prod) ou finders (dev)
             if uri.startswith(settings.STATIC_URL):
                 static_path = uri[len(settings.STATIC_URL):]
+                static_root = getattr(settings, 'STATIC_ROOT', None)
+                if static_root:
+                    candidate = os.path.join(str(static_root), static_path)
+                    if os.path.exists(candidate):
+                        return candidate
+
                 found = finders.find(static_path)
                 if found:
                     return found
@@ -1596,6 +1603,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
                 'mes_ano': mes_ano,
                 'site_domain': site_domain,
                 'instagram_handle': instagram_handle,
+                'pdf_engine': 'xhtml2pdf',
                 'logo_src': f"{settings.STATIC_URL}images/logo.png",
                 'cliente_nome': (orcamento.cliente.razao_social if orcamento.cliente_id else None),
                 'cliente_cnpj': (orcamento.cliente.cnpj_formatado if (orcamento.cliente_id and orcamento.cliente.cnpj) else None),

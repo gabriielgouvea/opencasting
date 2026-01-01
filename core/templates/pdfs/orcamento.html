@@ -2,7 +2,9 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  {% if pdf_engine != 'xhtml2pdf' %}
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  {% endif %}
   <title>Orçamento #{{ orcamento.pk }}</title>
   {% load custom_filters %}
   <style>
@@ -11,6 +13,7 @@
       margin: 18mm 16mm;
     }
 
+    {% if pdf_engine != 'xhtml2pdf' %}
     @media print {
       /* Força impressão de cores e fundos (Chrome/Edge/Safari) */
       * {
@@ -44,6 +47,7 @@
       .bottom-strip { background: #313131 !important; color: #fff !important; }
       table.items tfoot td { background: #313131 !important; color: #fff !important; }
     }
+    {% endif %}
 
     * { box-sizing: border-box; }
 
@@ -56,7 +60,11 @@
 
     /* Prévia no navegador: força proporção/largura A4 para não “distorcer” */
     .sheet {
+      {% if pdf_engine == 'xhtml2pdf' %}
+      width: auto;
+      {% else %}
       width: min(210mm, 100%);
+      {% endif %}
       min-height: 297mm;
       margin: 0 auto;
       padding: 18mm 16mm;
@@ -64,6 +72,7 @@
     }
 
     /* Mobile: ajusta tamanhos só na prévia (não afeta print/PDF) */
+    {% if pdf_engine != 'xhtml2pdf' %}
     @media screen and (max-width: 520px) {
       .sheet {
         min-height: auto;
@@ -76,7 +85,9 @@
       table.items th { font-size: 9pt; padding: 7px 8px; }
       table.items td { font-size: 9.5pt; padding: 8px 8px; }
     }
+    {% endif %}
 
+    {% if pdf_engine != 'xhtml2pdf' %}
     @media print {
       /* No print/PDF, o @page já controla margens. Evita “margem dupla”. */
       .sheet {
@@ -86,6 +97,7 @@
         padding: 0;
       }
     }
+    {% endif %}
 
     .top-strip {
       width: 100%;
