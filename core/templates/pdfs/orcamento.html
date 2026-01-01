@@ -8,10 +8,16 @@
   <title>Orçamento #{{ orcamento.pk }}</title>
   {% load custom_filters %}
   <style>
+    {% if pdf_engine == 'xhtml2pdf' %}
+    @page {
+      margin: 18mm 16mm;
+    }
+    {% else %}
     @page {
       size: A4;
       margin: 18mm 16mm;
     }
+    {% endif %}
 
     {% if pdf_engine != 'xhtml2pdf' %}
     @media print {
