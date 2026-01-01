@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orçamento #{{ orcamento.pk }}</title>
+  {% load custom_filters %}
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm;
+    }
+
+    @media print {
+      /* Força impressão de cores e fundos (Chrome/Edge/Safari) */
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Alguns navegadores “achatam” fundos no print; reforçamos com !important */
+      .top-strip,
+      table.items th,
+      .th-total,
+      .cell-total,
+      .cell-qty,
+      tr.alt td,
+      .bottom-strip,
+      table.items tfoot td {
+        background: inherit;
+      }
+
+      .top-strip { background: #313131 !important; color: #fff !important; }
+      table.items th { background: #313131 !important; color: #fff !important; border-color: #313131 !important; }
+      .th-total { background: #d5ac5c !important; color: #fff !important; }
+      .cell-total { background: #d5ac5c !important; color: #fff !important; }
+      .cell-qty { background: #ececec !important; color: #111 !important; }
+      tr.alt td { background: #f3f3f3 !important; }
+      .bottom-strip { background: #313131 !important; color: #fff !important; }
+      table.items tfoot td { background: #313131 !important; color: #fff !important; }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 11pt;
+      color: #111;
+      margin: 0;
+    }
+
+    /* Prévia no navegador: força proporção/largura A4 para não “distorcer” */
+    .sheet {
+      width: min(210mm, 100%);
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 18mm 16mm;
+      background: #fff;
+    }
+
+    /* Mobile: ajusta tamanhos só na prévia (não afeta print/PDF) */
+    @media screen and (max-width: 520px) {
+      .sheet {
+        min-height: auto;
+        padding: 14px;
+      }
+
+      .strip-title { font-size: 34pt; }
+      .strip-date { font-size: 20pt; }
+
+      table.items th { font-size: 9pt; padding: 7px 8px; }
+      table.items td { font-size: 9.5pt; padding: 8px 8px; }
+    }
+
+    @media print {
+      /* No print/PDF, o @page já controla margens. Evita “margem dupla”. */
+      .sheet {
+        width: auto;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    .top-strip {
+      width: 100%;
+      border-collapse: collapse;
+      background: #313131;
+      color: #fff;
+      margin-bottom: 12mm;
+    }
+
+    .top-strip td {
+      padding: 14px 16px;
+      vertical-align: middle;
+    }
+
+    .strip-title {
+      font-size: 46pt;
+      font-weight: 900;
+      line-height: 1.1;
+      margin: 0;
+      padding: 0;
+    }
+
+    .strip-sub {
+      font-size: 11pt;
+      font-weight: 500;
+      color: #e6e6e6;
+      margin-top: 2px;
+    }
+
+    .strip-right {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .strip-date {
+      font-size: 28pt;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .header {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14mm;
+    }
+
+    .title {
+      font-size: 36pt;
+      font-weight: 900;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 10pt;
+      color: #333;
+      line-height: 1.35;
+    }
+
+    .date-line {
+      margin-top: 10px;
+      font-weight: 800;
+      font-size: 11pt;
+    }
+
+    .logo-placeholder {
+      text-align: right;
+      vertical-align: top;
+    }
+
+    .logo-img {
+      width: 230px;
+      max-width: 230px;
+      max-height: 70px;
+      height: auto;
+      display: block;
+    }
+
+    .logo-wrap {
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    .bottom-strip-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .bottom-left {
+      vertical-align: middle;
+    }
+
+    .bottom-right {
+      vertical-align: middle;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .bottom-logo {
+      display: inline-block;
+    }
+
+    .bottom-logo img {
+      height: 90px;
+      max-height: 90px;
+      width: auto;
+      max-width: 360px;
+      display: block;
+    }
+
+    .logo-badge {
+      display: inline-block;
+      border: 1px solid #111;
+      padding: 10px 12px;
+      font-weight: 900;
+      font-size: 12pt;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    table.items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0;
+    }
+
+    table.items th {
+      background: #313131;
+      color: #fff;
+      font-size: 9.5pt;
+      padding: 8px 10px;
+      font-weight: 800;
+      border: 1px solid #313131;
+    }
+
+    table.items td {
+      font-size: 10pt;
+      padding: 10px 10px;
+      border: 1px solid #666;
+      vertical-align: top;
+    }
+
+    tr.alt td { background: #f3f3f3; }
+    .cell-qty { background: #ececec; font-weight: 800; text-align: center; }
+    .cell-total { background: #d5ac5c; color: #fff; font-weight: 900; text-align: right; }
+    .th-total { background: #d5ac5c; }
+
+    .col-qty { width: 12%; text-align: center; }
+    .col-func { width: 38%; }
+    .col-hrs { width: 14%; text-align: center; }
+    .col-diaria { width: 18%; text-align: center; }
+    .col-total { width: 18%; text-align: right; }
+
+    .desc-sub {
+      font-size: 9pt;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .footer {
+      margin-top: 26mm;
+      font-size: 9.5pt;
+      color: #111;
+    }
+
+    .bottom-strip {
+      margin-top: 28mm;
+      background: #313131;
+      color: #fff;
+      padding: 18px 22px;
+      border-radius: 0;
+    }
+
+    .bottom-strip .line {
+      font-weight: 700;
+      font-size: 11pt;
+      margin: 4px 0;
+    }
+
+    .contact-table {
+      border-collapse: collapse;
+    }
+
+    .contact-table td {
+      padding: 3px 0;
+      vertical-align: middle;
+      font-weight: 700;
+      font-size: 11pt;
+    }
+
+    .contact-icon {
+      width: 24px;
+      color: #d5ac5c;
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .client-block {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10mm;
+      font-size: 11pt;
+      color: #313131;
+    }
+
+    .client-block td {
+      padding: 4px 0;
+    }
+
+    .lbl { font-weight: 900; }
+
+    .validade {
+      margin: 0 0 10mm;
+      font-size: 10pt;
+      color: #313131;
+    }
+
+    .footer-help {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18mm;
+    }
+
+    .help-text {
+      font-size: 9.5pt;
+      color: #333;
+      text-align: left;
+      line-height: 1.35;
+    }
+
+    .footer-line {
+      margin-top: 14mm;
+      border-top: 2px solid #111;
+      padding-top: 10px;
+    }
+
+    .footer-bottom {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+
+    .footer-bottom td {
+      vertical-align: top;
+      font-size: 9.5pt;
+    }
+
+    .sep {
+      border-left: 1px solid #111;
+      width: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+  <table class="top-strip">
+    <tr>
+      <td style="width: 60%;">
+        <div class="strip-title">Orçamento</div>
+      </td>
+      <td style="width: 35%;" class="strip-right">
+        <div class="strip-date">{{ data_formatada }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="client-block">
+    <tr>
+      <td><span class="lbl">Nome do cliente:</span> {{ cliente_nome|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td><span class="lbl">CNPJ:</span> {{ cliente_cnpj|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td><span class="lbl">Data do evento:</span> {{ data_evento|default:"-" }}</td>
+    </tr>
+  </table>
+
+  {% if frase_validade %}
+    <div class="validade">{{ frase_validade }}</div>
+  {% endif %}
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="col-qty">Qntd</th>
+        <th class="col-func">Função</th>
+        <th class="col-hrs">Hrs</th>
+        <th class="col-diaria"><div style="font-size: 9pt;">R$</div><div>Diaria</div></th>
+        <th class="col-total th-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in itens %}
+        <tr class="{% cycle '' 'alt' %}">
+          <td class="col-qty cell-qty">{{ item.quantidade|stringformat:"02d" }}</td>
+          <td class="col-func">{{ item.funcao }}</td>
+          <td class="col-hrs">{{ item.carga_horaria_horas }}h</td>
+          <td class="col-diaria">{{ item.valor_diaria|br_num }}</td>
+          <td class="col-total cell-total">{{ item.total|brl_compacto }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="subtitle">Nenhum item informado.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" style="border: none;"></td>
+        <td colspan="2" style="text-align: right; font-weight: 900; border: 1px solid #666; padding: 10px; background: #313131; color: #fff;">
+          Total&nbsp;&nbsp; {{ total_geral|brl_compacto }}
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="bottom-strip">
+    <table class="bottom-strip-table">
+      <tr>
+        <td class="bottom-left">
+          <table class="contact-table">
+            {% if contato_telefone %}
+              <tr>
+                <td class="contact-icon">☎</td>
+                <td>{{ contato_telefone }}</td>
+              </tr>
+            {% endif %}
+            {% if contato_email %}
+              <tr>
+                <td class="contact-icon">✉</td>
+                <td>{{ contato_email }}</td>
+              </tr>
+            {% endif %}
+            {% if instagram_handle %}
+              <tr>
+                <td class="contact-icon">@</td>
+                <td>{{ instagram_handle|lower }}</td>
+              </tr>
+            {% endif %}
+          </table>
+        </td>
+        <td class="bottom-right">
+          {% if logo_src %}
+            <span class="bottom-logo">
+              <img src="{{ logo_src }}" alt="Logo" />
+            </span>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{# Remove ações do topo (ícones/atalhos) e deixa a tela mais limpa #}
+{% block object-tools-items %}
+  {{ block.super }}
+{% endblock %}
+
+{# Botão discreto para adicionar itens (funções) #}
+{% block after_field_sets %}
+  {{ block.super }}
+  <div style="margin: 10px 0 16px;">
+    <a href="#" class="btn btn-outline-success" data-add-orcamento-item="1" style="border-radius: 999px; padding: 10px 18px; font-weight: 800;">
+      Adicionar função
+    </a>
+  </div>
+{% endblock %}
+
+{% block after_related_objects %}
+  {{ block.super }}
+  <div class="oc-orcamento-total-wrapper">
+    <div class="oc-orcamento-total">
+      <div class="oc-orcamento-total-label">Total do orçamento</div>
+      <div class="oc-orcamento-total-value" id="ocOrcamentoTotal">R$ 0,00</div>
+    </div>
+  </div>
+{% endblock %}
+
+{# Um único botão grande no final: salva e já baixa o PDF #}
+{% block submit_buttons_bottom %}
+  <div class="submit-row" style="margin-top: 18px;">
+    <button type="submit" class="btn btn-success btn-lg btn-block oc-generate-btn" name="_generate_pdf" value="1">
+      Gerar orçamento
+    </button>
+  </div>
+{% endblock %}
+
+{# Remove botões duplicados no topo #}
+{% block submit_buttons_top %}{% endblock %}

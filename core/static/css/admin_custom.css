@@ -15,7 +15,7 @@
     --shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* Força o padrão de cores do OpenCasting no Admin */
+/* Força o padrão de cores do Casting Certo no Admin */
 .btn-success, .btn-primary, #btn-realizar-busca {
     background-color: var(--primary) !important;
     border-color: var(--primary) !important;

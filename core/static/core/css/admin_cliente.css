@@ -1,0 +1,48 @@
+/* Estilos aplicados somente nas telas do ModelAdmin Cliente (via Media). */
+
+/* Remove o “fundo cinza” do conteúdo e deixa mais clean. */
+.content-wrapper,
+.content,
+.container-fluid,
+#content {
+  background: #fff !important;
+}
+
+/* Layout em linhas (1 coluna) */
+.form-row,
+.form-group {
+  display: block;
+  width: 100%;
+}
+
+/* Jazzmin/AdminLTE costuma usar colunas internas: força full-width */
+.form-group > .row,
+.form-group .row,
+.form-group [class*='col-'],
+.form-group [class*='col-md-'],
+.form-group [class*='col-lg-'] {
+  max-width: 100%;
+  flex: 0 0 100%;
+}
+
+/* Campos e botões com acabamento mais “profissional” */
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='number'],
+input[type='url'],
+input[type='date'],
+select,
+textarea {
+  border-radius: 10px;
+}
+
+.btn {
+  border-radius: 10px;
+}
+
+/* Dá um respiro vertical entre blocos */
+fieldset,
+.card {
+  margin-bottom: 14px;
+}

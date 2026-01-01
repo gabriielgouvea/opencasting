@@ -1,0 +1,133 @@
+/* Estilos aplicados somente nas telas do ModelAdmin Orcamento (via Media). */
+
+/* Fundo branco (sem cinza) */
+.content-wrapper,
+.content,
+.container-fluid,
+#content {
+  background: #fff !important;
+}
+
+/* Força single-page mesmo se o tema tentar renderizar abas */
+.nav-tabs,
+.nav.nav-tabs,
+.card-header .nav,
+.card-header-tabs {
+  display: none !important;
+}
+
+.tab-content > .tab-pane {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.tab-content {
+  padding-top: 0 !important;
+}
+
+/* Força formulário em 1 coluna (linhas) */
+.form-row,
+.form-group {
+  display: block;
+  width: 100%;
+}
+
+.form-group > .row,
+.form-group .row,
+.form-group [class*='col-'],
+.form-group [class*='col-md-'],
+.form-group [class*='col-lg-'] {
+  max-width: 100%;
+  flex: 0 0 100%;
+}
+
+/* Inlines mais "em lista" */
+.inline-related {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.inline-related h3 {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 0 10px 0 !important;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='number'],
+input[type='url'],
+input[type='date'],
+select,
+textarea {
+  border-radius: 10px;
+  padding: 12px 14px;
+  height: auto;
+}
+
+.btn {
+  border-radius: 10px;
+}
+
+/* Botão principal (estilo "cadastro") */
+.oc-generate-btn {
+  border-radius: 999px !important;
+  padding: 14px 22px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.2px;
+}
+
+/* Some com os ícones do widget relacionado (lápis/+/x/olho) do campo Cliente */
+.related-widget-wrapper-link,
+.related-widget-wrapper .related-widget-wrapper-link {
+  display: none !important;
+}
+
+/* Total geral fixo no final */
+.oc-orcamento-total-wrapper {
+  margin-top: 14px;
+}
+
+.oc-orcamento-total {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oc-orcamento-total-label {
+  font-weight: 700;
+  color: #333;
+}
+
+.oc-orcamento-total-value {
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+/* Total por função */
+.oc-line-total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0,0,0,0.12);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oc-line-total-label {
+  font-weight: 700;
+  color: #444;
+}
+
+.oc-line-total-value {
+  font-weight: 800;
+}

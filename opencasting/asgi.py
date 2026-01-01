@@ -1,5 +1,5 @@
 """
-ASGI config for opencasting project.
+ASGI config for Casting Certo project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

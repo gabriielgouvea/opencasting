@@ -191,7 +191,7 @@
     <div class="hero-grid">
         <div class="hero-content reveal">
             <h1>Excelência em equipe<br>para o seu <span>Evento</span></h1>
-            <p>A OpenCasting conecta marcas aos profissionais certos, com tecnologia, agilidade e documentação validada.</p>
+            <p>A Casting Certo conecta marcas aos profissionais certos, com tecnologia, agilidade e documentação validada.</p>
             <div class="hero-actions">
                 <a href="#orcamento" class="btn-hero btn-primary-hero"><i class="material-icons" style="font-size: 20px;">business</i> Solicitar orçamento</a>
                 {% if not user.is_authenticated %}
@@ -229,7 +229,7 @@
 <section class="why-us lp-section">
     <div class="lp-inner">
         <div class="section-title reveal">
-            <h2>Por que a OpenCasting?</h2>
+            <h2>Por que a Casting Certo?</h2>
             <p>Tecnologia e processo para escalar seu evento com segurança.</p>
         </div>
         <div class="features-grid">
@@ -252,7 +252,7 @@
     </div>
 </section>
 
-<section class="gallery lp-section">
+<section id="cases" class="gallery lp-section">
     <div class="lp-inner">
         <div class="section-title reveal">
             <h2>Nossa equipe em ação</h2>
@@ -273,7 +273,7 @@
     </div>
 </section>
 
-<section class="services">
+<section id="o-que-fazemos" class="services">
     <div class="lp-inner">
         <div class="section-title reveal"><h2 style="color:white; margin: 0;">Soluções completas</h2></div>
         <div class="services-grid">
@@ -419,30 +419,65 @@
 <footer class="site-footer">
     <div class="footer-content">
         <div class="footer-col">
-            <h4>{{ config_site.titulo_site|default:"OpenCasting" }}</h4>
+            <h4>{{ config_site.titulo_site|default:"Casting Certo" }}</h4>
             <p>{{ config_site.texto_sobre_curto|default:"Conectamos as melhores marcas aos profissionais mais qualificados."|safe }}</p>
         </div>
         <div class="footer-col">
-            <h4>Navegação</h4>
+            <h4>Soluções</h4>
             <ul class="footer-links">
                 <li><a href="{% url 'lista_vagas' %}">Mural de Vagas</a></li>
+                <li><a href="{% url 'home' %}#o-que-fazemos">O que fazemos</a></li>
+                <li><a href="{% url 'home' %}#cases">Cases</a></li>
+                <li><a href="{% url 'home' %}#orcamento">Contato</a></li>
                 <li><a href="{% url 'cadastro' %}">Cadastro</a></li>
             </ul>
         </div>
         <div class="footer-col">
-            <h4>Contato</h4>
+            <h4>Empresa</h4>
             <ul class="footer-links">
-                {% if contatos_por_tipo.telefone %}
-                    {% for c in contatos_por_tipo.telefone %}<li>{{ c.valor }}</li>{% endfor %}
-                {% endif %}
+                <li><a href="{% url 'quem_somos' %}">Quem somos</a></li>
+                <li><a href="{% url 'privacidade' %}">Privacidade</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Canais de atendimento</h4>
+            <ul class="footer-links">
                 {% if contatos_por_tipo.email %}
-                    {% for c in contatos_por_tipo.email %}<li>{{ c.valor }}</li>{% endfor %}
+                    {% for c in contatos_por_tipo.email %}
+                        <li><a href="mailto:{{ c.valor }}">{{ c.valor }}</a></li>
+                    {% endfor %}
+                {% endif %}
+
+                {% if contatos_por_tipo.telefone %}
+                    {% for c in contatos_por_tipo.telefone %}
+                        {% if c.telefone_tipo == 'whatsapp' or c.telefone_tipo == 'ambos' %}
+                            <li><a href="https://wa.me/55{{ c.valor|phone_digits }}" target="_blank">{{ c.valor }}</a></li>
+                        {% else %}
+                            <li><a href="tel:{{ c.valor|phone_digits }}">{{ c.valor }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                {% if contatos_por_tipo.instagram %}
+                    {% for c in contatos_por_tipo.instagram %}
+                        <li><a href="{{ c.valor }}" target="_blank">Instagram</a></li>
+                    {% endfor %}
+                {% endif %}
+
+                {% if contatos_por_tipo.facebook %}
+                    {% for c in contatos_por_tipo.facebook %}
+                        <li><a href="{{ c.valor }}" target="_blank">Facebook</a></li>
+                    {% endfor %}
+                {% endif %}
+
+                {% if config_site.endereco_contato %}
+                    <li>{{ config_site.endereco_contato }}</li>
                 {% endif %}
             </ul>
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"OpenCasting" }}. Todos os direitos reservados.</p>
+        <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"Casting Certo" }}. Todos os direitos reservados.</p>
         <p>Desenvolvido por <a href="#" class="dev-tag">GOUVEA AUTOMAÇÕES</a></p>
     </div>
 </footer>

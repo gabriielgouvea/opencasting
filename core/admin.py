@@ -9,7 +9,9 @@ Desenvolvido para: Gabriel Gouvêa com suporte de IA.
 import re
 import os
 import mimetypes
+import base64
 from io import BytesIO
+from decimal import Decimal
 from datetime import timedelta
 from datetime import date
 from django.contrib import admin
@@ -32,11 +34,16 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
+from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 
 # Importação dos Modelos do Sistema OpenCasting
 from .models import (
     UserProfile, 
     CpfBanido,
+    Cliente,
+    Orcamento,
+    OrcamentoItem,
     Job, 
     JobDia, 
     Candidatura, 
@@ -48,6 +55,8 @@ from .models import (
     Apresentacao,
     ApresentacaoItem,
 )
+
+import requests
 
 
 @admin.action(description='Gerar link de apresentação (7 dias)')
@@ -375,8 +384,10 @@ class ContatoSiteInlineForm(forms.ModelForm):
         telefone_tipo = cleaned.get('telefone_tipo')
 
         if tipo == 'telefone':
+            # Em alguns cenários (tema/admin custom), o radio pode não vir no POST.
+            # Não bloqueia o salvamento: assume o padrão mais comum.
             if not telefone_tipo:
-                self.add_error('telefone_tipo', 'Selecione uma opção (Telefone, WhatsApp ou Ambos).')
+                cleaned['telefone_tipo'] = 'ambos'
         else:
             cleaned['telefone_tipo'] = None
 
@@ -862,7 +873,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         except Exception:
             cfg = None
 
-        agencia_nome = (getattr(cfg, 'titulo_site', None) or 'OpenCasting').strip()
+        agencia_nome = (getattr(cfg, 'titulo_site', None) or 'Casting Certo').strip()
         agencia_email = (getattr(cfg, 'email_contato', None) or '').strip()
 
         now = timezone.localtime(timezone.now())
@@ -1026,7 +1037,7 @@ class UserProfileAdmin(admin.ModelAdmin):
             try:
                 if p.user and p.user.email:
                     link_edicao = request.build_absolute_uri(reverse('editar_perfil'))
-                    assunto = 'OpenCasting: Ajustes necessários no seu cadastro'
+                    assunto = 'Casting Certo: Ajustes necessários no seu cadastro'
                     texto = (
                         f"Olá {p.nome_completo},\n\n"
                         f"Identificamos que seu cadastro precisa de ajustes para seguir para análise.\n"
@@ -1070,7 +1081,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
             try:
                 if p.user and p.user.email:
-                    assunto = 'OpenCasting: Atualização do seu cadastro'
+                    assunto = 'Casting Certo: Atualização do seu cadastro'
                     texto = (
                         f"Olá {p.nome_completo},\n\n"
                         f"Analisamos seu cadastro e, no momento, não foi possível aprovar.\n"
@@ -1229,11 +1240,405 @@ admin.site.register(Resposta)
 admin.site.register(Avaliacao)
 
 
+@admin.register(Cliente)
+class ClienteAdmin(admin.ModelAdmin):
+    changeform_format = 'single'
+    list_display = ('razao_social', 'nome_fantasia', 'cnpj_formatado', 'cidade', 'uf', 'email_nfe')
+    search_fields = (
+        'cnpj',
+        'razao_social',
+        'nome_fantasia',
+        'email_nfe',
+        'telefone',
+        'inscricao_estadual',
+        'inscricao_municipal',
+        'cidade',
+        'uf',
+    )
+    list_filter = ()
+
+    fieldsets = (
+        ('Identificação', {
+            'fields': (
+                'cnpj',
+                'razao_social',
+                'nome_fantasia',
+                'data_abertura',
+                'situacao_cadastral',
+                'natureza_juridica',
+                'cnae_principal',
+                'cnae_principal_descricao',
+            )
+        }),
+        ('Fiscal (NF)', {
+            'fields': (
+                'inscricao_estadual',
+                'inscricao_municipal',
+                'regime_tributario',
+                'email_nfe',
+            )
+        }),
+        ('Endereço', {
+            'fields': (
+                'cep',
+                'logradouro',
+                'numero',
+                'complemento',
+                'bairro',
+                'cidade',
+                'uf',
+            )
+        }),
+        ('Contato', {
+            'fields': (
+                'telefone',
+                'contato_nome',
+                'contato_cargo',
+                'observacoes',
+            )
+        }),
+    )
+
+    class Media:
+        js = ('core/js/admin_cliente.js',)
+        css = {
+            'all': ('core/css/admin_cliente.css',)
+        }
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'cnpj' and formfield and getattr(formfield, 'widget', None):
+            # Permite digitar CNPJ com máscara no admin
+            formfield.widget.attrs.setdefault('maxlength', 18)
+            formfield.widget.attrs.setdefault('inputmode', 'numeric')
+        return formfield
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                'buscar-cnpj/',
+                self.admin_site.admin_view(self.buscar_cnpj_view),
+                name='core_cliente_buscar_cnpj',
+            )
+        ]
+        return custom + urls
+
+    @method_decorator(require_GET)
+    def buscar_cnpj_view(self, request):
+        cnpj = request.GET.get('cnpj', '')
+        cnpj_digits = re.sub(r'\D+', '', cnpj)
+        if len(cnpj_digits) != 14:
+            return JsonResponse({'ok': False, 'error': 'CNPJ inválido.'}, status=400)
+
+        try:
+            resp = requests.get(
+                f'https://brasilapi.com.br/api/cnpj/v1/{cnpj_digits}',
+                timeout=8,
+                headers={'Accept': 'application/json'},
+            )
+        except Exception:
+            return JsonResponse({'ok': False, 'error': 'Falha ao consultar a API de CNPJ.'}, status=502)
+
+        if resp.status_code != 200:
+            return JsonResponse({'ok': False, 'error': 'CNPJ não encontrado.'}, status=404)
+
+        try:
+            data = resp.json() or {}
+        except Exception:
+            return JsonResponse({'ok': False, 'error': 'Resposta inválida da API.'}, status=502)
+
+        # Normaliza para os IDs dos campos do admin.
+        out = {
+            'cnpj': cnpj_digits,
+            'razao_social': data.get('razao_social') or '',
+            'nome_fantasia': data.get('nome_fantasia') or '',
+            'data_abertura': data.get('data_inicio_atividade') or '',
+            'situacao_cadastral': data.get('descricao_situacao_cadastral') or data.get('situacao_cadastral') or '',
+            'natureza_juridica': data.get('natureza_juridica') or '',
+            'cnae_principal': str(data.get('cnae_fiscal') or '') or '',
+            'cnae_principal_descricao': data.get('cnae_fiscal_descricao') or '',
+            'cep': data.get('cep') or '',
+            'logradouro': data.get('logradouro') or '',
+            'numero': data.get('numero') or '',
+            'complemento': data.get('complemento') or '',
+            'bairro': data.get('bairro') or '',
+            'cidade': data.get('municipio') or '',
+            'uf': (data.get('uf') or '').upper(),
+            'telefone': (data.get('ddd_telefone_1') or data.get('telefone_1') or '') or '',
+        }
+
+        return JsonResponse({'ok': True, 'data': out})
+
+
+class OrcamentoItemInline(admin.StackedInline):
+    model = OrcamentoItem
+    extra = 1
+    ordering = ('ordem', 'id')
+    exclude = ('ordem', 'total')
+    fields = ('funcao', 'quantidade', 'carga_horaria_horas', 'valor_diaria', 'diarias')
+
+
+@admin.register(Orcamento)
+class OrcamentoAdmin(admin.ModelAdmin):
+    changeform_format = 'single'
+    list_display = ('id', 'cliente', 'criado_em', 'validade_dias')
+    search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
+    list_filter = ()
+    date_hierarchy = 'criado_em'
+
+    fields = ('cliente', 'data_evento', 'validade_dias')
+    inlines = (OrcamentoItemInline,)
+
+    change_list_template = 'admin/core/orcamento/change_list.html'
+    change_form_template = 'admin/core/orcamento/change_form.html'
+
+    class Media:
+        js = ('core/js/admin_orcamento.js',)
+        css = {
+            'all': ('core/css/admin_orcamento.css',)
+        }
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                '<int:orcamento_id>/pdf/',
+                self.admin_site.admin_view(self.pdf_view),
+                name='core_orcamento_pdf',
+            )
+        ]
+        return custom + urls
+
+    @method_decorator(require_GET)
+    def pdf_view(self, request, orcamento_id: int):
+        import base64
+        import mimetypes
+        from django.contrib.staticfiles import finders
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+
+        orcamento = get_object_or_404(Orcamento.objects.prefetch_related('itens', 'cliente'), pk=orcamento_id)
+        config_site = ConfiguracaoSite.load()
+
+        pdf_engine = (os.getenv('ORCAMENTO_PDF_ENGINE') or 'auto').strip().lower()
+
+        def _static_file_data_uri(static_rel_path: str) -> str | None:
+            found = finders.find(static_rel_path)
+            if not found:
+                return None
+            mime, _ = mimetypes.guess_type(found)
+            if not mime:
+                mime = 'application/octet-stream'
+            try:
+                with open(found, 'rb') as f:
+                    encoded = base64.b64encode(f.read()).decode('ascii')
+                return f"data:{mime};base64,{encoded}"
+            except Exception:
+                return None
+
+        def _instagram_handle(url: str | None) -> str | None:
+            u = (url or '').strip()
+            if not u:
+                return None
+            u = u.replace('https://', '').replace('http://', '')
+            if 'instagram.com' in u:
+                parts = [p for p in u.split('/') if p]
+                if parts:
+                    last = parts[-1]
+                    if last.lower() in {'instagram.com', 'www.instagram.com'} and len(parts) >= 2:
+                        last = parts[-2]
+                    last = last.split('?')[0].strip('@')
+                    return f"@{last.upper()}" if last else None
+            # se já vier como @handle
+            if u.startswith('@'):
+                return u.upper()
+            return None
+
+        meses = [
+            'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+        ]
+
+        contatos_qs = getattr(config_site, 'contatos', None)
+        contatos = list(contatos_qs.all()) if contatos_qs is not None else []
+        contatos_por_tipo = {
+            'email': [],
+            'telefone': [],
+            'instagram': [],
+            'facebook': [],
+        }
+        for c in contatos:
+            if c.tipo in contatos_por_tipo:
+                contatos_por_tipo[c.tipo].append(c)
+
+        contato_email_principal = contatos_por_tipo['email'][0] if contatos_por_tipo['email'] else None
+        contato_whatsapp_principal = None
+        for c in contatos_por_tipo['telefone']:
+            if (c.telefone_tipo or '').strip() in {'whatsapp', 'ambos'}:
+                contato_whatsapp_principal = c
+                break
+
+        dt = timezone.localtime(orcamento.criado_em) if orcamento.criado_em else timezone.now()
+        mes_ano = f"{meses[dt.month - 1].capitalize()}, {dt.year}"
+        site_domain = request.get_host()
+        instagram_handle = _instagram_handle(getattr(config_site, 'instagram_link', None))
+
+        data_evento_fmt = None
+        if getattr(orcamento, 'data_evento', None):
+            try:
+                data_evento_fmt = orcamento.data_evento.strftime('%d/%m/%Y')
+            except Exception:
+                data_evento_fmt = None
+
+        validade_dias = int(orcamento.validade_dias or 0)
+        frase_validade = f"Este orçamento tem validade de {validade_dias} dias corridos a partir de hoje." if validade_dias else None
+        itens = list(orcamento.itens.all())
+        total_geral = Decimal('0.00')
+        for item in itens:
+            total_geral += (item.total or Decimal('0.00'))
+
+        html = render_to_string(
+            'pdfs/orcamento.html',
+            {
+                'orcamento': orcamento,
+                'itens': itens,
+                'total_geral': total_geral,
+                'config_site': config_site,
+                'data_formatada': dt.strftime('%d/%m/%Y'),
+                'validade_dias': validade_dias,
+                'valido_ate': (orcamento.valido_ate.strftime('%d/%m/%Y') if orcamento.valido_ate else None),
+                'observacoes': None,
+                'mes_ano': mes_ano,
+                'site_domain': site_domain,
+                'instagram_handle': instagram_handle,
+                # Para o Chromium (Playwright) funciona melhor embutir imagem.
+                # Para xhtml2pdf, usamos STATIC_URL + link_callback.
+                'logo_src': (_static_file_data_uri('images/logo.png') if pdf_engine in {'auto', 'playwright'} else f"{settings.STATIC_URL}images/logo.png"),
+                'cliente_nome': (orcamento.cliente.razao_social if orcamento.cliente_id else None),
+                'cliente_cnpj': (orcamento.cliente.cnpj_formatado if (orcamento.cliente_id and orcamento.cliente.cnpj) else None),
+                'data_evento': data_evento_fmt,
+                'frase_validade': frase_validade,
+                'contato_telefone': (getattr(contato_whatsapp_principal, 'valor', None) or None),
+                'contato_email': (getattr(contato_email_principal, 'valor', None) or None),
+            },
+            request=request,
+        )
+
+        if request.GET.get('format') == 'html':
+            return HttpResponse(html, content_type='text/html; charset=utf-8')
+
+        # 1) Tenta Chromium (Playwright) se configurado ou em auto
+        if pdf_engine in {'auto', 'playwright'}:
+            try:
+                from playwright.sync_api import sync_playwright
+
+                with sync_playwright() as p:
+                    browser = p.chromium.launch()
+                    page = browser.new_page(viewport={"width": 794, "height": 1123})  # ~A4 @96dpi
+                    page.set_content(html, wait_until='load')
+                    page.emulate_media(media='print')
+                    pdf_bytes = page.pdf(
+                        format='A4',
+                        print_background=True,
+                        prefer_css_page_size=True,
+                    )
+                    browser.close()
+
+                filename = f"orcamento-{orcamento.pk}.pdf"
+                return FileResponse(BytesIO(pdf_bytes), as_attachment=True, filename=filename)
+            except Exception as e:
+                if pdf_engine == 'playwright':
+                    return HttpResponse(
+                        f'Falha ao gerar PDF via Chromium (Playwright): {e}',
+                        status=500,
+                        content_type='text/plain; charset=utf-8',
+                    )
+                # auto -> cai para xhtml2pdf
+
+        # 2) Fallback: xhtml2pdf (mais compatível em hosts restritos como PythonAnywhere)
+        try:
+            from xhtml2pdf import pisa
+        except Exception as e:
+            return HttpResponse(
+                f'Não foi possível gerar o PDF (faltam dependências). Erro: {e}',
+                status=500,
+                content_type='text/plain; charset=utf-8',
+            )
+
+        def link_callback(uri: str, rel: str | None = None):
+            # Resolve /static/... via django finders (funciona no dev sem collectstatic)
+            if uri.startswith(settings.STATIC_URL):
+                static_path = uri[len(settings.STATIC_URL):]
+                found = finders.find(static_path)
+                if found:
+                    return found
+
+            # Resolve /media/... via MEDIA_ROOT
+            if uri.startswith(settings.MEDIA_URL):
+                media_path = uri[len(settings.MEDIA_URL):]
+                return os.path.join(str(settings.MEDIA_ROOT), media_path)
+
+            return uri
+
+        # Re-render com logo via STATIC_URL (xhtml2pdf não é confiável com data URI)
+        html_xhtml2pdf = render_to_string(
+            'pdfs/orcamento.html',
+            {
+                'orcamento': orcamento,
+                'itens': itens,
+                'total_geral': total_geral,
+                'config_site': config_site,
+                'data_formatada': dt.strftime('%d/%m/%Y'),
+                'validade_dias': validade_dias,
+                'valido_ate': (orcamento.valido_ate.strftime('%d/%m/%Y') if orcamento.valido_ate else None),
+                'observacoes': None,
+                'mes_ano': mes_ano,
+                'site_domain': site_domain,
+                'instagram_handle': instagram_handle,
+                'logo_src': f"{settings.STATIC_URL}images/logo.png",
+                'cliente_nome': (orcamento.cliente.razao_social if orcamento.cliente_id else None),
+                'cliente_cnpj': (orcamento.cliente.cnpj_formatado if (orcamento.cliente_id and orcamento.cliente.cnpj) else None),
+                'data_evento': data_evento_fmt,
+                'frase_validade': frase_validade,
+                'contato_telefone': (getattr(contato_whatsapp_principal, 'valor', None) or None),
+                'contato_email': (getattr(contato_email_principal, 'valor', None) or None),
+            },
+            request=request,
+        )
+
+        out = BytesIO()
+        status = pisa.CreatePDF(src=html_xhtml2pdf, dest=out, encoding='UTF-8', link_callback=link_callback)
+        if status.err:
+            return HttpResponse('Erro ao gerar PDF do orçamento.', status=500, content_type='text/plain; charset=utf-8')
+
+        out.seek(0)
+        filename = f"orcamento-{orcamento.pk}.pdf"
+        return FileResponse(out, as_attachment=True, filename=filename)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if '_generate_pdf' in request.POST:
+            return redirect(reverse('admin:core_orcamento_pdf', args=(obj.pk,)))
+        return super().response_add(request, obj, post_url_continue=post_url_continue)
+
+    def response_change(self, request, obj):
+        if '_generate_pdf' in request.POST:
+            return redirect(reverse('admin:core_orcamento_pdf', args=(obj.pk,)))
+        return super().response_change(request, obj)
+
+
+class ConfiguracaoSiteContatosForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoSite
+        fields = ()
+
+
 @admin.register(ConfiguracaoSite)
 class ConfiguracaoSiteAdmin(admin.ModelAdmin):
     list_display = ('titulo_site',)
     inlines = (ContatoSiteInline,)
-    fields = ()
+    form = ConfiguracaoSiteContatosForm
+    fieldsets = ((None, {'fields': ()}),)
 
     # Jazzmin: evita tabs/scroll desnecessários
     changeform_format = 'single'
@@ -1250,6 +1655,39 @@ class ConfiguracaoSiteAdmin(admin.ModelAdmin):
         # Ao clicar no menu "Contatos", abre direto o singleton.
         obj = ConfiguracaoSite.load()
         return redirect(reverse('admin:core_configuracaosite_change', args=(obj.pk,)))
+
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        # Ajuda a diagnosticar validações dos inlines quando o admin mostra apenas
+        # o banner genérico "Please correct the errors below".
+        try:
+            if request.method == 'POST':
+                inline_sets = context.get('inline_admin_formsets') or []
+                msgs = []
+                for inline_admin_formset in inline_sets:
+                    fs = getattr(inline_admin_formset, 'formset', None)
+                    if not fs:
+                        continue
+                    try:
+                        non_form = list(fs.non_form_errors())
+                    except Exception:
+                        non_form = []
+                    if non_form:
+                        msgs.append(f"Inline {inline_admin_formset.opts.verbose_name_plural}: {non_form}")
+
+                    try:
+                        for idx, ferr in enumerate(getattr(fs, 'errors', []) or []):
+                            if ferr:
+                                msgs.append(f"Inline {inline_admin_formset.opts.verbose_name_plural} item {idx + 1}: {dict(ferr)}")
+                    except Exception:
+                        pass
+
+                if msgs:
+                    # Mostra só um resumo para não poluir demais.
+                    messages.error(request, "Erros ao salvar Contatos: " + " | ".join(msgs[:6]))
+        except Exception:
+            pass
+
+        return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
     def has_add_permission(self, request):
         # Singleton

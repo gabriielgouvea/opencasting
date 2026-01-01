@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config_site.titulo_site|default:"OpenCasting" }} | Gestão de Talentos</title>
+    <title>{{ config_site.titulo_site|default:"Casting Certo" }} | Gestão de Talentos</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
@@ -172,7 +172,7 @@
 
     <nav class="navbar">
         <a href="{% url 'home' %}" class="nav-logo">
-            {{ config_site.titulo_site|upper|default:"OPENCASTING" }}
+            {{ config_site.titulo_site|upper|default:"CASTING CERTO" }}
         </a>
 
         <div class="hamburger-icon" onclick="toggleMobileMenu()">
@@ -234,23 +234,33 @@
             <div class="footer-grid">
                 
                 <div class="footer-col">
-                    <h5 style="color:var(--primary);">{{ config_site.titulo_site|default:"OpenCasting" }}</h5>
+                    <h5 style="color:var(--primary);">{{ config_site.titulo_site|default:"Casting Certo" }}</h5>
                     <p style="font-size:0.9rem; line-height:1.6;">
                         {{ config_site.texto_sobre_curto|default:"A plataforma líder em gestão de talentos para eventos corporativos e promocionais. Conectando marcas a pessoas."|safe }}
                     </p>
                 </div>
 
                 <div class="footer-col">
-                    <h5>Plataforma</h5>
+                    <h5>Soluções</h5>
                     <ul class="footer-links">
                         <li><a href="{% url 'lista_vagas' %}">Mural de Vagas</a></li>
                         <li><a href="{% url 'editar_perfil' %}">Minha Conta</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
+                        <li><a href="{% url 'home' %}#o-que-fazemos">O que fazemos</a></li>
+                        <li><a href="{% url 'home' %}#cases">Cases</a></li>
+                        <li><a href="{% url 'home' %}#orcamento">Contato</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
-                    <h5>Fale Conosco</h5>
+                    <h5>Empresa</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'quem_somos' %}">Quem somos</a></li>
+                        <li><a href="{% url 'privacidade' %}">Privacidade</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Canais de atendimento</h5>
                     <ul class="footer-links">
                         {% if contatos_por_tipo.email %}
                             {% for c in contatos_por_tipo.email %}
@@ -279,13 +289,21 @@
                                 <li><a href="{{ c.valor }}" target="_blank"><i class="material-icons" style="font-size:16px;">public</i> Facebook</a></li>
                             {% endfor %}
                         {% endif %}
+
+                        {% if config_site.endereco_contato %}
+                            <li>
+                                <a href="#" onclick="return false;" style="cursor: default;">
+                                    <i class="material-icons" style="font-size:16px;">place</i> {{ config_site.endereco_contato }}
+                                </a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
 
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"OpenCasting" }}. Desenvolvido com tecnologia <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a>.</p>
+                <p>&copy; {% now "Y" %} {{ config_site.titulo_site|default:"Casting Certo" }}. Desenvolvido com tecnologia <a href="#" class="dev-link">GOUVEA AUTOMAÇÕES</a>.</p>
             </div>
         </footer>
     {% endblock %}

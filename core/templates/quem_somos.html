@@ -1,74 +1,132 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
-<div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-top: 20px;">
-    
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h1 style="color: #009688; font-weight: 800; font-size: 2.5rem; text-transform: uppercase;">
-            {{ config_site.titulo_quem_somos|default:"QUEM SOMOS" }}
-        </h1>
-        <div style="width: 60px; height: 4px; background: #009688; margin: 10px auto;"></div>
-        <p style="color: #666; font-size: 1.1rem;">Conectando marcas a talentos extraordinários.</p>
-    </div>
+<style>
+    .qs-wrap { background: white; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.06); overflow: hidden; }
+    .qs-hero { padding: 46px 42px; background: linear-gradient(135deg, rgba(0,150,136,0.10) 0%, rgba(0,150,136,0.04) 55%, rgba(0,0,0,0.02) 100%); border-bottom: 1px solid #eee; }
+    .qs-hero h1 { margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.5px; color: #0b2e2b; }
+    .qs-hero p { margin: 10px 0 0; color: #4f5b5a; font-size: 1.05rem; line-height: 1.7; max-width: 900px; }
+    .qs-hero .qs-actions { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .qs-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; text-decoration: none; font-weight: 800; }
+    .qs-btn-primary { background: var(--primary); color: #fff; }
+    .qs-btn-outline { border: 2px solid var(--primary); color: var(--primary); }
 
-    <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start;">
-        
-        <div style="flex: 1; min-width: 300px;">
-            <h3 style="color: #333; font-weight: 700;">Nossa Missão</h3>
-            <div style="line-height: 1.8; color: #555; font-size: 1.05rem; text-align: justify;">
-                {% if config_site.texto_quem_somos %}
-                    {{ config_site.texto_quem_somos|safe }}
-                {% else %}
-                    <p>A OpenCasting nasceu com o propósito de revolucionar o mercado de eventos. Acreditamos que cada promotor é a face da marca que representa, e por isso investimos em uma seleção rigorosa e humanizada.</p>
-                    <p>Nossa tecnologia conecta as melhores empresas aos profissionais mais qualificados do mercado, garantindo agilidade, segurança e transparência em todo o processo de contratação.</p>
-                {% endif %}
-            </div>
+    .qs-section { padding: 38px 42px; }
+    .qs-section + .qs-section { border-top: 1px solid #f0f0f0; }
+    .qs-section h2 { margin: 0 0 10px; font-size: 1.35rem; font-weight: 900; color: #222; }
+    .qs-section p { margin: 0 0 10px; color: #555; line-height: 1.75; }
 
-            <h3 style="color: #333; font-weight: 700; margin-top: 30px;">Por que nos escolher?</h3>
-            <ul style="list-style: none; padding: 0; color: #555;">
-                <li style="margin-bottom: 10px; display: flex; align-items: center;">
-                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Seleção rigorosa de talentos
-                </li>
-                <li style="margin-bottom: 10px; display: flex; align-items: center;">
-                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Tecnologia de ponta para gestão
-                </li>
-                <li style="margin-bottom: 10px; display: flex; align-items: center;">
-                    <i class="material-icons" style="color:#009688; margin-right:8px;">check_circle</i> Atendimento humanizado e suporte
-                </li>
-            </ul>
+    .qs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+    .qs-card { border: 1px solid #eee; border-radius: 14px; padding: 18px; background: #fff; }
+    .qs-card h3 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 900; color: #1f1f1f; display: flex; align-items: center; gap: 10px; }
+    .qs-card p { margin: 0; color: #555; line-height: 1.7; }
+
+    .qs-bullets { margin: 14px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+    .qs-bullets li { display: flex; gap: 8px; align-items: flex-start; color: #555; line-height: 1.6; }
+
+    .qs-note { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: #f8f9fa; border: 1px solid #eee; color: #555; }
+    .qs-note strong { color: #333; }
+
+    @media (max-width: 900px) {
+        .qs-hero, .qs-section { padding: 28px 18px; }
+        .qs-grid { grid-template-columns: 1fr; }
+        .qs-bullets { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="qs-wrap">
+    <header class="qs-hero">
+        <h1>{{ config_site.titulo_quem_somos|default:"Quem Somos" }}</h1>
+        <p>
+            Construímos operações com foco em execução, capilaridade e qualidade.
+            Para marcas, entregamos equipe e gestão. Para talentos, entregamos oportunidade e clareza no processo.
+        </p>
+        <div class="qs-actions">
+            <a class="qs-btn qs-btn-outline" href="{% url 'home' %}#o-que-fazemos"><i class="material-icons" style="font-size:18px;">work</i> O que fazemos</a>
+            <a class="qs-btn qs-btn-outline" href="{% url 'home' %}#cases"><i class="material-icons" style="font-size:18px;">photo_library</i> Cases</a>
+            <a class="qs-btn qs-btn-primary" href="{% url 'home' %}#orcamento"><i class="material-icons" style="font-size:18px;">chat</i> Falar com a gente</a>
         </div>
+    </header>
 
-        <div style="flex: 1; min-width: 300px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="background: #e0f2f1; padding: 40px; border-radius: 20px; width: 100%; box-sizing: border-box;">
-                <i class="material-icons" style="font-size: 120px; color: #009688;">groups</i>
-                <h4 style="color: #00796b; margin-top: 10px;">Equipe OpenCasting</h4>
-                <p style="font-size: 0.9rem; color: #555;">Compromisso com a excelência.</p>
+    <section class="qs-section">
+        <h2>O que nos move</h2>
+        <p>
+            {% if config_site.texto_quem_somos %}
+                {{ config_site.texto_quem_somos|safe }}
+            {% else %}
+                A Casting Certo existe para tornar a contratação e a gestão de equipes de campo mais simples, rápida e confiável.
+                Trabalhamos com processos de triagem, organização e acompanhamento para elevar o padrão de execução em eventos e ações promocionais.
+            {% endif %}
+        </p>
+
+        <ul class="qs-bullets">
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">check_circle</i> Seleção e gestão de equipes com processo</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">check_circle</i> Operação com visibilidade e prazos claros</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">check_circle</i> Atendimento e suporte durante a execução</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">check_circle</i> Base de talentos em constante atualização</li>
+        </ul>
+    </section>
+
+    <section class="qs-section">
+        <h2>Como entregamos</h2>
+        <div class="qs-grid">
+            <div class="qs-card">
+                <h3><i class="material-icons" style="color: var(--primary);">insights</i> Inteligência operacional</h3>
+                <p>Conectamos briefing, perfis e execução com um fluxo objetivo: cadastro, triagem, aprovação e acompanhamento.</p>
             </div>
-            
-            {% if config_site.instagram_link %}
-            <div style="margin-top: 20px;">
-                <a href="{{ config_site.instagram_link }}" target="_blank" style="text-decoration: none; color: #009688; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                    <i class="material-icons">camera_alt</i> Siga-nos no Instagram
+            <div class="qs-card">
+                <h3><i class="material-icons" style="color: var(--primary);">verified_user</i> Profissionalismo e experiência</h3>
+                <p>Padronização de processos, comunicação clara e suporte para garantir consistência em diferentes cenários e demandas.</p>
+            </div>
+            <div class="qs-card">
+                <h3><i class="material-icons" style="color: var(--primary);">groups</i> Casting estratégico</h3>
+                <p>Recrutamento e organização de mão de obra conforme a necessidade do projeto, com segurança para contratante e contratado.</p>
+                <div class="qs-note">
+                    <strong>Conformidade:</strong> quando aplicável, a contratação de trabalho temporário pode seguir as diretrizes da <strong>Lei 6.019/1974</strong> (com alterações posteriores).
+                    Esta informação é geral e não substitui orientação jurídica.
+                </div>
+            </div>
+            <div class="qs-card">
+                <h3><i class="material-icons" style="color: var(--primary);">local_shipping</i> Estrutura e logística</h3>
+                <p>Organização e suporte para operação: alinhamentos, materiais e execução em campo com foco em agilidade.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section">
+        <h2>Capacidade e qualidade</h2>
+        <p>Nosso objetivo é gerar resultado na ponta: presença, abordagem, organização e entrega.</p>
+        <ul class="qs-bullets">
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">bolt</i> Agilidade para montar equipe</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">place</i> Atendimento por região (conforme demanda)</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">assignment</i> Processos de seleção e aprovação</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">payments</i> Organização de pagamento e dados</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">support_agent</i> Suporte operacional</li>
+            <li><i class="material-icons" style="color: var(--primary); font-size:18px;">bar_chart</i> Visibilidade e acompanhamento</li>
+        </ul>
+    </section>
+
+    <section class="qs-section" style="text-align:center;">
+        <h2>Vamos conversar?</h2>
+        <p style="max-width: 820px; margin: 0 auto 14px;">Se você é uma marca e precisa de equipe, ou é talento e quer participar das oportunidades, fale com a gente.</p>
+        <div class="qs-actions" style="justify-content:center;">
+            {% if contato_whatsapp_principal %}
+                <a class="qs-btn qs-btn-primary" href="https://wa.me/55{{ contato_whatsapp_principal.valor|phone_digits }}" target="_blank">
+                    <i class="material-icons" style="font-size:18px;">chat</i> WhatsApp
                 </a>
-            </div>
+            {% endif %}
+            {% if contato_email_principal %}
+                <a class="qs-btn qs-btn-outline" href="mailto:{{ contato_email_principal.valor }}">
+                    <i class="material-icons" style="font-size:18px;">email</i> E-mail
+                </a>
+            {% endif %}
+            {% if user.is_authenticated %}
+                <a class="qs-btn qs-btn-outline" href="{% url 'lista_vagas' %}"><i class="material-icons" style="font-size:18px;">dashboard</i> Acessar painel</a>
+            {% else %}
+                <a class="qs-btn qs-btn-outline" href="{% url 'cadastro' %}"><i class="material-icons" style="font-size:18px;">person_add</i> Criar conta</a>
             {% endif %}
         </div>
-    </div>
-
-    <div style="text-align: center; margin-top: 60px; background: #f8f9fa; padding: 30px; border-radius: 10px; border: 1px solid #eee;">
-        <h3 style="margin-top: 0; color: #333;">Faça parte dessa história</h3>
-        <p style="color: #666; margin-bottom: 20px;">Seja você um talento ou uma marca, temos a solução ideal.</p>
-        
-        {% if user.is_authenticated %}
-            <a href="{% url 'lista_vagas' %}" class="btn" style="background: #009688; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,150,136,0.3);">
-                Acessar Painel
-            </a>
-        {% else %}
-            <a href="{% url 'cadastro' %}" class="btn" style="background: #009688; color: white; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,150,136,0.3);">
-                Criar Minha Conta
-            </a>
-        {% endif %}
-    </div>
-
+    </section>
 </div>
 {% endblock %}

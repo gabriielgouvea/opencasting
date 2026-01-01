@@ -1,4 +1,6 @@
 import uuid
+import re
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -19,6 +21,165 @@ class CpfBanido(models.Model):
 
     def __str__(self):
         return self.cpf
+
+
+def _only_digits(value: str) -> str:
+    return re.sub(r'\D+', '', str(value or ''))
+
+
+class Cliente(models.Model):
+    REGIME_TRIBUTARIO_CHOICES = (
+        ('simples', 'Simples Nacional'),
+        ('presumido', 'Lucro Presumido'),
+        ('real', 'Lucro Real'),
+        ('mei', 'MEI'),
+        ('outro', 'Outro/Não informado'),
+    )
+
+    # Aceita máscara no input do admin (ex: 12.345.678/0001-90),
+    # mas salvamos somente dígitos.
+    cnpj = models.CharField(max_length=18, unique=True, verbose_name='CNPJ')
+    razao_social = models.CharField(max_length=255, verbose_name='Razão social')
+    nome_fantasia = models.CharField(max_length=255, blank=True, null=True, verbose_name='Nome fantasia')
+    data_abertura = models.DateField(blank=True, null=True, verbose_name='Data de abertura')
+    situacao_cadastral = models.CharField(max_length=80, blank=True, null=True, verbose_name='Situação cadastral')
+    natureza_juridica = models.CharField(max_length=255, blank=True, null=True, verbose_name='Natureza jurídica')
+    cnae_principal = models.CharField(max_length=20, blank=True, null=True, verbose_name='CNAE principal')
+    cnae_principal_descricao = models.CharField(max_length=255, blank=True, null=True, verbose_name='Descrição do CNAE')
+
+    inscricao_estadual = models.CharField(max_length=40, blank=True, null=True, verbose_name='Inscrição estadual')
+    inscricao_municipal = models.CharField(max_length=40, blank=True, null=True, verbose_name='Inscrição municipal')
+    regime_tributario = models.CharField(
+        max_length=20,
+        choices=REGIME_TRIBUTARIO_CHOICES,
+        default='outro',
+        verbose_name='Regime tributário',
+    )
+
+    email_nfe = models.EmailField(blank=True, null=True, verbose_name='E-mail para NF')
+    telefone = models.CharField(max_length=30, blank=True, null=True, verbose_name='Telefone')
+
+    cep = models.CharField(max_length=9, blank=True, null=True, verbose_name='CEP')
+    logradouro = models.CharField(max_length=120, blank=True, null=True, verbose_name='Logradouro')
+    numero = models.CharField(max_length=20, blank=True, null=True, verbose_name='Número')
+    complemento = models.CharField(max_length=80, blank=True, null=True, verbose_name='Complemento')
+    bairro = models.CharField(max_length=80, blank=True, null=True, verbose_name='Bairro')
+    cidade = models.CharField(max_length=80, blank=True, null=True, verbose_name='Cidade')
+    uf = models.CharField(max_length=2, blank=True, null=True, verbose_name='UF')
+
+    contato_nome = models.CharField(max_length=120, blank=True, null=True, verbose_name='Contato (nome)')
+    contato_cargo = models.CharField(max_length=120, blank=True, null=True, verbose_name='Contato (cargo)')
+
+    observacoes = models.TextField(blank=True, null=True, verbose_name='Observações')
+
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+
+    class Meta:
+        verbose_name = 'Cliente'
+        verbose_name_plural = 'Clientes'
+        ordering = ('razao_social', 'id')
+
+    def __str__(self) -> str:
+        return self.nome_fantasia or self.razao_social
+
+    @property
+    def cnpj_formatado(self) -> str:
+        d = _only_digits(self.cnpj)
+        if len(d) != 14:
+            return self.cnpj
+        return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}"
+
+    def save(self, *args, **kwargs):
+        self.cnpj = _only_digits(self.cnpj)
+        self.cep = (self.cep or '').strip() or None
+        if self.cep:
+            self.cep = self.cep.replace(' ', '')
+        self.uf = (self.uf or '').strip().upper() or None
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        cnpj_digits = _only_digits(self.cnpj)
+        if cnpj_digits and len(cnpj_digits) != 14:
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError({'cnpj': 'CNPJ deve conter 14 dígitos.'})
+        self.cnpj = cnpj_digits
+
+
+class Orcamento(models.Model):
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='orcamentos',
+        verbose_name='Cliente (opcional)',
+    )
+    data_evento = models.DateField(blank=True, null=True, verbose_name='Data do evento')
+    validade_dias = models.PositiveIntegerField(default=30, verbose_name='Orçamento válido por (dias)')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+
+    class Meta:
+        verbose_name = 'Orçamento'
+        verbose_name_plural = 'Orçamentos'
+        ordering = ('-criado_em', '-id')
+
+    def __str__(self) -> str:
+        base = f"Orçamento #{self.pk or 'novo'}"
+        if self.cliente_id:
+            return f"{base} - {self.cliente}"
+        return base
+
+    @property
+    def total_geral(self) -> Decimal:
+        total = Decimal('0')
+        for item in self.itens.all():
+            total += (item.total or Decimal('0'))
+        return total
+
+    @property
+    def valido_ate(self):
+        try:
+            return (self.criado_em + timedelta(days=int(self.validade_dias or 0))).date()
+        except Exception:
+            return None
+
+
+class OrcamentoItem(models.Model):
+    orcamento = models.ForeignKey(
+        Orcamento,
+        on_delete=models.CASCADE,
+        related_name='itens',
+        verbose_name='Orçamento',
+    )
+    funcao = models.CharField(max_length=120, verbose_name='Função')
+    quantidade = models.PositiveIntegerField(default=1, verbose_name='Quantidade')
+    carga_horaria_horas = models.PositiveIntegerField(default=8, verbose_name='Carga horária (h)')
+    valor_diaria = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name='Valor da diária (R$)')
+    diarias = models.PositiveIntegerField(default=1, verbose_name='Diárias')
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Total (R$)')
+    ordem = models.PositiveSmallIntegerField(default=0, verbose_name='Ordem')
+
+    class Meta:
+        verbose_name = 'Item do orçamento'
+        verbose_name_plural = 'Itens do orçamento'
+        ordering = ('ordem', 'id')
+
+    def __str__(self) -> str:
+        return f"{self.funcao} ({self.quantidade}x)"
+
+    def save(self, *args, **kwargs):
+        qty = int(self.quantidade or 0)
+        days = int(self.diarias or 0)
+        daily = self.valor_diaria or Decimal('0')
+        try:
+            self.total = (Decimal(qty) * Decimal(days) * Decimal(daily)).quantize(Decimal('0.01'))
+        except Exception:
+            self.total = Decimal('0.00')
+        super().save(*args, **kwargs)
 
 # ==============================================================================
 # 1. PERFIL DO PROMOTOR (BASE DE TALENTOS)
@@ -251,7 +412,7 @@ class UserProfile(models.Model):
                 antigo = UserProfile.objects.get(pk=self.pk)
                 if antigo.status != 'aprovado' and self.status == 'aprovado':
                     send_mail(
-                        'OpenCasting: Cadastro Aprovado! 🎉',
+                        'Casting Certo: Cadastro Aprovado! 🎉',
                         f'Olá {self.nome_completo}, seu perfil foi aprovado.',
                         settings.DEFAULT_FROM_EMAIL, [self.user.email], fail_silently=True
                     )
@@ -274,7 +435,7 @@ class UserProfile(models.Model):
                 ]
                 query = ', '.join([p for p in parts if p])
                 if query:
-                    geolocator = Nominatim(user_agent='opencasting')
+                    geolocator = Nominatim(user_agent='casting-certo')
                     location = geolocator.geocode(query, timeout=5)
                     if location:
                         self.latitude = round(float(location.latitude), 6)
@@ -390,7 +551,7 @@ class Job(models.Model):
                 ]
                 query = ', '.join([p for p in parts if p])
                 if query:
-                    geolocator = Nominatim(user_agent='opencasting')
+                    geolocator = Nominatim(user_agent='casting-certo')
                     location = geolocator.geocode(query, timeout=5)
                     if location:
                         self.latitude = round(float(location.latitude), 6)
@@ -419,7 +580,7 @@ class Candidatura(models.Model):
     data_candidatura = models.DateTimeField(auto_now_add=True)
 
 class ConfiguracaoSite(models.Model):
-    titulo_site = models.CharField(max_length=100, default="OpenCasting", verbose_name="Nome do Site")
+    titulo_site = models.CharField(max_length=100, default="Casting Certo", verbose_name="Nome do Site")
 
     # Contatos (Rodapé)
     email_contato = models.EmailField(default="contato@opencasting.com.br", verbose_name="E-mail de Contato")
@@ -442,7 +603,7 @@ class ConfiguracaoSite(models.Model):
         blank=True,
         null=True,
         default=(
-            "A OpenCasting é uma agência focada em conectar marcas e talentos com agilidade e transparência.\n\n"
+            "A Casting Certo é uma agência focada em conectar marcas e talentos com agilidade e transparência.\n\n"
             "Trabalhamos com uma base de profissionais verificados para eventos, ações promocionais e ativações de marca.\n\n"
             "Nossa missão é simplificar a seleção e elevar o padrão de entrega em campo."
         ),

@@ -108,18 +108,29 @@
 
     addLink.click();
 
-    // pega o último inline (stacked) ou linha (tabular)
-    var containers = getInlineContainers(group);
-    if (!containers.length) return;
-    var container = containers[containers.length - 1];
+    // Aguarda o Django admin inserir o novo form no DOM
+    setTimeout(function () {
+      // pega o último inline (stacked) ou linha (tabular)
+      var containers = getInlineContainers(group);
+      if (!containers.length) return;
+      var container = containers[containers.length - 1];
 
-    var tipoSelect = container.querySelector('select[id$="-tipo"]');
-    if (tipoSelect) {
-      tipoSelect.value = tipo;
-      tipoSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+      var tipoSelect = container.querySelector('select[id$="-tipo"]');
+      if (tipoSelect) {
+        tipoSelect.value = tipo;
+        tipoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
-    toggleTelefoneTipo(container);
+      toggleTelefoneTipo(container);
+      applyTelefoneMask(container);
+
+      var tipoSelect2 = container.querySelector('select[id$="-tipo"]');
+      if (tipoSelect2) {
+        tipoSelect2.addEventListener('change', function () {
+          toggleTelefoneTipo(container);
+        });
+      }
+    }, 0);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

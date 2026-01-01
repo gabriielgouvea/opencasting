@@ -1,5 +1,5 @@
 """
-WSGI config for opencasting project.
+WSGI config for Casting Certo project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

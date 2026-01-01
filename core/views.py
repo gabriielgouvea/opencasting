@@ -91,6 +91,14 @@ def home(request):
     return render(request, 'landing.html', context)
 
 
+def quem_somos(request):
+    return render(request, 'quem_somos.html')
+
+
+def privacidade(request):
+    return render(request, 'privacidade.html')
+
+
 def _idade_em_anos(data_nascimento):
     if not data_nascimento:
         return None

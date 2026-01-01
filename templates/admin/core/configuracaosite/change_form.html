@@ -4,6 +4,58 @@
 {# Renderiza somente os contatos (inlines). Não mostra campos do modelo (aba "General"). #}
 {% block field_sets %}
   <div class="col-12 col-lg-9">
+    {% if errors %}
+      <div class="alert alert-danger oc-admin-errors" style="margin-bottom: 14px;">
+        <style>
+          .oc-admin-errors ul.errorlist,
+          .oc-admin-errors ul.errorlist li {
+            color: inherit;
+          }
+          .oc-admin-errors ul.errorlist {
+            margin: 6px 0 0 18px;
+          }
+          .oc-admin-errors ul.errorlist a {
+            color: inherit;
+            text-decoration: underline;
+          }
+        </style>
+        <strong>Erros ao salvar:</strong>
+
+        {% if adminform.form.errors %}
+          <div style="margin-top: 8px;">
+            {{ adminform.form.errors }}
+          </div>
+        {% endif %}
+        {% if adminform.form.non_field_errors %}
+          <div style="margin-top: 8px;">{{ adminform.form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for inline_admin_formset in inline_admin_formsets %}
+          {% if inline_admin_formset.formset.management_form.errors %}
+            <div style="margin-top: 8px;">
+              <div><strong>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</strong></div>
+              {{ inline_admin_formset.formset.management_form.errors }}
+            </div>
+          {% endif %}
+          {% if inline_admin_formset.formset.non_form_errors %}
+            <div style="margin-top: 8px;">
+              <div><strong>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</strong></div>
+              {{ inline_admin_formset.formset.non_form_errors }}
+            </div>
+          {% endif %}
+
+          {% for f in inline_admin_formset.formset.forms %}
+            {% if f.errors %}
+              <div style="margin-top: 8px;">
+                <div><strong>{{ inline_admin_formset.opts.verbose_name|capfirst }} {{ forloop.counter }}</strong></div>
+                {{ f.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
     <div class="card">
       <div class="card-body">
         {% for inline_admin_formset in inline_admin_formsets %}

@@ -1,5 +1,5 @@
 /**
- * OPENCASTING CRM - GESTOR V16 (JAZZMIN BOOTSTRAP SUPPORT)
+ * CASTING CERTO - GESTOR V16 (JAZZMIN BOOTSTRAP SUPPORT)
  * ------------------------------------------------------------------
  * 1. SUPORTE JAZZMIN: Lê filtros dentro de Cards/Bootstraps.
  * 2. VISIBILIDADE: Garante que os filtros sejam encontrados.
