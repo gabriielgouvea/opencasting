@@ -424,41 +424,81 @@
     </tfoot>
   </table>
 
-  <div class="bottom-strip">
-    <table class="bottom-strip-table">
+  {% if pdf_engine == 'xhtml2pdf' %}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 28mm; background: #313131;" bgcolor="#313131">
       <tr>
-        <td class="bottom-left">
-          <table class="contact-table">
-            {% if contato_telefone %}
-              <tr>
-                <td class="contact-icon">☎</td>
-                <td>{{ contato_telefone }}</td>
-              </tr>
-            {% endif %}
-            {% if contato_email %}
-              <tr>
-                <td class="contact-icon">✉</td>
-                <td>{{ contato_email }}</td>
-              </tr>
-            {% endif %}
-            {% if instagram_handle %}
-              <tr>
-                <td class="contact-icon">@</td>
-                <td>{{ instagram_handle|lower }}</td>
-              </tr>
-            {% endif %}
+        <td style="padding: 18px 22px; color: #ffffff;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="vertical-align: middle;">
+                <table cellpadding="0" cellspacing="0">
+                  {% if contato_telefone %}
+                    <tr>
+                      <td style="width: 24px; color: #d5ac5c; font-weight: 900; padding: 3px 0;">☎</td>
+                      <td style="color: #ffffff; font-weight: 700; font-size: 11pt; padding: 3px 0;">{{ contato_telefone }}</td>
+                    </tr>
+                  {% endif %}
+                  {% if contato_email %}
+                    <tr>
+                      <td style="width: 24px; color: #d5ac5c; font-weight: 900; padding: 3px 0;">✉</td>
+                      <td style="color: #ffffff; font-weight: 700; font-size: 11pt; padding: 3px 0;">{{ contato_email }}</td>
+                    </tr>
+                  {% endif %}
+                  {% if instagram_handle %}
+                    <tr>
+                      <td style="width: 24px; color: #d5ac5c; font-weight: 900; padding: 3px 0;">@</td>
+                      <td style="color: #ffffff; font-weight: 700; font-size: 11pt; padding: 3px 0;">{{ instagram_handle|lower }}</td>
+                    </tr>
+                  {% endif %}
+                </table>
+              </td>
+              <td style="vertical-align: middle; text-align: right; white-space: nowrap;">
+                {% if logo_src %}
+                  <img src="{{ logo_src }}" alt="Logo" style="height: 90px; width: auto; max-width: 360px; display: block;" />
+                {% endif %}
+              </td>
+            </tr>
           </table>
-        </td>
-        <td class="bottom-right">
-          {% if logo_src %}
-            <span class="bottom-logo">
-              <img src="{{ logo_src }}" alt="Logo" />
-            </span>
-          {% endif %}
         </td>
       </tr>
     </table>
-  </div>
+  {% else %}
+    <div class="bottom-strip">
+      <table class="bottom-strip-table">
+        <tr>
+          <td class="bottom-left">
+            <table class="contact-table">
+              {% if contato_telefone %}
+                <tr>
+                  <td class="contact-icon">☎</td>
+                  <td>{{ contato_telefone }}</td>
+                </tr>
+              {% endif %}
+              {% if contato_email %}
+                <tr>
+                  <td class="contact-icon">✉</td>
+                  <td>{{ contato_email }}</td>
+                </tr>
+              {% endif %}
+              {% if instagram_handle %}
+                <tr>
+                  <td class="contact-icon">@</td>
+                  <td>{{ instagram_handle|lower }}</td>
+                </tr>
+              {% endif %}
+            </table>
+          </td>
+          <td class="bottom-right">
+            {% if logo_src %}
+              <span class="bottom-logo">
+                <img src="{{ logo_src }}" alt="Logo" />
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+  {% endif %}
   </div>
 </body>
 </html>
