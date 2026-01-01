@@ -334,12 +334,9 @@
 
     .lbl { font-weight: 900; }
 
-    .validade {
-      {% if pdf_engine == 'xhtml2pdf' %}
-      margin: 0 0 16px;
-      {% else %}
-      margin: 0 0 10mm;
-      {% endif %}
+    .validade-inline {
+      padding-top: 6px;
+      font-size: 10pt;
       font-size: 10pt;
       color: #313131;
     }
@@ -403,11 +400,12 @@
     <tr>
       <td><span class="lbl">Data do evento:</span> {{ data_evento|default:"-" }}</td>
     </tr>
+    {% if frase_validade %}
+      <tr>
+        <td class="validade-inline">{{ frase_validade }}</td>
+      </tr>
+    {% endif %}
   </table>
-
-  {% if frase_validade %}
-    <div class="validade">{{ frase_validade }}</div>
-  {% endif %}
 
   <table class="items">
     <thead>
@@ -426,7 +424,7 @@
           <td class="col-func">{{ item.funcao }}</td>
           <td class="col-hrs">{{ item.carga_horaria_horas }}h</td>
           <td class="col-diaria">{{ item.valor_diaria|br_num }}</td>
-          <td class="col-total cell-total">{{ item.total|brl_compacto }}</td>
+          <td class="col-total cell-total" style="background:#d5ac5c; color:#fff; font-weight:900; text-align:right;">{{ item.total|brl_compacto }}</td>
         </tr>
       {% empty %}
         <tr>
