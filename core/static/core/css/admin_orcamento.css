@@ -8,6 +8,198 @@
   background: #fff !important;
 }
 
+/* Centraliza o conteúdo do formulário/lista e padroniza largura */
+#content,
+#content-main,
+.content,
+.container-fluid {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Orçamento (add/change): nada na lateral; conteúdo em largura total */
+body.app-core.model-orcamento.change-form .content .row > .col-lg-3,
+body.app-core.model-orcamento.change-form .content .row > .col-md-3,
+body.app-core.model-orcamento.add-form .content .row > .col-lg-3,
+body.app-core.model-orcamento.add-form .content .row > .col-md-3 {
+  display: none !important;
+}
+
+/* =========================
+   CHANGE LIST (ORÇAMENTOS)
+   ========================= */
+
+/* Mobile: tabela pode estourar; permite scroll horizontal só aqui */
+body.app-core.model-orcamento.change-list .results,
+body.app-core.model-orcamento.change-list #changelist .results {
+  overflow-x: auto;
+}
+
+/* Ajusta a barra de ações (botão "Realizar orçamento") */
+body.app-core.model-orcamento.change-list ul.object-tools {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-top: 34px !important;
+}
+
+body.app-core.model-orcamento.change-list ul.object-tools > li {
+  list-style: none !important;
+}
+
+/* Alguns temas colocam o “•” via pseudo-elemento */
+body.app-core.model-orcamento.change-list ul.object-tools > li::marker {
+  color: transparent !important;
+}
+
+body.app-core.model-orcamento.change-list ul.object-tools > li:before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Botão maior */
+body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
+  border-radius: 999px !important;
+  padding: 14px 26px !important;
+  font-weight: 900 !important;
+  font-size: 0.98rem !important;
+}
+
+@media (max-width: 640px) {
+  body.app-core.model-orcamento.change-list ul.object-tools {
+    margin-top: 18px !important;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
+    padding: 12px 18px !important;
+    font-size: 0.92rem !important;
+  }
+
+  .oc-modal__dialog {
+    top: 10% !important;
+  }
+}
+
+/* Esconde links do topo (Ver Site / Suporte / Pesquisar) apenas nesta tela */
+body.app-core.model-orcamento.change-list .main-header .navbar-nav,
+body.app-core.model-orcamento.change-list .main-header form,
+body.app-core.model-orcamento.change-list .main-header .navbar-search-block,
+body.app-core.model-orcamento.change-list .main-header .navbar-search-open {
+  display: none !important;
+}
+
+/* Reexibe a área direita (perfil/usuário) quando o tema usar ml-auto */
+body.app-core.model-orcamento.change-list .main-header .navbar-nav.ml-auto,
+body.app-core.model-orcamento.change-list .main-header .navbar-nav.navbar-right {
+  display: flex !important;
+}
+
+/* Linha inteira clicável */
+body.app-core.model-orcamento.change-list #result_list tbody tr {
+  cursor: pointer;
+}
+
+/* Botão lixeira (por linha) */
+body.app-core.model-orcamento.change-list a.oc-row-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  text-decoration: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: 20px;
+}
+
+body.app-core.model-orcamento.change-list a.oc-row-delete:hover {
+  background: rgba(0,0,0,0.04) !important;
+}
+
+/* Busca: remove botão, deixa só o campo */
+body.app-core.model-orcamento.change-list #changelist-search input[type="submit"],
+body.app-core.model-orcamento.change-list #changelist-search button,
+body.app-core.model-orcamento.change-list #changelist-search .btn {
+  display: none !important;
+}
+
+/* Esconde o "X" (limpar ordenação) que aparece nos headers */
+body.app-core.model-orcamento.change-list .sortremove,
+body.app-core.model-orcamento.change-list a.sortremove {
+  display: none !important;
+}
+
+/* =========================
+   MODAL (EXCLUSÃO)
+   ========================= */
+
+.oc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.oc-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+}
+
+.oc-modal__dialog {
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  transform: translateX(-50%);
+  width: min(680px, calc(100% - 28px));
+}
+
+.oc-modal__card {
+  border-radius: 14px;
+}
+
+/* Deixa o popup mais “presente” */
+.oc-modal .card-body {
+  padding: 22px 24px;
+}
+
+.oc-modal .card-title {
+  font-size: 1.25rem;
+}
+
+.oc-modal .card-text {
+  font-size: 1.05rem;
+}
+
+.oc-modal__actions .btn {
+  border-radius: 999px !important;
+  padding: 10px 18px !important;
+  font-weight: 900 !important;
+}
+
+.oc-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+body.app-core.model-orcamento.change-form .content .row > .col-lg-9,
+body.app-core.model-orcamento.change-form .content .row > .col-md-9,
+body.app-core.model-orcamento.add-form .content .row > .col-lg-9,
+body.app-core.model-orcamento.add-form .content .row > .col-md-9 {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+}
+
+/* Remove breadcrumbs/cabeçalho para ficar mais "cara de sistema" */
+.content-header .breadcrumb,
+.breadcrumb {
+  display: none !important;
+}
+
 /* Força single-page mesmo se o tema tentar renderizar abas */
 .nav-tabs,
 .nav.nav-tabs,
@@ -32,6 +224,35 @@
   width: 100%;
 }
 
+/* Remove o excesso de linhas/divisórias internas */
+.form-row,
+.form-group,
+.module {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Campos com mesma largura e centralizados */
+.form-row > div,
+.form-group > div,
+.form-row .field-box,
+.form-group .field-box {
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='number'],
+input[type='url'],
+input[type='date'],
+select,
+textarea {
+  width: 100% !important;
+}
+
 .form-group > .row,
 .form-group .row,
 .form-group [class*='col-'],
@@ -47,6 +268,21 @@
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 12px;
+}
+
+/* Dentro de cada função: evita "linhas" por campo; a borda do bloco já separa */
+.inline-related .form-row,
+.inline-related .form-group {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 0 !important;
+}
+
+.inline-related fieldset,
+.inline-related fieldset.module {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .inline-related h3 {
@@ -67,6 +303,24 @@ textarea {
   border-radius: 12px;
   padding: 8px 12px;
   height: 38px;
+}
+
+/* Foco em verde (usa variável do tema quando existir) */
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='tel']:focus,
+input[type='number']:focus,
+input[type='url']:focus,
+input[type='date']:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--success, #28a745) !important;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+/* Remove o "X" de limpar ordenação (só fica setinha) */
+.sortremove {
+  display: none !important;
 }
 
 textarea {

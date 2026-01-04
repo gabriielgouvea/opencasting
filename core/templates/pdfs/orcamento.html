@@ -437,17 +437,23 @@
       {% endfor %}
     </tbody>
     <tfoot>
+      <tr>
+        <td colspan="4" style="border: none;"></td>
+        <td colspan="2" style="text-align: right; font-weight: 800; border: 1px solid #666; padding: 8px 10px; background: #f5f5f5; color: #111;">
+          Subtotal&nbsp;&nbsp; {{ subtotal_geral|brl_compacto }}
+        </td>
+      </tr>
       {% if desconto_aplicado and desconto_aplicado > 0 %}
         <tr>
           <td colspan="4" style="border: none;"></td>
-          <td colspan="2" style="text-align: right; font-weight: 800; border: 1px solid #666; padding: 8px 10px; background: #f5f5f5; color: #111;">
-            Subtotal&nbsp;&nbsp; {{ subtotal_geral|brl_compacto }}
-          </td>
-        </tr>
-        <tr>
-          <td colspan="4" style="border: none;"></td>
           <td colspan="2" style="text-align: right; font-weight: 900; border: 1px solid #666; padding: 8px 10px; background: #f5f5f5; color: #111;">
-            Desconto&nbsp;&nbsp; -{{ desconto_aplicado|brl_compacto }}
+            Desconto
+            {% if desconto_tipo == 'pct' and desconto_percentual_texto %}
+              ({{ desconto_percentual_texto }}%)
+            {% elif desconto_tipo == 'valor' and desconto_valor_informado and desconto_valor_informado > 0 %}
+              ({{ desconto_valor_informado|brl_compacto }})
+            {% endif %}
+            &nbsp;&nbsp; -{{ desconto_aplicado|brl_compacto }}
           </td>
         </tr>
       {% endif %}

@@ -43,7 +43,13 @@
   }
 
   function maskMoneyOnBlur(input) {
-    if (!input || input.dataset.ocMoneyBound === '1') return;
+    // IMPORTANTE:
+    // Não use apenas dataset/data-attributes como flag de bind.
+    // Em inlines do Django, o template "empty-form" (com __prefix__) é clonado.
+    // Se marcarmos data-oc-money-bound="1" nele, o clone herda o atributo,
+    // mas NÃO herda os event listeners — e o campo novo fica "marcado" sem máscara.
+    if (!input || input.__ocMoneyBound) return;
+    input.__ocMoneyBound = true;
     input.dataset.ocMoneyBound = '1';
 
     // Garante que o campo aceite vírgula (se alguém renderizar como type=number)
@@ -125,6 +131,30 @@
         input.dataset.ocMoneyDecPos = '0';
         setCaretBeforeComma();
       }
+    });
+
+    function normalizeCaretAfterClick() {
+      // Em alguns casos o click coloca o cursor no decimal; forçamos pro inteiro.
+      try {
+        if ((input.dataset.ocMoneyMode || 'int') !== 'int') return;
+        if (!String(input.value || '').trim()) return;
+        ensureBase();
+        var idx = String(input.value || '').indexOf(',');
+        if (idx < 0) return;
+        var pos = input.selectionStart;
+        if (typeof pos === 'number' && pos > idx) {
+          setCaretBeforeComma();
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    input.addEventListener('mouseup', function () {
+      setTimeout(normalizeCaretAfterClick, 0);
+    });
+    input.addEventListener('click', function () {
+      setTimeout(normalizeCaretAfterClick, 0);
     });
 
     input.addEventListener('keydown', function (e) {
@@ -238,6 +268,37 @@
     });
   }
 
+  function maskPercentIntOnBlur(input) {
+    if (!input || input.dataset.ocPercentBound === '1') return;
+    input.dataset.ocPercentBound = '1';
+
+    try {
+      if (input.type && input.type.toLowerCase() === 'number') {
+        input.type = 'text';
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    function sanitize() {
+      var digits = onlyDigits(input.value);
+      var n = parseInt(digits || '0', 10);
+      if (isNaN(n)) n = 0;
+      if (n < 0) n = 0;
+      if (n > 100) n = 100;
+      input.value = String(n);
+    }
+
+    input.addEventListener('input', function () {
+      // mantém o cursor mais estável: não força formatação a cada tecla
+      input.value = onlyDigits(input.value).slice(0, 3);
+    });
+
+    input.addEventListener('blur', function () {
+      sanitize();
+    });
+  }
+
   function maskDateDDMMYYYY(input) {
     if (!input || input.dataset.ocDateBound === '1') return;
     input.dataset.ocDateBound = '1';
@@ -282,6 +343,17 @@
     var stacked = Array.prototype.slice.call(group.querySelectorAll('.inline-related'));
     if (stacked.length) return stacked;
     return Array.prototype.slice.call(group.querySelectorAll('tbody tr.form-row'));
+  }
+
+  function getRealInlineContainers(group) {
+    return getInlineContainers(group).filter(function (c) {
+      return c && !(c.classList && c.classList.contains('empty-form'));
+    });
+  }
+
+  function getLastRealContainer(group) {
+    var containers = getRealInlineContainers(group);
+    return containers.length ? containers[containers.length - 1] : null;
   }
 
   function findInput(container, suffix) {
@@ -331,9 +403,7 @@
   function computeAll() {
     var group = getInlineGroup();
     var subtotal = 0;
-    getInlineContainers(group).forEach(function (container) {
-      // ignora forms vazios que o Django usa como template
-      if (container.classList.contains('empty-form')) return;
+    getRealInlineContainers(group).forEach(function (container) {
       subtotal += computeLine(container);
     });
 
@@ -390,15 +460,334 @@
     addLink.click();
 
     setTimeout(function () {
-      var containers = getInlineContainers(group);
-      if (!containers.length) return;
-      var last = containers[containers.length - 1];
+      var last = getLastRealContainer(group);
+      if (!last) return;
       bindContainer(last);
+
+      var dailyEl = findInput(last, 'valor_diaria');
+      maskMoneyOnBlur(dailyEl);
       computeAll();
-    }, 0);
+    }, 50);
+  }
+
+  function bindNewInline(container) {
+    if (!container || (container.classList && container.classList.contains('empty-form'))) return;
+    bindContainer(container);
+    var dailyEl = findInput(container, 'valor_diaria');
+    maskMoneyOnBlur(dailyEl);
+    computeAll();
+  }
+
+  function observeInlineAdds(group) {
+    if (!group || group.dataset.ocObserverBound === '1') return;
+    group.dataset.ocObserverBound = '1';
+
+    try {
+      var scheduled = false;
+      var lastCount = 0;
+
+      function scanAndBind() {
+        scheduled = false;
+        var containers = getInlineContainers(group).filter(function (c) {
+          return c && !c.classList.contains('empty-form');
+        });
+
+        // Evita varredura sem necessidade
+        if (containers.length === lastCount) return;
+        lastCount = containers.length;
+
+        containers.forEach(function (container) {
+          bindContainer(container);
+          var dailyEl = findInput(container, 'valor_diaria');
+          maskMoneyOnBlur(dailyEl);
+        });
+        computeAll();
+      }
+
+      var mo = new MutationObserver(function (mutations) {
+        var hasNewInline = false;
+
+        for (var i = 0; i < mutations.length; i++) {
+          var m = mutations[i];
+          if (!m || !m.addedNodes || !m.addedNodes.length) continue;
+
+          for (var j = 0; j < m.addedNodes.length; j++) {
+            var n = m.addedNodes[j];
+            if (!n || n.nodeType !== 1) continue;
+            // Só reage quando realmente adicionou um inline/form novo
+            if (
+              (n.classList && n.classList.contains('inline-related')) ||
+              (n.matches && n.matches('tr.form-row')) ||
+              (n.querySelector && (n.querySelector('.inline-related') || n.querySelector('tr.form-row')))
+            ) {
+              hasNewInline = true;
+              break;
+            }
+          }
+
+          if (hasNewInline) break;
+        }
+
+        if (!hasNewInline) return;
+        if (scheduled) return;
+        scheduled = true;
+        setTimeout(scanAndBind, 0);
+      });
+
+      mo.observe(group, { childList: true, subtree: true });
+      // Inicializa contagem para não disparar à toa em alterações de texto
+      lastCount = getInlineContainers(group).filter(function (c) {
+        return c && !c.classList.contains('empty-form');
+      }).length;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function bindChangelistUX() {
+    var changelist = document.getElementById('changelist') || document.querySelector('.change-list');
+    if (!changelist) return;
+
+    function getCsrfToken() {
+      // Preferência: token já renderizado no changelist-form do admin
+      var el = document.querySelector('#changelist-form input[name="csrfmiddlewaretoken"]');
+      if (el && el.value) return el.value;
+
+      // Fallback: cookie padrão do Django
+      try {
+        var name = 'csrftoken';
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          var cookies = document.cookie.split(';');
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + '=') {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function ensureDeleteModal() {
+      var existing = document.getElementById('ocDeleteModal');
+      if (existing) return existing;
+
+      var overlay = document.createElement('div');
+      overlay.id = 'ocDeleteModal';
+      overlay.className = 'oc-modal';
+      overlay.style.display = 'none';
+      overlay.innerHTML =
+        '<div class="oc-modal__backdrop" data-oc-close="1"></div>' +
+        '<div class="oc-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="ocDeleteTitle">' +
+        '  <div class="oc-modal__card card">' +
+        '    <div class="card-body">' +
+        '      <h5 id="ocDeleteTitle" class="card-title" style="font-weight:900;">Confirmar exclusão</h5>' +
+        '      <p class="card-text" id="ocDeleteText" style="margin-bottom:14px;">Tem certeza que deseja excluir?</p>' +
+        '      <div class="oc-modal__actions">' +
+        '        <button type="button" class="btn btn-outline-secondary" data-oc-close="1">Cancelar</button>' +
+        '        <button type="button" class="btn btn-danger" id="ocDeleteConfirm">Excluir</button>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+
+    function openDeleteModal(opts) {
+      var modal = ensureDeleteModal();
+      var text = modal.querySelector('#ocDeleteText');
+      var btnConfirm = modal.querySelector('#ocDeleteConfirm');
+      modal.__ocDeleteTarget = {
+        url: (opts && opts.url) || null,
+        id: (opts && opts.id) || null,
+      };
+
+      if (text) {
+        text.textContent = modal.__ocDeleteTarget.id
+          ? 'Excluir o orçamento #' + modal.__ocDeleteTarget.id + '?'
+          : 'Tem certeza que deseja excluir este orçamento?';
+      }
+
+      function close() {
+        modal.style.display = 'none';
+        modal.classList.remove('oc-modal--open');
+        if (btnConfirm) btnConfirm.disabled = false;
+        document.removeEventListener('keydown', onKey);
+      }
+
+      function onKey(e) {
+        if (e && e.key === 'Escape') close();
+      }
+
+      modal.querySelectorAll('[data-oc-close="1"]').forEach(function (el) {
+        if (el.__ocBoundClose) return;
+        el.__ocBoundClose = true;
+        el.addEventListener('click', function () {
+          close();
+        });
+      });
+
+      if (btnConfirm && !btnConfirm.__ocBoundConfirm) {
+        btnConfirm.__ocBoundConfirm = true;
+        btnConfirm.addEventListener('click', function () {
+          var target = modal.__ocDeleteTarget || {};
+          if (!target.url) {
+            close();
+            return;
+          }
+
+          btnConfirm.disabled = true;
+
+          // Submit real via form (mais confiável no Django Admin)
+          var csrf = getCsrfToken();
+          if (!csrf) {
+            btnConfirm.disabled = false;
+            close();
+            window.location.href = target.url;
+            return;
+          }
+
+          var form = document.createElement('form');
+          form.method = 'POST';
+          form.action = target.url;
+
+          var inpCsrf = document.createElement('input');
+          inpCsrf.type = 'hidden';
+          inpCsrf.name = 'csrfmiddlewaretoken';
+          inpCsrf.value = csrf;
+          form.appendChild(inpCsrf);
+
+          var inpPost = document.createElement('input');
+          inpPost.type = 'hidden';
+          inpPost.name = 'post';
+          inpPost.value = 'yes';
+          form.appendChild(inpPost);
+
+          document.body.appendChild(form);
+          form.submit();
+        });
+      }
+
+      modal.style.display = 'block';
+      modal.classList.add('oc-modal--open');
+      document.addEventListener('keydown', onKey);
+    }
+
+    // Buscar enquanto digita
+    var form = document.getElementById('changelist-search');
+    var input = document.getElementById('searchbar');
+    if (form && input) {
+      // Identificação do campo (sem precisar do botão)
+      if (!input.getAttribute('placeholder')) {
+        input.setAttribute('placeholder', 'Pesquisar cliente...');
+      }
+      if (!input.getAttribute('aria-label')) {
+        input.setAttribute('aria-label', 'Pesquisar cliente');
+      }
+
+      var t = null;
+      var last = String(input.value || '');
+      input.addEventListener('input', function () {
+        var v = String(input.value || '');
+        if (v === last) return;
+        last = v;
+        if (t) window.clearTimeout(t);
+        t = window.setTimeout(function () {
+          form.submit();
+        }, 250);
+      });
+    }
+
+    // Ações só quando selecionar
+    var actions = document.querySelector('#changelist-form .actions');
+    function updateActionsVisibility() {
+      if (!actions) return;
+      var any = !!document.querySelector('#changelist-form input.action-select:checked');
+      actions.style.display = any ? '' : 'none';
+    }
+    if (actions) {
+      updateActionsVisibility();
+      document.addEventListener('change', function (e) {
+        var target = e.target;
+        if (!target) return;
+        if (target.matches && (target.matches('#action-toggle') || target.matches('input.action-select'))) {
+          updateActionsVisibility();
+        }
+      });
+    }
+
+    // Confirmação na lixeira por linha
+    document.querySelectorAll('a.oc-row-delete[data-oc-delete="1"]').forEach(function (a) {
+      if (a.__ocDeleteBound) return;
+      a.__ocDeleteBound = true;
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openDeleteModal({ url: a.getAttribute('href'), id: a.getAttribute('data-oc-id') });
+      });
+    });
+
+    // Linha inteira clicável: abre o orçamento ao clicar em qualquer lugar da linha.
+    var resultList = document.getElementById('result_list');
+    if (resultList) {
+      resultList.querySelectorAll('tbody tr').forEach(function (tr) {
+        if (tr.__ocRowBound) return;
+        tr.__ocRowBound = true;
+
+        tr.addEventListener('click', function (e) {
+          var target = e && e.target;
+          if (!target) return;
+
+          // Não dispara ao clicar em checkbox, links, botões ou na lixeira.
+          if (
+            (target.closest && target.closest('a')) ||
+            (target.closest && target.closest('button')) ||
+            (target.closest && target.closest('input'))
+          ) {
+            return;
+          }
+
+          var link = tr.querySelector('th a, td a');
+          if (link && link.getAttribute) {
+            var href = link.getAttribute('href');
+            if (href) window.location.href = href;
+          }
+        });
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    bindChangelistUX();
+
+    // Fallback: se algum inline novo escapar dos binds, aplica máscara ao focar.
+    document.addEventListener(
+      'focusin',
+      function (e) {
+        var target = e && e.target;
+        if (!target || !target.matches) return;
+        if (target.matches('input[id$="-valor_diaria"]')) {
+          maskMoneyOnBlur(target);
+          return;
+        }
+        if (target.matches('input[name="desconto_valor"]')) {
+          maskMoneyOnBlur(target);
+          return;
+        }
+        if (target.matches('input[name="desconto_percentual"]')) {
+          maskPercentIntOnBlur(target);
+        }
+      },
+      true
+    );
+
     // Move os campos de desconto para o final (abaixo dos itens).
     var mount = document.getElementById('ocDescontoArea');
     if (mount) {
@@ -406,6 +795,31 @@
       var descontoPctRow = document.querySelector('.form-row.field-desconto_percentual, .form-group.field-desconto_percentual');
       if (descontoValorRow) mount.appendChild(descontoValorRow);
       if (descontoPctRow) mount.appendChild(descontoPctRow);
+
+      // Botão aplicar desconto (R$ ou %)
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-outline-success';
+      btn.textContent = 'Aplicar desconto';
+      btn.style.borderRadius = '999px';
+      btn.style.fontWeight = '900';
+      btn.style.marginTop = '10px';
+      mount.appendChild(btn);
+
+      btn.addEventListener('click', function () {
+        var dv = findMainInputByName('desconto_valor');
+        var dp = findMainInputByName('desconto_percentual');
+        var v = toFloatBR(dv && dv.value);
+        var p = toFloatBR(dp && dp.value);
+
+        // Escolhe um só: se % > 0, zera R$; senão mantém R$
+        if (p > 0) {
+          if (dv) dv.value = '0,00';
+        } else if (v > 0) {
+          if (dp) dp.value = '0';
+        }
+        computeAll();
+      });
     }
 
     // Máscara da data do evento (dd/mm/aaaa)
@@ -413,20 +827,37 @@
 
     // Máscara do desconto
     maskMoneyOnBlur(findMainInputByName('desconto_valor'));
-    maskMoneyOnBlur(findMainInputByName('desconto_percentual'));
+    maskPercentIntOnBlur(findMainInputByName('desconto_percentual'));
 
     var group = getInlineGroup();
-    getInlineContainers(group).forEach(function (container) {
+    getRealInlineContainers(group).forEach(function (container) {
       bindContainer(container);
     });
 
-    // Máscara do valor da diária em todos os inlines
+    // Máscara do valor da diária apenas nos inlines reais (não no template empty-form/__prefix__)
     if (group) {
-      Array.prototype.slice
-        .call(group.querySelectorAll('input[id$="-valor_diaria"]'))
-        .forEach(function (el) {
-          maskMoneyOnBlur(el);
+      getRealInlineContainers(group).forEach(function (container) {
+        var dailyEl = findInput(container, 'valor_diaria');
+        maskMoneyOnBlur(dailyEl);
+      });
+    }
+
+    observeInlineAdds(group);
+
+    // Django admin dispara este evento ao adicionar inline (mais confiável que observer)
+    try {
+      if (window.django && window.django.jQuery) {
+        window.django.jQuery(document).on('formset:added', function (_event, row) {
+          // row pode vir como elemento DOM ou como jQuery object
+          var el = row;
+          if (el && el.jquery) {
+            el = el[0];
+          }
+          bindNewInline(el);
         });
+      }
+    } catch (e) {
+      // ignore
     }
 
     document.querySelectorAll('[data-add-orcamento-item]').forEach(function (btn) {
@@ -441,16 +872,10 @@
         var target = e.target;
         if (target && target.closest && target.closest('.add-row')) {
           setTimeout(function () {
-            var containers = getInlineContainers(group);
-            if (!containers.length) return;
-            var last = containers[containers.length - 1];
-            bindContainer(last);
-
-            var dailyEl = findInput(last, 'valor_diaria');
-            maskMoneyOnBlur(dailyEl);
-
-            computeAll();
-          }, 0);
+            var last = getLastRealContainer(group);
+            if (!last) return;
+            bindNewInline(last);
+          }, 50);
         }
       });
     }

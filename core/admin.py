@@ -1371,6 +1371,8 @@ class ClienteAdmin(admin.ModelAdmin):
         return JsonResponse({'ok': True, 'data': out})
 
 class OrcamentoAdminForm(forms.ModelForm):
+    localized_fields = ('desconto_valor', 'desconto_percentual')
+
     class Meta:
         model = Orcamento
         fields = '__all__'
@@ -1397,8 +1399,22 @@ class OrcamentoAdminForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ('desconto_valor', 'desconto_percentual'):
+            field = self.fields.get(name)
+            if not field:
+                continue
+            field.localize = True
+            try:
+                field.widget.is_localized = True
+            except Exception:
+                pass
+
 
 class OrcamentoItemInlineForm(forms.ModelForm):
+    localized_fields = ('valor_diaria',)
+
     class Meta:
         model = OrcamentoItem
         fields = '__all__'
@@ -1410,6 +1426,28 @@ class OrcamentoItemInlineForm(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields.get('valor_diaria')
+        if field:
+            field.localize = True
+            try:
+                field.widget.is_localized = True
+            except Exception:
+                pass
+
+        # Para inlines NOVOS, não pré-preencher com defaults do model (ex.: 1 / 8 / 1).
+        # Mantém valores normalmente quando o item já existe.
+        if not self.is_bound and not getattr(self.instance, 'pk', None):
+            for name in ('quantidade', 'carga_horaria_horas', 'diarias'):
+                if name in self.fields:
+                    self.fields[name].initial = None
+                    self.initial[name] = ''
+                    try:
+                        setattr(self.instance, name, None)
+                    except Exception:
+                        pass
 
 
 class OrcamentoItemInline(admin.StackedInline):
@@ -1425,10 +1463,14 @@ class OrcamentoItemInline(admin.StackedInline):
 class OrcamentoAdmin(admin.ModelAdmin):
     form = OrcamentoAdminForm
     changeform_format = 'single'
-    list_display = ('id', 'cliente', 'criado_em', 'validade_dias')
+    list_display = ('id', 'cliente', 'criado_em', 'validade_dias', 'lixeira')
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
-    date_hierarchy = 'criado_em'
+    sortable_by = ('criado_em',)
+
+    # Remove seleção por checkbox + dropdown de ações (não usado nesta tela)
+    actions = None
+    actions_selection_counter = False
 
     fields = ('cliente', 'data_evento', 'validade_dias', 'desconto_valor', 'desconto_percentual')
     inlines = (OrcamentoItemInline,)
@@ -1441,6 +1483,17 @@ class OrcamentoAdmin(admin.ModelAdmin):
         css = {
             'all': ('core/css/admin_orcamento.css',)
         }
+
+    @admin.display(description='', ordering=False)
+    def lixeira(self, obj: Orcamento):
+        url = reverse('admin:core_orcamento_delete', args=[obj.pk])
+        return format_html(
+            '<a class="oc-row-delete" href="{}" data-oc-delete="1" data-oc-id="{}" title="Excluir">'
+            '<span aria-hidden="true">🗑</span>'
+            '</a>',
+            url,
+            obj.pk,
+        )
 
     def get_urls(self):
         urls = super().get_urls()
@@ -1544,6 +1597,30 @@ class OrcamentoAdmin(admin.ModelAdmin):
         desconto_aplicado = orcamento.calcular_desconto_aplicado(subtotal_geral)
         total_final = (subtotal_geral - desconto_aplicado).quantize(Decimal('0.01'))
 
+        desconto_tipo = None
+        desconto_percentual_texto = None
+        try:
+            desconto_pct = Decimal(str(orcamento.desconto_percentual or '0'))
+        except Exception:
+            desconto_pct = Decimal('0')
+        try:
+            desconto_val = Decimal(str(orcamento.desconto_valor or '0'))
+        except Exception:
+            desconto_val = Decimal('0')
+
+        if desconto_pct and desconto_pct > 0:
+            desconto_tipo = 'pct'
+            try:
+                pct_2 = desconto_pct.quantize(Decimal('0.01'))
+            except Exception:
+                pct_2 = desconto_pct
+            if pct_2 == pct_2.to_integral_value():
+                desconto_percentual_texto = str(int(pct_2))
+            else:
+                desconto_percentual_texto = f"{pct_2:.2f}".replace('.', ',')
+        elif desconto_val and desconto_val > 0:
+            desconto_tipo = 'valor'
+
         html = render_to_string(
             'pdfs/orcamento.html',
             {
@@ -1552,6 +1629,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
                 'subtotal_geral': subtotal_geral,
                 'desconto_aplicado': desconto_aplicado,
                 'total_geral': total_final,
+                'desconto_tipo': desconto_tipo,
+                'desconto_percentual_texto': desconto_percentual_texto,
+                'desconto_valor_informado': desconto_val,
                 'config_site': config_site,
                 'data_formatada': dt.strftime('%d/%m/%Y'),
                 'validade_dias': validade_dias,
@@ -1645,6 +1725,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
                 'subtotal_geral': subtotal_geral,
                 'desconto_aplicado': desconto_aplicado,
                 'total_geral': total_final,
+                'desconto_tipo': desconto_tipo,
+                'desconto_percentual_texto': desconto_percentual_texto,
+                'desconto_valor_informado': desconto_val,
                 'config_site': config_site,
                 'data_formatada': dt.strftime('%d/%m/%Y'),
                 'validade_dias': validade_dias,
