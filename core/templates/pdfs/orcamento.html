@@ -267,11 +267,12 @@
     tr.alt td.cell-total { background: #d5ac5c !important; color: #fff !important; }
     .th-total { background: #d5ac5c; }
 
-    .col-qty { width: 12%; text-align: center; }
-    .col-func { width: 38%; }
-    .col-hrs { width: 14%; text-align: center; }
-    .col-diaria { width: 18%; text-align: center; }
-    .col-total { width: 18%; text-align: right; }
+    .col-qty { width: 10%; text-align: center; }
+    .col-func { width: 36%; }
+    .col-hrs { width: 10%; text-align: center; }
+    .col-days { width: 10%; text-align: center; }
+    .col-diaria { width: 14%; text-align: center; }
+    .col-total { width: 20%; text-align: right; }
 
     .desc-sub {
       font-size: 9pt;
@@ -414,6 +415,7 @@
         <th class="col-qty">Qntd</th>
         <th class="col-func">Função</th>
         <th class="col-hrs">Hrs</th>
+        <th class="col-days">Diárias</th>
         <th class="col-diaria"><div style="font-size: 9pt;">R$</div><div>Diaria</div></th>
         <th class="col-total th-total">Total</th>
       </tr>
@@ -424,18 +426,19 @@
           <td class="col-qty cell-qty">{{ item.quantidade|stringformat:"02d" }}</td>
           <td class="col-func">{{ item.funcao }}</td>
           <td class="col-hrs">{{ item.carga_horaria_horas }}h</td>
+          <td class="col-days">{{ item.diarias|stringformat:"02d" }}</td>
           <td class="col-diaria">{{ item.valor_diaria|br_num }}</td>
           <td class="col-total cell-total" style="background:#d5ac5c; color:#fff; font-weight:900; text-align:right;">{{ item.total|brl_compacto }}</td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="5" class="subtitle">Nenhum item informado.</td>
+          <td colspan="6" class="subtitle">Nenhum item informado.</td>
         </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr>
-        <td colspan="3" style="border: none;"></td>
+        <td colspan="4" style="border: none;"></td>
         <td colspan="2" style="text-align: right; font-weight: 900; border: 1px solid #666; padding: 10px; background: #313131; color: #fff;">
           Total&nbsp;&nbsp; {{ total_geral|brl_compacto }}
         </td>
