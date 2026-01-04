@@ -119,6 +119,21 @@ class Orcamento(models.Model):
     )
     data_evento = models.DateField(blank=True, null=True, verbose_name='Data do evento')
     validade_dias = models.PositiveIntegerField(default=30, verbose_name='Orçamento válido por (dias)')
+    desconto_valor = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        blank=True,
+        verbose_name='Desconto (R$)',
+    )
+    desconto_percentual = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        blank=True,
+        verbose_name='Desconto (%)',
+        help_text='Informe um desconto em R$ ou em %, não os dois.',
+    )
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
     atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
 
@@ -139,6 +154,67 @@ class Orcamento(models.Model):
         for item in self.itens.all():
             total += (item.total or Decimal('0'))
         return total
+
+    def clean(self):
+        super().clean()
+        try:
+            desconto_valor = Decimal(str(self.desconto_valor or '0'))
+        except Exception:
+            desconto_valor = Decimal('0')
+        try:
+            desconto_percentual = Decimal(str(self.desconto_percentual or '0'))
+        except Exception:
+            desconto_percentual = Decimal('0')
+
+        if desconto_valor < 0 or desconto_percentual < 0:
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError('Desconto não pode ser negativo.')
+
+        if desconto_valor > 0 and desconto_percentual > 0:
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError('Informe o desconto em R$ ou em %, não os dois.')
+
+    def calcular_desconto_aplicado(self, subtotal: Decimal | None = None) -> Decimal:
+        subtotal_val = (subtotal if subtotal is not None else self.total_geral) or Decimal('0')
+        try:
+            subtotal_val = Decimal(str(subtotal_val))
+        except Exception:
+            subtotal_val = Decimal('0')
+
+        desconto_val = self.desconto_valor or Decimal('0')
+        desconto_pct = self.desconto_percentual or Decimal('0')
+
+        # % tem prioridade se preenchido
+        if desconto_pct and desconto_pct > 0:
+            try:
+                pct = Decimal(str(desconto_pct))
+            except Exception:
+                pct = Decimal('0')
+            if pct > 100:
+                pct = Decimal('100')
+            desconto = (subtotal_val * pct / Decimal('100')).quantize(Decimal('0.01'))
+        else:
+            try:
+                desconto = Decimal(str(desconto_val or '0')).quantize(Decimal('0.01'))
+            except Exception:
+                desconto = Decimal('0.00')
+
+        if desconto < 0:
+            desconto = Decimal('0.00')
+        if desconto > subtotal_val:
+            desconto = subtotal_val
+        return desconto
+
+    @property
+    def total_final(self) -> Decimal:
+        subtotal = self.total_geral or Decimal('0')
+        desconto = self.calcular_desconto_aplicado(subtotal)
+        try:
+            return (Decimal(str(subtotal)) - Decimal(str(desconto))).quantize(Decimal('0.01'))
+        except Exception:
+            return Decimal('0.00')
 
     @property
     def valido_ate(self):

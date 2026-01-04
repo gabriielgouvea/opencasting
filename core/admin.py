@@ -1370,9 +1370,51 @@ class ClienteAdmin(admin.ModelAdmin):
 
         return JsonResponse({'ok': True, 'data': out})
 
+class OrcamentoAdminForm(forms.ModelForm):
+    class Meta:
+        model = Orcamento
+        fields = '__all__'
+        widgets = {
+            # Em muitos browsers, DateInput vira type=date e não aceita máscara. Mantemos texto.
+            'data_evento': forms.TextInput(
+                attrs={
+                    'inputmode': 'numeric',
+                    'placeholder': 'dd/mm/aaaa',
+                }
+            ),
+            # DecimalField com TextInput para aceitar vírgula e máscara BR
+            'desconto_valor': forms.TextInput(
+                attrs={
+                    'inputmode': 'decimal',
+                    'placeholder': '0,00',
+                }
+            ),
+            'desconto_percentual': forms.TextInput(
+                attrs={
+                    'inputmode': 'decimal',
+                    'placeholder': '0,00',
+                }
+            ),
+        }
+
+
+class OrcamentoItemInlineForm(forms.ModelForm):
+    class Meta:
+        model = OrcamentoItem
+        fields = '__all__'
+        widgets = {
+            'valor_diaria': forms.TextInput(
+                attrs={
+                    'inputmode': 'decimal',
+                    'placeholder': '0,00',
+                }
+            ),
+        }
+
 
 class OrcamentoItemInline(admin.StackedInline):
     model = OrcamentoItem
+    form = OrcamentoItemInlineForm
     extra = 1
     ordering = ('ordem', 'id')
     exclude = ('ordem', 'total')
@@ -1381,13 +1423,14 @@ class OrcamentoItemInline(admin.StackedInline):
 
 @admin.register(Orcamento)
 class OrcamentoAdmin(admin.ModelAdmin):
+    form = OrcamentoAdminForm
     changeform_format = 'single'
     list_display = ('id', 'cliente', 'criado_em', 'validade_dias')
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
     date_hierarchy = 'criado_em'
 
-    fields = ('cliente', 'data_evento', 'validade_dias')
+    fields = ('cliente', 'data_evento', 'validade_dias', 'desconto_valor', 'desconto_percentual')
     inlines = (OrcamentoItemInline,)
 
     change_list_template = 'admin/core/orcamento/change_list.html'
@@ -1494,16 +1537,21 @@ class OrcamentoAdmin(admin.ModelAdmin):
         validade_dias = int(orcamento.validade_dias or 0)
         frase_validade = f"Este orçamento tem validade de {validade_dias} dias corridos a partir de hoje." if validade_dias else None
         itens = list(orcamento.itens.all())
-        total_geral = Decimal('0.00')
+        subtotal_geral = Decimal('0.00')
         for item in itens:
-            total_geral += (item.total or Decimal('0.00'))
+            subtotal_geral += (item.total or Decimal('0.00'))
+
+        desconto_aplicado = orcamento.calcular_desconto_aplicado(subtotal_geral)
+        total_final = (subtotal_geral - desconto_aplicado).quantize(Decimal('0.01'))
 
         html = render_to_string(
             'pdfs/orcamento.html',
             {
                 'orcamento': orcamento,
                 'itens': itens,
-                'total_geral': total_geral,
+                'subtotal_geral': subtotal_geral,
+                'desconto_aplicado': desconto_aplicado,
+                'total_geral': total_final,
                 'config_site': config_site,
                 'data_formatada': dt.strftime('%d/%m/%Y'),
                 'validade_dias': validade_dias,
@@ -1594,7 +1642,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
             {
                 'orcamento': orcamento,
                 'itens': itens,
-                'total_geral': total_geral,
+                'subtotal_geral': subtotal_geral,
+                'desconto_aplicado': desconto_aplicado,
+                'total_geral': total_final,
                 'config_site': config_site,
                 'data_formatada': dt.strftime('%d/%m/%Y'),
                 'validade_dias': validade_dias,
