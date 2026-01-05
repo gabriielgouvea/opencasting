@@ -1482,7 +1482,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
     class Media:
         js = ('core/js/admin_orcamento.js',)
         css = {
-            'all': ('core/css/admin_orcamento.css',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-1',)
         }
 
     @admin.display(description='Cliente', ordering='cliente__razao_social')
