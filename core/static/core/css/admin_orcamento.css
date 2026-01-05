@@ -380,6 +380,29 @@ textarea {
   margin-bottom: 12px;
 }
 
+/* Evita estouro de largura por margens negativas do Bootstrap (.row) dentro do inline */
+body.app-core.model-orcamento.change-form .inline-related .row,
+body.app-core.model-orcamento.add-form .inline-related .row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .row > [class*='col-'],
+body.app-core.model-orcamento.add-form .inline-related .row > [class*='col-'] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related input,
+body.app-core.model-orcamento.add-form .inline-related input,
+body.app-core.model-orcamento.change-form .inline-related select,
+body.app-core.model-orcamento.add-form .inline-related select,
+body.app-core.model-orcamento.change-form .inline-related textarea,
+body.app-core.model-orcamento.add-form .inline-related textarea {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
 /* Remove a caixa do GRUPO (wrapper) do inline no Orçamento: fica só a caixa do item */
 body.app-core.model-orcamento.change-form .inline-group,
 body.app-core.model-orcamento.add-form .inline-group,

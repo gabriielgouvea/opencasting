@@ -11,7 +11,28 @@
 
   <div class="oc-orcamento-bottom">
     <div class="oc-orcamento-total-wrapper">
-      <div id="ocDescontoArea" class="oc-desconto-area"></div>
+      <div id="ocDescontoArea" class="oc-desconto-area">
+        <div class="form-row field-desconto_valor">
+          <div>
+            <label for="{{ adminform.form.desconto_valor.id_for_label }}">Desconto (R$)</label>
+            {{ adminform.form.desconto_valor }}
+            {{ adminform.form.desconto_valor.errors }}
+          </div>
+        </div>
+
+        <div class="form-row field-desconto_percentual">
+          <div>
+            <label for="{{ adminform.form.desconto_percentual.id_for_label }}">Desconto (%)</label>
+            {{ adminform.form.desconto_percentual }}
+            {{ adminform.form.desconto_percentual.errors }}
+            {% if adminform.form.desconto_percentual.help_text %}
+              <div class="help">{{ adminform.form.desconto_percentual.help_text }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
+      </div>
       <div class="oc-orcamento-total">
         <div class="oc-orcamento-total-label">Total do orçamento</div>
         <div class="oc-orcamento-total-value" id="ocOrcamentoTotal">R$ 0,00</div>

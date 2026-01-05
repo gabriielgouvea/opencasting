@@ -796,23 +796,11 @@
       true
     );
 
-    // Move os campos de desconto para o final (abaixo dos itens).
-    var mount = document.getElementById('ocDescontoArea');
-    if (mount) {
-      var descontoValorRow = document.querySelector('.form-row.field-desconto_valor, .form-group.field-desconto_valor');
-      var descontoPctRow = document.querySelector('.form-row.field-desconto_percentual, .form-group.field-desconto_percentual');
-      if (descontoValorRow) mount.appendChild(descontoValorRow);
-      if (descontoPctRow) mount.appendChild(descontoPctRow);
-
-      // Botão aplicar desconto (R$ ou %)
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-outline-success oc-apply-discount-btn';
-      btn.textContent = 'Aplicar desconto';
-      btn.style.marginTop = '10px';
-      mount.appendChild(btn);
-
-      btn.addEventListener('click', function () {
+    // Botão aplicar desconto (R$ ou %) — renderizado no template
+    var applyBtn = document.querySelector('.oc-apply-discount-btn');
+    if (applyBtn && !applyBtn.__ocBound) {
+      applyBtn.__ocBound = true;
+      applyBtn.addEventListener('click', function () {
         var dv = findMainInputByName('desconto_valor');
         var dp = findMainInputByName('desconto_percentual');
         var v = toFloatBR(dv && dv.value);

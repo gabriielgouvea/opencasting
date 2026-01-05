@@ -1473,17 +1473,26 @@ class OrcamentoAdmin(admin.ModelAdmin):
     actions = None
     actions_selection_counter = False
 
-    fields = ('cliente', 'data_evento', 'validade_dias', 'desconto_valor', 'desconto_percentual')
+    fields = ('cliente', 'data_evento', 'validade_dias')
     inlines = (OrcamentoItemInline,)
 
     change_list_template = 'admin/core/orcamento/change_list.html'
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js?v=20260105-2',)
+        js = ('core/js/admin_orcamento.js?v=20260105-3',)
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-2',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-3',)
         }
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'cliente' and hasattr(formfield, 'widget'):
+            # Remove ícones (+/editar/excluir/visualizar) no widget relacionado, independente do CSS.
+            for attr in ('can_add_related', 'can_change_related', 'can_delete_related', 'can_view_related'):
+                if hasattr(formfield.widget, attr):
+                    setattr(formfield.widget, attr, False)
+        return formfield
 
     @admin.display(description='Cliente', ordering='cliente__razao_social')
     def cliente_nome(self, obj: Orcamento):
