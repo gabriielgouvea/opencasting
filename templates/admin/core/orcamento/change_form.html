@@ -6,30 +6,26 @@
   {{ block.super }}
 {% endblock %}
 
+{# Renderiza os campos principais normalmente, mas NÃO renderiza o fieldset de desconto aqui #}
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    {% if 'oc-discount-fieldset' not in fieldset.classes %}
+      {% include "admin/includes/fieldset.html" %}
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
 {% block after_related_objects %}
   {{ block.super }}
 
   <div class="oc-orcamento-bottom">
     <div class="oc-orcamento-total-wrapper">
       <div id="ocDescontoArea" class="oc-desconto-area">
-        <div class="form-row field-desconto_valor">
-          <div>
-            <label for="{{ adminform.form.desconto_valor.id_for_label }}">Desconto (R$)</label>
-            {{ adminform.form.desconto_valor }}
-            {{ adminform.form.desconto_valor.errors }}
-          </div>
-        </div>
-
-        <div class="form-row field-desconto_percentual">
-          <div>
-            <label for="{{ adminform.form.desconto_percentual.id_for_label }}">Desconto (%)</label>
-            {{ adminform.form.desconto_percentual }}
-            {{ adminform.form.desconto_percentual.errors }}
-            {% if adminform.form.desconto_percentual.help_text %}
-              <div class="help">{{ adminform.form.desconto_percentual.help_text }}</div>
-            {% endif %}
-          </div>
-        </div>
+        {% for fieldset in adminform %}
+          {% if 'oc-discount-fieldset' in fieldset.classes %}
+            {% include "admin/includes/fieldset.html" %}
+          {% endif %}
+        {% endfor %}
 
         <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
       </div>

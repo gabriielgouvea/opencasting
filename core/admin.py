@@ -1473,22 +1473,30 @@ class OrcamentoAdmin(admin.ModelAdmin):
     actions = None
     actions_selection_counter = False
 
-    fields = ('cliente', 'data_evento', 'validade_dias')
+    fieldsets = (
+        (None, {
+            'fields': ('cliente', 'data_evento', 'validade_dias'),
+        }),
+        (None, {
+            'fields': ('desconto_valor', 'desconto_percentual'),
+            'classes': ('oc-discount-fieldset',),
+        }),
+    )
     inlines = (OrcamentoItemInline,)
 
     change_list_template = 'admin/core/orcamento/change_list.html'
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js?v=20260105-3',)
+        js = ('core/js/admin_orcamento.js?v=20260105-4',)
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-3',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-4',)
         }
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == 'cliente' and hasattr(formfield, 'widget'):
-            # Remove ícones (+/editar/excluir/visualizar) no widget relacionado, independente do CSS.
+            # Remove ícones (+/editar/excluir/visualizar) do RelatedFieldWidgetWrapper.
             for attr in ('can_add_related', 'can_change_related', 'can_delete_related', 'can_view_related'):
                 if hasattr(formfield.widget, attr):
                     setattr(formfield.widget, attr, False)

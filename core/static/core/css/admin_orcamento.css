@@ -401,6 +401,30 @@ body.app-core.model-orcamento.change-form .inline-related textarea,
 body.app-core.model-orcamento.add-form .inline-related textarea {
   max-width: 100% !important;
   box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Alguns widgets do admin usam flex/colunas: garante que possam "encolher" no mobile */
+body.app-core.model-orcamento.change-form .inline-related [class*='col-'],
+body.app-core.model-orcamento.add-form .inline-related [class*='col-'],
+body.app-core.model-orcamento.change-form .inline-related .field-box,
+body.app-core.model-orcamento.add-form .inline-related .field-box,
+body.app-core.model-orcamento.change-form .inline-related .form-row > div,
+body.app-core.model-orcamento.add-form .inline-related .form-row > div,
+body.app-core.model-orcamento.change-form .inline-related .form-group > div,
+body.app-core.model-orcamento.add-form .inline-related .form-group > div {
+  min-width: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .form-row,
+body.app-core.model-orcamento.add-form .inline-related .form-row,
+body.app-core.model-orcamento.change-form .inline-related .form-group,
+body.app-core.model-orcamento.add-form .inline-related .form-group {
+  overflow: hidden;
 }
 
 /* Remove a caixa do GRUPO (wrapper) do inline no Orçamento: fica só a caixa do item */
