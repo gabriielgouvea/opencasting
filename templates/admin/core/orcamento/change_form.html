@@ -6,12 +6,36 @@
   {{ block.super }}
 {% endblock %}
 
+{# Renderiza o formulário em 1 coluna (sem lateral) e deixa o desconto para o final #}
+{% block field_sets %}
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        {% for fieldset in adminform %}
+          {% if 'oc-discount-fieldset' not in fieldset.classes %}
+            {% include "admin/includes/fieldset.html" %}
+          {% endif %}
+        {% endfor %}
+
+        {% for inline_admin_formset in inline_admin_formsets %}
+          {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
 {% block after_related_objects %}
   {{ block.super }}
 
   <div class="oc-orcamento-bottom">
     <div class="oc-orcamento-total-wrapper">
       <div id="ocDescontoArea" class="oc-desconto-area">
+        {% for fieldset in adminform %}
+          {% if 'oc-discount-fieldset' in fieldset.classes %}
+            {% include "admin/includes/fieldset.html" %}
+          {% endif %}
+        {% endfor %}
       </div>
       <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
       <div class="oc-orcamento-total">
