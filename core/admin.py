@@ -1480,9 +1480,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js?v=20260105-5',)
+        js = ('core/js/admin_orcamento.js?v=20260105-6',)
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-5',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-6',)
         }
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):

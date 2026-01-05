@@ -159,6 +159,19 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
     padding: 10px 14px;
   }
 
+  /* Django admin costuma limitar inteiros (quantidade/carga/diárias) com largura pequena.
+     Aqui força 100% igual Função/Valor da diária. */
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-quantidade'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-quantidade'],
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-carga_horaria_horas'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-carga_horaria_horas'],
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-diarias'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-diarias'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+  }
+
   body.app-core.model-orcamento.change-form .inline-related textarea,
   body.app-core.model-orcamento.add-form .inline-related textarea {
     height: auto;
@@ -592,6 +605,29 @@ body.app-core.model-orcamento.add-form .related-widget-wrapper a {
 
 .oc-desconto-area {
   margin-bottom: 10px;
+}
+
+/* Desconto precisa ficar no final: esconde no lugar original e mostra só quando for movido para #ocDescontoArea */
+body.app-core.model-orcamento.change-form .form-row.field-desconto_valor,
+body.app-core.model-orcamento.add-form .form-row.field-desconto_valor,
+body.app-core.model-orcamento.change-form .form-group.field-desconto_valor,
+body.app-core.model-orcamento.add-form .form-group.field-desconto_valor,
+body.app-core.model-orcamento.change-form .form-row.field-desconto_percentual,
+body.app-core.model-orcamento.add-form .form-row.field-desconto_percentual,
+body.app-core.model-orcamento.change-form .form-group.field-desconto_percentual,
+body.app-core.model-orcamento.add-form .form-group.field-desconto_percentual {
+  display: none !important;
+}
+
+body.app-core.model-orcamento.change-form #ocDescontoArea .form-row.field-desconto_valor,
+body.app-core.model-orcamento.add-form #ocDescontoArea .form-row.field-desconto_valor,
+body.app-core.model-orcamento.change-form #ocDescontoArea .form-group.field-desconto_valor,
+body.app-core.model-orcamento.add-form #ocDescontoArea .form-group.field-desconto_valor,
+body.app-core.model-orcamento.change-form #ocDescontoArea .form-row.field-desconto_percentual,
+body.app-core.model-orcamento.add-form #ocDescontoArea .form-row.field-desconto_percentual,
+body.app-core.model-orcamento.change-form #ocDescontoArea .form-group.field-desconto_percentual,
+body.app-core.model-orcamento.add-form #ocDescontoArea .form-group.field-desconto_percentual {
+  display: block !important;
 }
 
 .oc-orcamento-total-hint {
