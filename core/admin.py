@@ -1473,24 +1473,16 @@ class OrcamentoAdmin(admin.ModelAdmin):
     actions = None
     actions_selection_counter = False
 
-    fieldsets = (
-        (None, {
-            'fields': ('cliente', 'data_evento', 'validade_dias'),
-        }),
-        (None, {
-            'fields': ('desconto_valor', 'desconto_percentual'),
-            'classes': ('oc-discount-fieldset',),
-        }),
-    )
+    fields = ('cliente', 'data_evento', 'validade_dias', 'desconto_valor', 'desconto_percentual')
     inlines = (OrcamentoItemInline,)
 
     change_list_template = 'admin/core/orcamento/change_list.html'
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js?v=20260105-4',)
+        js = ('core/js/admin_orcamento.js?v=20260105-5',)
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-4',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-5',)
         }
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):

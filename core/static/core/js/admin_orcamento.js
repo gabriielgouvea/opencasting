@@ -796,6 +796,15 @@
       true
     );
 
+    // Move os campos de desconto para o final (abaixo dos itens).
+    var mount = document.getElementById('ocDescontoArea');
+    if (mount) {
+      var descontoValorRow = document.querySelector('.form-row.field-desconto_valor, .form-group.field-desconto_valor');
+      var descontoPctRow = document.querySelector('.form-row.field-desconto_percentual, .form-group.field-desconto_percentual');
+      if (descontoValorRow) mount.appendChild(descontoValorRow);
+      if (descontoPctRow) mount.appendChild(descontoPctRow);
+    }
+
     // Botão aplicar desconto (R$ ou %) — renderizado no template
     var applyBtn = document.querySelector('.oc-apply-discount-btn');
     if (applyBtn && !applyBtn.__ocBound) {

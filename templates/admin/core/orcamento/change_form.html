@@ -6,29 +6,14 @@
   {{ block.super }}
 {% endblock %}
 
-{# Renderiza os campos principais normalmente, mas NÃO renderiza o fieldset de desconto aqui #}
-{% block field_sets %}
-  {% for fieldset in adminform %}
-    {% if 'oc-discount-fieldset' not in fieldset.classes %}
-      {% include "admin/includes/fieldset.html" %}
-    {% endif %}
-  {% endfor %}
-{% endblock %}
-
 {% block after_related_objects %}
   {{ block.super }}
 
   <div class="oc-orcamento-bottom">
     <div class="oc-orcamento-total-wrapper">
       <div id="ocDescontoArea" class="oc-desconto-area">
-        {% for fieldset in adminform %}
-          {% if 'oc-discount-fieldset' in fieldset.classes %}
-            {% include "admin/includes/fieldset.html" %}
-          {% endif %}
-        {% endfor %}
-
-        <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
       </div>
+      <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
       <div class="oc-orcamento-total">
         <div class="oc-orcamento-total-label">Total do orçamento</div>
         <div class="oc-orcamento-total-value" id="ocOrcamentoTotal">R$ 0,00</div>
