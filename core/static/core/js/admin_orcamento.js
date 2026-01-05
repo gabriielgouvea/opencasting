@@ -724,15 +724,23 @@
     }
 
     // Confirmação na lixeira por linha
-    document.querySelectorAll('a.oc-row-delete[data-oc-delete="1"]').forEach(function (a) {
-      if (a.__ocDeleteBound) return;
-      a.__ocDeleteBound = true;
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openDeleteModal({ url: a.getAttribute('href'), id: a.getAttribute('data-oc-id') });
-      });
-    });
+    // Delegado (mais confiável no mobile e cobre linhas geradas dinamicamente)
+    if (!changelist.__ocDeleteDelegated) {
+      changelist.__ocDeleteDelegated = true;
+      changelist.addEventListener(
+        'click',
+        function (e) {
+          var target = e && e.target;
+          if (!target || !target.closest) return;
+          var a = target.closest('a.oc-row-delete[data-oc-delete="1"]');
+          if (!a) return;
+          e.preventDefault();
+          e.stopPropagation();
+          openDeleteModal({ url: a.getAttribute('href'), id: a.getAttribute('data-oc-id') });
+        },
+        true
+      );
+    }
 
     // Linha inteira clicável: abre o orçamento ao clicar em qualquer lugar da linha.
     var resultList = document.getElementById('result_list');
@@ -799,10 +807,8 @@
       // Botão aplicar desconto (R$ ou %)
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'btn btn-outline-success';
+      btn.className = 'btn btn-outline-success oc-apply-discount-btn';
       btn.textContent = 'Aplicar desconto';
-      btn.style.borderRadius = '999px';
-      btn.style.fontWeight = '900';
       btn.style.marginTop = '10px';
       mount.appendChild(btn);
 

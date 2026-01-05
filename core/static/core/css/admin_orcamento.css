@@ -515,6 +515,28 @@ textarea {
   display: none !important;
 }
 
+/* Reforço: no Orçamento, esconde QUALQUER link/ícone do wrapper relacionado */
+body.app-core.model-orcamento.change-form .related-widget-wrapper a,
+body.app-core.model-orcamento.add-form .related-widget-wrapper a {
+  display: none !important;
+}
+
+/* Botão aplicar desconto com o mesmo "padrão" dos outros */
+.oc-apply-discount-btn {
+  border-radius: 999px !important;
+  padding: 14px 22px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 640px) {
+  body.app-core.model-orcamento.change-form .oc-apply-discount-btn,
+  body.app-core.model-orcamento.add-form .oc-apply-discount-btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* Total geral fixo no final */
 .oc-orcamento-total-wrapper {
   margin-top: 14px;

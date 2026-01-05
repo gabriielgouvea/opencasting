@@ -1480,9 +1480,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js',)
+        js = ('core/js/admin_orcamento.js?v=20260105-2',)
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-1',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-2',)
         }
 
     @admin.display(description='Cliente', ordering='cliente__razao_social')
