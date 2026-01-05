@@ -1463,10 +1463,11 @@ class OrcamentoItemInline(admin.StackedInline):
 class OrcamentoAdmin(admin.ModelAdmin):
     form = OrcamentoAdminForm
     changeform_format = 'single'
-    list_display = ('id', 'cliente', 'criado_em', 'validade_dias', 'lixeira')
+    list_display = ('cliente_nome', 'lixeira')
+    list_display_links = ('cliente_nome',)
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
-    sortable_by = ('criado_em',)
+    sortable_by = ()
 
     # Remove seleção por checkbox + dropdown de ações (não usado nesta tela)
     actions = None
@@ -1483,6 +1484,14 @@ class OrcamentoAdmin(admin.ModelAdmin):
         css = {
             'all': ('core/css/admin_orcamento.css',)
         }
+
+    @admin.display(description='Cliente', ordering='cliente__razao_social')
+    def cliente_nome(self, obj: Orcamento):
+        # Evita o rótulo "(opcional)" e mantém a coluna mais limpa.
+        try:
+            return str(obj.cliente) if obj.cliente_id else '—'
+        except Exception:
+            return '—'
 
     @admin.display(description='', ordering=False)
     def lixeira(self, obj: Orcamento):
@@ -1660,7 +1669,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
         # 1) Tenta Chromium (Playwright) se configurado ou em auto
         if pdf_engine in {'auto', 'playwright'}:
             try:
-                from playwright.sync_api import sync_playwright
+                from playwright.sync_api import sync_playwright  # type: ignore[import-not-found]
 
                 with sync_playwright() as p:
                     browser = p.chromium.launch()

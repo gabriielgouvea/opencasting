@@ -36,6 +36,29 @@ body.app-core.model-orcamento.change-list #changelist .results {
   overflow-x: auto;
 }
 
+/* Mobile: preferimos NÃO precisar arrastar — ocultamos colunas para caber */
+@media (max-width: 640px) {
+  body.app-core.model-orcamento.change-list .results,
+  body.app-core.model-orcamento.change-list #changelist .results {
+    overflow-x: visible;
+  }
+
+  /* Remove colunas "ID" e "Criado em" no celular */
+  body.app-core.model-orcamento.change-list #result_list th.column-id,
+  body.app-core.model-orcamento.change-list #result_list td.field-id,
+  body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
+  body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
+    display: none !important;
+  }
+
+  /* Tabela mais compacta */
+  body.app-core.model-orcamento.change-list #result_list th,
+  body.app-core.model-orcamento.change-list #result_list td {
+    padding: 10px 10px !important;
+    white-space: normal;
+  }
+}
+
 /* Ajusta a barra de ações (botão "Realizar orçamento") */
 body.app-core.model-orcamento.change-list ul.object-tools {
   list-style: none !important;
@@ -82,6 +105,81 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
   }
 }
 
+/* =========================
+   MOBILE (ORÇAMENTO FORM)
+   ========================= */
+
+@media (max-width: 640px) {
+  /* Aproveita mais a largura da tela no formulário */
+  body.app-core.model-orcamento.change-form #content,
+  body.app-core.model-orcamento.add-form #content,
+  body.app-core.model-orcamento.change-form #content-main,
+  body.app-core.model-orcamento.add-form #content-main,
+  body.app-core.model-orcamento.change-form .content,
+  body.app-core.model-orcamento.add-form .content,
+  body.app-core.model-orcamento.change-form .container-fluid,
+  body.app-core.model-orcamento.add-form .container-fluid {
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  /* Remove o “miolo estreito” e deixa inputs realmente grandes */
+  body.app-core.model-orcamento.change-form .form-row > div,
+  body.app-core.model-orcamento.add-form .form-row > div,
+  body.app-core.model-orcamento.change-form .form-group > div,
+  body.app-core.model-orcamento.add-form .form-group > div,
+  body.app-core.model-orcamento.change-form .form-row .field-box,
+  body.app-core.model-orcamento.add-form .form-row .field-box,
+  body.app-core.model-orcamento.change-form .form-group .field-box,
+  body.app-core.model-orcamento.add-form .form-group .field-box {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Cards dos inlines um pouco mais “largos” */
+  body.app-core.model-orcamento.change-form .inline-related,
+  body.app-core.model-orcamento.add-form .inline-related {
+    padding: 10px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  /* No celular, deixa os campos realmente grandes dentro dos itens */
+  body.app-core.model-orcamento.change-form .inline-related input[type='text'],
+  body.app-core.model-orcamento.add-form .inline-related input[type='text'],
+  body.app-core.model-orcamento.change-form .inline-related input[type='number'],
+  body.app-core.model-orcamento.add-form .inline-related input[type='number'],
+  body.app-core.model-orcamento.change-form .inline-related select,
+  body.app-core.model-orcamento.add-form .inline-related select,
+  body.app-core.model-orcamento.change-form .inline-related textarea,
+  body.app-core.model-orcamento.add-form .inline-related textarea {
+    font-size: 16px;
+    height: 44px;
+    padding: 10px 14px;
+  }
+
+  body.app-core.model-orcamento.change-form .inline-related textarea,
+  body.app-core.model-orcamento.add-form .inline-related textarea {
+    height: auto;
+    min-height: 110px;
+  }
+
+  /* Botões no final: sempre empilhados e ocupando 100% */
+  body.app-core.model-orcamento.change-form .oc-actions-row,
+  body.app-core.model-orcamento.add-form .oc-actions-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  body.app-core.model-orcamento.change-form .oc-actions-row .btn,
+  body.app-core.model-orcamento.add-form .oc-actions-row .btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* Esconde links do topo (Ver Site / Suporte / Pesquisar) apenas nesta tela */
 body.app-core.model-orcamento.change-list .main-header .navbar-nav,
 body.app-core.model-orcamento.change-list .main-header form,
@@ -99,6 +197,18 @@ body.app-core.model-orcamento.change-list .main-header .navbar-nav.navbar-right 
 /* Linha inteira clicável */
 body.app-core.model-orcamento.change-list #result_list tbody tr {
   cursor: pointer;
+}
+
+/* Remove fundo cinza/striped do tema nessa tabela */
+body.app-core.model-orcamento.change-list #result_list tbody tr,
+body.app-core.model-orcamento.change-list #result_list tbody td,
+body.app-core.model-orcamento.change-list #result_list tbody th {
+  background: #fff !important;
+}
+
+body.app-core.model-orcamento.change-list #result_list tbody tr:hover td,
+body.app-core.model-orcamento.change-list #result_list tbody tr:hover th {
+  background: rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Botão lixeira (por linha) */
@@ -268,6 +378,65 @@ textarea {
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 12px;
+}
+
+/* Remove a caixa do GRUPO (wrapper) do inline no Orçamento: fica só a caixa do item */
+body.app-core.model-orcamento.change-form .inline-group,
+body.app-core.model-orcamento.add-form .inline-group,
+body.app-core.model-orcamento.change-form .inline-group > .card,
+body.app-core.model-orcamento.add-form .inline-group > .card,
+body.app-core.model-orcamento.change-form .inline-group > fieldset,
+body.app-core.model-orcamento.add-form .inline-group > fieldset,
+body.app-core.model-orcamento.change-form .inline-group > fieldset.module,
+body.app-core.model-orcamento.add-form .inline-group > fieldset.module {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group,
+body.app-core.model-orcamento.add-form .inline-group {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group > .card > .card-body,
+body.app-core.model-orcamento.add-form .inline-group > .card > .card-body {
+  padding: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group > .card > .card-header,
+body.app-core.model-orcamento.add-form .inline-group > .card > .card-header {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 12px;
+}
+
+/* Tira “caixa dentro de caixa” (Jazzmin/Bootstrap cards/modules) dentro do inline */
+.inline-related .card,
+.inline-related .card-header,
+.inline-related .card-body,
+.inline-related .module,
+.inline-related .inline-group,
+.inline-related .inline-group .card,
+.inline-related .inline-group .module {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.inline-related .card-header {
+  padding: 0 !important;
+  margin-bottom: 10px;
+}
+
+.inline-related .card-body {
+  padding: 0 !important;
+}
+
+.inline-related hr {
+  display: none !important;
 }
 
 /* Dentro de cada função: evita "linhas" por campo; a borda do bloco já separa */
