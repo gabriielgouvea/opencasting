@@ -36,6 +36,22 @@
       var body = document.body;
       if (!body) return;
 
+      // Desativa o modo "mini" (ícones) que costuma expandir apenas no hover.
+      // Jazzmin/AdminLTE podem usar variantes como sidebar-mini, sidebar-mini-md, etc.
+      try {
+        var toRemove = [];
+        body.classList.forEach(function (cls) {
+          if (typeof cls === 'string' && cls.indexOf('sidebar-mini') === 0) {
+            toRemove.push(cls);
+          }
+        });
+        toRemove.forEach(function (cls) {
+          body.classList.remove(cls);
+        });
+      } catch (e) {
+        // ignore
+      }
+
       // No desktop, sidebar aberta = sem 'sidebar-collapse' (que ativa o modo hover)
       body.classList.remove('sidebar-collapse');
       body.classList.remove('sidebar-closed');
