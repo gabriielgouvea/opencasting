@@ -1,23 +1,65 @@
 (function () {
+  var enforceTimer = null;
+
   function isDesktop() {
     // AdminLTE costuma considerar >= 992px como layout desktop
     return (window.innerWidth || 0) >= 992;
   }
 
-  function keepSidebarOpen() {
+  function clearSidebarRememberState() {
+    try {
+      // Chaves comuns em temas/AdminLTE para lembrar colapso
+      var keys = [
+        'sidebar-collapse',
+        'sidebarCollapsed',
+        'adminlte-sidebar',
+        'AdminLTE:sidebar',
+        'AdminLTE:PushMenu',
+        'pushmenu',
+      ];
+      keys.forEach(function (k) {
+        try {
+          window.localStorage && window.localStorage.removeItem(k);
+        } catch (_e) {
+          // ignore
+        }
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function keepSidebarExpanded() {
     if (!isDesktop()) return;
 
     try {
       var body = document.body;
       if (!body) return;
 
-      // No desktop, sidebar aberta = sem 'sidebar-collapse'
+      // No desktop, sidebar aberta = sem 'sidebar-collapse' (que ativa o modo hover)
       body.classList.remove('sidebar-collapse');
       body.classList.remove('sidebar-closed');
-      body.classList.add('sidebar-open');
+      body.classList.remove('sidebar-is-opening');
+      // 'sidebar-open' é mais usado no mobile/overlay; no desktop pode atrapalhar.
+      body.classList.remove('sidebar-open');
     } catch (e) {
       // ignore
     }
+  }
+
+  function startEnforceSidebar() {
+    if (!isDesktop()) {
+      if (enforceTimer) {
+        clearInterval(enforceTimer);
+        enforceTimer = null;
+      }
+      return;
+    }
+
+    if (enforceTimer) return;
+    enforceTimer = setInterval(function () {
+      keepSidebarExpanded();
+    }, 300);
   }
 
   function ensurePushmenuButton() {
@@ -52,7 +94,9 @@
   }
 
   function boot() {
-    keepSidebarOpen();
+    clearSidebarRememberState();
+    keepSidebarExpanded();
+    startEnforceSidebar();
     ensurePushmenuButton();
 
     // Se clicarem no hamburger no desktop, mantém aberto (não deixa colapsar)
@@ -66,7 +110,7 @@
         if (!isDesktop()) return;
         e.preventDefault();
         e.stopPropagation();
-        keepSidebarOpen();
+        keepSidebarExpanded();
       },
       true
     );
@@ -76,10 +120,21 @@
       var body = document.body;
       if (body) {
         var bodyObserver = new MutationObserver(function () {
-          keepSidebarOpen();
+          keepSidebarExpanded();
         });
         bodyObserver.observe(body, { attributes: true, attributeFilter: ['class'] });
       }
+    } catch (e) {
+      // ignore
+    }
+
+    // Se a pessoa redimensionar a janela, aplica a regra novamente
+    try {
+      window.addEventListener('resize', function () {
+        clearSidebarRememberState();
+        keepSidebarExpanded();
+        startEnforceSidebar();
+      });
     } catch (e) {
       // ignore
     }
@@ -89,7 +144,7 @@
       var header = document.querySelector('.main-header');
       if (!header) return;
       var mo = new MutationObserver(function () {
-        keepSidebarOpen();
+        keepSidebarExpanded();
         ensurePushmenuButton();
       });
       mo.observe(header, { childList: true, subtree: true });
