@@ -1622,8 +1622,6 @@ class OrcamentoAdmin(admin.ModelAdmin):
 
         linhas.append(f"✅ *Total:* {self._fmt_brl(total_final)}")
 
-        linhas.append("")
-        linhas.append("Se quiser, posso ajustar o orçamento (funções, quantidades e valores).")
         return "\n".join(linhas).strip() + "\n"
 
     @method_decorator(require_GET)
