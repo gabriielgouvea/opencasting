@@ -36,6 +36,29 @@ body.app-core.model-orcamento.change-list #changelist .results {
   overflow-x: auto;
 }
 
+/* Mobile: preferimos NÃO precisar arrastar — ocultamos colunas para caber */
+@media (max-width: 640px) {
+  body.app-core.model-orcamento.change-list .results,
+  body.app-core.model-orcamento.change-list #changelist .results {
+    overflow-x: visible;
+  }
+
+  /* Remove colunas "ID" e "Criado em" no celular */
+  body.app-core.model-orcamento.change-list #result_list th.column-id,
+  body.app-core.model-orcamento.change-list #result_list td.field-id,
+  body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
+  body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
+    display: none !important;
+  }
+
+  /* Tabela mais compacta */
+  body.app-core.model-orcamento.change-list #result_list th,
+  body.app-core.model-orcamento.change-list #result_list td {
+    padding: 10px 10px !important;
+    white-space: normal;
+  }
+}
+
 /* Ajusta a barra de ações (botão "Realizar orçamento") */
 body.app-core.model-orcamento.change-list ul.object-tools {
   list-style: none !important;
@@ -82,6 +105,102 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
   }
 }
 
+/* =========================
+   MOBILE (ORÇAMENTO FORM)
+   ========================= */
+
+@media (max-width: 640px) {
+  /* Aproveita mais a largura da tela no formulário */
+  body.app-core.model-orcamento.change-form #content,
+  body.app-core.model-orcamento.add-form #content,
+  body.app-core.model-orcamento.change-form #content-main,
+  body.app-core.model-orcamento.add-form #content-main,
+  body.app-core.model-orcamento.change-form .content,
+  body.app-core.model-orcamento.add-form .content,
+  body.app-core.model-orcamento.change-form .container-fluid,
+  body.app-core.model-orcamento.add-form .container-fluid {
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  /* Remove o “miolo estreito” e deixa inputs realmente grandes */
+  body.app-core.model-orcamento.change-form .form-row > div,
+  body.app-core.model-orcamento.add-form .form-row > div,
+  body.app-core.model-orcamento.change-form .form-group > div,
+  body.app-core.model-orcamento.add-form .form-group > div,
+  body.app-core.model-orcamento.change-form .form-row .field-box,
+  body.app-core.model-orcamento.add-form .form-row .field-box,
+  body.app-core.model-orcamento.change-form .form-group .field-box,
+  body.app-core.model-orcamento.add-form .form-group .field-box {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Cards dos inlines um pouco mais “largos” */
+  body.app-core.model-orcamento.change-form .inline-related,
+  body.app-core.model-orcamento.add-form .inline-related {
+    padding: 10px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  /* No celular, deixa os campos realmente grandes dentro dos itens */
+  body.app-core.model-orcamento.change-form .inline-related input[type='text'],
+  body.app-core.model-orcamento.add-form .inline-related input[type='text'],
+  body.app-core.model-orcamento.change-form .inline-related input[type='number'],
+  body.app-core.model-orcamento.add-form .inline-related input[type='number'],
+  body.app-core.model-orcamento.change-form .inline-related select,
+  body.app-core.model-orcamento.add-form .inline-related select,
+  body.app-core.model-orcamento.change-form .inline-related textarea,
+  body.app-core.model-orcamento.add-form .inline-related textarea {
+    font-size: 16px;
+    height: 44px;
+    padding: 10px 14px;
+  }
+
+  body.app-core.model-orcamento.change-form .inline-related .vIntegerField,
+  body.app-core.model-orcamento.add-form .inline-related .vIntegerField {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 44px !important;
+    display: block;
+  }
+
+  /* Django admin costuma limitar inteiros (quantidade/carga/diárias) com largura pequena.
+     Aqui força 100% igual Função/Valor da diária. */
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-quantidade'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-quantidade'],
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-carga_horaria_horas'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-carga_horaria_horas'],
+  body.app-core.model-orcamento.change-form .inline-related input[id$='-diarias'],
+  body.app-core.model-orcamento.add-form .inline-related input[id$='-diarias'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+  }
+
+  body.app-core.model-orcamento.change-form .inline-related textarea,
+  body.app-core.model-orcamento.add-form .inline-related textarea {
+    height: auto;
+    min-height: 110px;
+  }
+
+  /* Botões no final: sempre empilhados e ocupando 100% */
+  body.app-core.model-orcamento.change-form .oc-actions-row,
+  body.app-core.model-orcamento.add-form .oc-actions-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  body.app-core.model-orcamento.change-form .oc-actions-row .btn,
+  body.app-core.model-orcamento.add-form .oc-actions-row .btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* Esconde links do topo (Ver Site / Suporte / Pesquisar) apenas nesta tela */
 body.app-core.model-orcamento.change-list .main-header .navbar-nav,
 body.app-core.model-orcamento.change-list .main-header form,
@@ -99,6 +218,18 @@ body.app-core.model-orcamento.change-list .main-header .navbar-nav.navbar-right 
 /* Linha inteira clicável */
 body.app-core.model-orcamento.change-list #result_list tbody tr {
   cursor: pointer;
+}
+
+/* Remove fundo cinza/striped do tema nessa tabela */
+body.app-core.model-orcamento.change-list #result_list tbody tr,
+body.app-core.model-orcamento.change-list #result_list tbody td,
+body.app-core.model-orcamento.change-list #result_list tbody th {
+  background: #fff !important;
+}
+
+body.app-core.model-orcamento.change-list #result_list tbody tr:hover td,
+body.app-core.model-orcamento.change-list #result_list tbody tr:hover th {
+  background: rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Botão lixeira (por linha) */
@@ -268,6 +399,231 @@ textarea {
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 12px;
+  max-width: 100% !important;
+  overflow: hidden;
+}
+
+/* Evita estouro por padding/width em qualquer filho do inline */
+body.app-core.model-orcamento.change-form .inline-related,
+body.app-core.model-orcamento.add-form .inline-related,
+body.app-core.model-orcamento.change-form .inline-related *,
+body.app-core.model-orcamento.add-form .inline-related * {
+  box-sizing: border-box;
+}
+
+/* No inline, sempre empilha label + input e ocupa 100% (principalmente no mobile) */
+body.app-core.model-orcamento.change-form .inline-related .form-row,
+body.app-core.model-orcamento.add-form .inline-related .form-row,
+body.app-core.model-orcamento.change-form .inline-related .form-group,
+body.app-core.model-orcamento.add-form .inline-related .form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+}
+
+/* Django admin (.aligned) aplica margin-left no "campo"; no mobile isso estoura. */
+body.app-core.model-orcamento.change-form .aligned .inline-related .form-row > div,
+body.app-core.model-orcamento.add-form .aligned .inline-related .form-row > div,
+body.app-core.model-orcamento.change-form .aligned .inline-related .form-group > div,
+body.app-core.model-orcamento.add-form .aligned .inline-related .form-group > div {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .aligned .inline-related label,
+body.app-core.model-orcamento.add-form .aligned .inline-related label {
+  float: none !important;
+  width: auto !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .form-row label,
+body.app-core.model-orcamento.add-form .inline-related .form-row label,
+body.app-core.model-orcamento.change-form .inline-related .form-group label,
+body.app-core.model-orcamento.add-form .inline-related .form-group label {
+  float: none !important;
+  width: auto !important;
+  margin: 0 0 6px 0 !important;
+  padding: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .form-row > div,
+body.app-core.model-orcamento.add-form .inline-related .form-row > div,
+body.app-core.model-orcamento.change-form .inline-related .form-group > div,
+body.app-core.model-orcamento.add-form .inline-related .form-group > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .help,
+body.app-core.model-orcamento.add-form .inline-related .help,
+body.app-core.model-orcamento.change-form .inline-related .help-block,
+body.app-core.model-orcamento.add-form .inline-related .help-block,
+body.app-core.model-orcamento.change-form .inline-related .text-muted,
+body.app-core.model-orcamento.add-form .inline-related .text-muted {
+  margin-left: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Evita estouro de largura por margens negativas do Bootstrap (.row) dentro do inline */
+body.app-core.model-orcamento.change-form .inline-related .row,
+body.app-core.model-orcamento.add-form .inline-related .row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .row > [class*='col-'],
+body.app-core.model-orcamento.add-form .inline-related .row > [class*='col-'] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related input,
+body.app-core.model-orcamento.add-form .inline-related input,
+body.app-core.model-orcamento.change-form .inline-related select,
+body.app-core.model-orcamento.add-form .inline-related select,
+body.app-core.model-orcamento.change-form .inline-related textarea,
+body.app-core.model-orcamento.add-form .inline-related textarea {
+  max-width: 100% !important;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100% !important;
+  display: block;
+}
+
+/* Alguns temas/admin colocam wrappers com largura fixa; aqui zera tudo dentro do item */
+body.app-core.model-orcamento.change-form .inline-related .fieldBox,
+body.app-core.model-orcamento.add-form .inline-related .fieldBox,
+body.app-core.model-orcamento.change-form .inline-related .flex-container,
+body.app-core.model-orcamento.add-form .inline-related .flex-container,
+body.app-core.model-orcamento.change-form .inline-related .related-widget-wrapper,
+body.app-core.model-orcamento.add-form .inline-related .related-widget-wrapper,
+body.app-core.model-orcamento.change-form .inline-related .form-row > div,
+body.app-core.model-orcamento.add-form .inline-related .form-row > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Visual consistente (alguns campos vinham com “estilo” diferente) */
+body.app-core.model-orcamento.change-form .inline-related input,
+body.app-core.model-orcamento.add-form .inline-related input,
+body.app-core.model-orcamento.change-form .inline-related select,
+body.app-core.model-orcamento.add-form .inline-related select,
+body.app-core.model-orcamento.change-form .inline-related textarea,
+body.app-core.model-orcamento.add-form .inline-related textarea {
+  background-color: #fff;
+}
+
+/* Django admin costuma dar largura fixa para campos numéricos (vIntegerField). Aqui padroniza. */
+body.app-core.model-orcamento.change-form .inline-related .vIntegerField,
+body.app-core.model-orcamento.add-form .inline-related .vIntegerField,
+body.app-core.model-orcamento.change-form .inline-related .vTextField,
+body.app-core.model-orcamento.add-form .inline-related .vTextField,
+body.app-core.model-orcamento.change-form .inline-related input[id$='-quantidade'],
+body.app-core.model-orcamento.add-form .inline-related input[id$='-quantidade'],
+body.app-core.model-orcamento.change-form .inline-related input[id$='-carga_horaria_horas'],
+body.app-core.model-orcamento.add-form .inline-related input[id$='-carga_horaria_horas'],
+body.app-core.model-orcamento.change-form .inline-related input[id$='-diarias'],
+body.app-core.model-orcamento.add-form .inline-related input[id$='-diarias'],
+body.app-core.model-orcamento.change-form .inline-related input[id$='-valor_diaria'],
+body.app-core.model-orcamento.add-form .inline-related input[id$='-valor_diaria'] {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+}
+
+/* Padroniza a altura visual dentro do inline (desktop e mobile) */
+body.app-core.model-orcamento.change-form .inline-related input,
+body.app-core.model-orcamento.add-form .inline-related input,
+body.app-core.model-orcamento.change-form .inline-related select,
+body.app-core.model-orcamento.add-form .inline-related select {
+  height: 38px;
+}
+
+/* Alguns widgets do admin usam flex/colunas: garante que possam "encolher" no mobile */
+body.app-core.model-orcamento.change-form .inline-related [class*='col-'],
+body.app-core.model-orcamento.add-form .inline-related [class*='col-'],
+body.app-core.model-orcamento.change-form .inline-related .field-box,
+body.app-core.model-orcamento.add-form .inline-related .field-box,
+body.app-core.model-orcamento.change-form .inline-related .form-row > div,
+body.app-core.model-orcamento.add-form .inline-related .form-row > div,
+body.app-core.model-orcamento.change-form .inline-related .form-group > div,
+body.app-core.model-orcamento.add-form .inline-related .form-group > div {
+  min-width: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related .form-row,
+body.app-core.model-orcamento.add-form .inline-related .form-row,
+body.app-core.model-orcamento.change-form .inline-related .form-group,
+body.app-core.model-orcamento.add-form .inline-related .form-group {
+  overflow: hidden;
+}
+
+/* Remove a caixa do GRUPO (wrapper) do inline no Orçamento: fica só a caixa do item */
+body.app-core.model-orcamento.change-form .inline-group,
+body.app-core.model-orcamento.add-form .inline-group,
+body.app-core.model-orcamento.change-form .inline-group > .card,
+body.app-core.model-orcamento.add-form .inline-group > .card,
+body.app-core.model-orcamento.change-form .inline-group > fieldset,
+body.app-core.model-orcamento.add-form .inline-group > fieldset,
+body.app-core.model-orcamento.change-form .inline-group > fieldset.module,
+body.app-core.model-orcamento.add-form .inline-group > fieldset.module {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group,
+body.app-core.model-orcamento.add-form .inline-group {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group > .card > .card-body,
+body.app-core.model-orcamento.add-form .inline-group > .card > .card-body {
+  padding: 0 !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-group > .card > .card-header,
+body.app-core.model-orcamento.add-form .inline-group > .card > .card-header {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 12px;
+}
+
+/* Tira “caixa dentro de caixa” (Jazzmin/Bootstrap cards/modules) dentro do inline */
+.inline-related .card,
+.inline-related .card-header,
+.inline-related .card-body,
+.inline-related .module,
+.inline-related .inline-group,
+.inline-related .inline-group .card,
+.inline-related .inline-group .module {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.inline-related .card-header {
+  padding: 0 !important;
+  margin-bottom: 10px;
+}
+
+.inline-related .card-body {
+  padding: 0 !important;
+}
+
+.inline-related hr {
+  display: none !important;
 }
 
 /* Dentro de cada função: evita "linhas" por campo; a borda do bloco já separa */
@@ -346,6 +702,28 @@ textarea {
   display: none !important;
 }
 
+/* Reforço: no Orçamento, esconde QUALQUER link/ícone do wrapper relacionado */
+body.app-core.model-orcamento.change-form .related-widget-wrapper a,
+body.app-core.model-orcamento.add-form .related-widget-wrapper a {
+  display: none !important;
+}
+
+/* Botão aplicar desconto com o mesmo "padrão" dos outros */
+.oc-apply-discount-btn {
+  border-radius: 999px !important;
+  padding: 14px 22px !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 640px) {
+  body.app-core.model-orcamento.change-form .oc-apply-discount-btn,
+  body.app-core.model-orcamento.add-form .oc-apply-discount-btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* Total geral fixo no final */
 .oc-orcamento-total-wrapper {
   margin-top: 14px;
@@ -356,6 +734,8 @@ textarea {
   margin-bottom: 10px;
 }
 
+
+
 .oc-orcamento-total-hint {
   margin-top: 8px;
   color: rgba(0, 0, 0, 0.62);
@@ -365,7 +745,8 @@ textarea {
 
 .oc-actions-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
   width: 100%;
 }
@@ -378,7 +759,7 @@ textarea {
 }
 
 .oc-actions-row .oc-generate-btn {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 /* Deixa os dois botões com "cara" igual (mesma altura e borda) */
@@ -386,6 +767,13 @@ textarea {
   border-radius: 999px !important;
   padding: 14px 22px !important;
   font-weight: 900 !important;
+  width: 100% !important;
+  justify-content: center;
+  text-align: center;
+}
+
+.oc-delete-row {
+  width: 100%;
 }
 
 .oc-actions-row .oc-delete-btn {
@@ -430,4 +818,74 @@ textarea {
 
 .oc-line-total-value {
   font-weight: 800;
+}
+
+/* =====================================================================
+   OVERRIDES FINAIS (INLINE): garante tamanhos idênticos
+   ===================================================================== */
+
+body.app-core.model-orcamento.change-form .inline-related input,
+body.app-core.model-orcamento.add-form .inline-related input,
+body.app-core.model-orcamento.change-form .inline-related select,
+body.app-core.model-orcamento.add-form .inline-related select,
+body.app-core.model-orcamento.change-form .inline-related textarea,
+body.app-core.model-orcamento.add-form .inline-related textarea,
+body.app-core.model-orcamento.change-form .inline-related .form-control,
+body.app-core.model-orcamento.add-form .inline-related .form-control {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+  height: 38px !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related textarea,
+body.app-core.model-orcamento.add-form .inline-related textarea {
+  height: auto !important;
+}
+
+body.app-core.model-orcamento.change-form .inline-related input.vTextField,
+body.app-core.model-orcamento.add-form .inline-related input.vTextField,
+body.app-core.model-orcamento.change-form .inline-related input.vIntegerField,
+body.app-core.model-orcamento.add-form .inline-related input.vIntegerField {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Se o tema não colocar as classes no <body>, ainda assim garante tamanhos iguais */
+.inline-related input,
+.inline-related select,
+.inline-related textarea,
+.inline-related input.vTextField,
+.inline-related input.vIntegerField,
+.inline-related .vTextField,
+.inline-related .vIntegerField {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+/* Neutraliza wrappers do Django/Jazzmin que podem limitar largura */
+.inline-related .form-row,
+.inline-related .form-group {
+  width: 100% !important;
+}
+
+.inline-related .form-row > div,
+.inline-related .form-group > div,
+.inline-related .fieldBox,
+.inline-related .field-box,
+.inline-related .flex-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+}
+
+.inline-related .flex-container {
+  display: block !important;
 }

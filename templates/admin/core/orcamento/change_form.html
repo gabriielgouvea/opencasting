@@ -6,12 +6,32 @@
   {{ block.super }}
 {% endblock %}
 
+{# Renderiza o formulário em 1 coluna (sem lateral) e deixa o desconto para o final #}
+{% block field_sets %}
+  {% for fieldset in adminform %}
+    {% if 'oc-discount-fieldset' not in fieldset.classes %}
+      {% include "admin/includes/fieldset.html" %}
+    {% endif %}
+  {% endfor %}
+
+  {% for inline_admin_formset in inline_admin_formsets %}
+    {% include inline_admin_formset.opts.template %}
+  {% endfor %}
+{% endblock %}
+
 {% block after_related_objects %}
   {{ block.super }}
 
   <div class="oc-orcamento-bottom">
     <div class="oc-orcamento-total-wrapper">
-      <div id="ocDescontoArea" class="oc-desconto-area"></div>
+      <div id="ocDescontoArea" class="oc-desconto-area">
+        {% for fieldset in adminform %}
+          {% if 'oc-discount-fieldset' in fieldset.classes %}
+            {% include "admin/includes/fieldset.html" %}
+          {% endif %}
+        {% endfor %}
+      </div>
+      <button type="button" class="btn btn-outline-success btn-lg btn-block oc-apply-discount-btn">Aplicar desconto</button>
       <div class="oc-orcamento-total">
         <div class="oc-orcamento-total-label">Total do orçamento</div>
         <div class="oc-orcamento-total-value" id="ocOrcamentoTotal">R$ 0,00</div>
@@ -19,23 +39,29 @@
       <div class="oc-orcamento-total-hint" id="ocOrcamentoHint"></div>
     </div>
 
-    <div class="submit-row oc-actions-row" style="margin-top: 14px;">
-      {% if change and has_delete_permission %}
-        <a class="btn btn-outline-danger oc-delete-btn" href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}">
+    {% if change and has_delete_permission %}
+      <div class="submit-row oc-delete-row" style="margin-top: 14px;">
+        <a class="btn btn-outline-danger btn-lg btn-block oc-delete-btn" href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}">
           Excluir orçamento
         </a>
-      {% endif %}
-      <a href="#" class="btn btn-outline-success oc-add-funcao-btn" data-add-orcamento-item="1">
+      </div>
+    {% endif %}
+
+    <div class="submit-row oc-actions-row" style="margin-top: 14px;">
+      <a href="#" class="btn btn-outline-success btn-lg btn-block oc-add-funcao-btn" data-add-orcamento-item="1">
         Adicionar função
       </a>
       <button type="submit" class="btn btn-success btn-lg btn-block oc-generate-btn" name="_generate_pdf" value="1">
-        Gerar orçamento
+        Salvar e gerar PDF
+      </button>
+      <button type="submit" class="btn btn-outline-success btn-lg btn-block oc-save-btn" name="_save" value="1">
+        Salvar
       </button>
     </div>
   </div>
 {% endblock %}
 
-{# Um único botão grande no final: salva e já baixa o PDF #}
+{# Botões padrão removidos: usamos área custom no final #}
 {% block submit_buttons_bottom %}
   {# Intencionalmente vazio: o tema coloca submit row na lateral; usamos after_related_objects #}
 {% endblock %}

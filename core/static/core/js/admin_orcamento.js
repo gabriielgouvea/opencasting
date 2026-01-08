@@ -796,17 +796,19 @@
       if (descontoValorRow) mount.appendChild(descontoValorRow);
       if (descontoPctRow) mount.appendChild(descontoPctRow);
 
-      // Botão aplicar desconto (R$ ou %)
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-outline-success';
-      btn.textContent = 'Aplicar desconto';
-      btn.style.borderRadius = '999px';
-      btn.style.fontWeight = '900';
-      btn.style.marginTop = '10px';
-      mount.appendChild(btn);
+      // Botão aplicar desconto (R$ ou %) - usa o botão do template; cria apenas se não existir.
+      var btn = document.querySelector('.oc-apply-discount-btn');
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-outline-success btn-lg btn-block oc-apply-discount-btn';
+        btn.textContent = 'Aplicar desconto';
+        mount.appendChild(btn);
+      }
 
-      btn.addEventListener('click', function () {
+      if (!btn.dataset.ocBound) {
+        btn.dataset.ocBound = '1';
+        btn.addEventListener('click', function () {
         var dv = findMainInputByName('desconto_valor');
         var dp = findMainInputByName('desconto_percentual');
         var v = toFloatBR(dv && dv.value);
@@ -819,7 +821,8 @@
           if (dp) dp.value = '0';
         }
         computeAll();
-      });
+        });
+      }
     }
 
     // Máscara da data do evento (dd/mm/aaaa)
