@@ -548,6 +548,27 @@
     var changelist = document.getElementById('changelist') || document.querySelector('.change-list');
     if (!changelist) return;
 
+    function ensurePushmenuButton() {
+      var header = document.querySelector('.main-header');
+      if (!header) return;
+
+      var existing = header.querySelector('.nav-link[data-widget="pushmenu"]');
+      if (existing) return;
+
+      var nav = header.querySelector('.navbar-nav');
+      if (!nav) return;
+
+      var li = document.createElement('li');
+      li.className = 'nav-item';
+      li.innerHTML =
+        '<a class="nav-link" data-widget="pushmenu" href="#" role="button" aria-label="Menu">' +
+        '<i class="fas fa-bars"></i>' +
+        '</a>';
+      nav.insertBefore(li, nav.firstChild);
+    }
+
+    ensurePushmenuButton();
+
     function getCsrfToken() {
       // Preferência: token já renderizado no changelist-form do admin
       var el = document.querySelector('#changelist-form input[name="csrfmiddlewaretoken"]');

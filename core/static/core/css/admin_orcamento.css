@@ -201,17 +201,7 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
   }
 }
 
-/* Esconde apenas busca do topo nesta tela (mantém o botão do menu lateral) */
-body.app-core.model-orcamento.change-list .main-header .navbar-nav {
-  display: flex !important;
-}
-
-/* Mantém só o primeiro item (normalmente o hamburger) na esquerda */
-body.app-core.model-orcamento.change-list .main-header .navbar-nav > li:not(:first-child) {
-  display: none !important;
-}
-
-/* Garante que o link do pushmenu não seja escondido por estilos do tema */
+/* Garante que o botão do menu (hamburger) exista/esteja visível no changelist */
 body.app-core.model-orcamento.change-list .main-header .nav-link[data-widget='pushmenu'] {
   display: inline-flex !important;
 }
