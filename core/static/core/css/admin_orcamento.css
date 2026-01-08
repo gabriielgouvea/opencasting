@@ -201,8 +201,7 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
   }
 }
 
-/* Esconde links do topo (Ver Site / Suporte / Pesquisar) apenas nesta tela */
-body.app-core.model-orcamento.change-list .main-header .navbar-nav,
+/* Esconde apenas busca do topo nesta tela (mantém o botão do menu lateral) */
 body.app-core.model-orcamento.change-list .main-header form,
 body.app-core.model-orcamento.change-list .main-header .navbar-search-block,
 body.app-core.model-orcamento.change-list .main-header .navbar-search-open {
