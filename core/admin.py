@@ -1467,6 +1467,7 @@ class OrcamentoAdmin(admin.ModelAdmin):
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
     sortable_by = ('criado_em',)
+    ordering = ('-id',)
 
     # Remove seleção por checkbox + dropdown de ações (não usado nesta tela)
     actions = None
