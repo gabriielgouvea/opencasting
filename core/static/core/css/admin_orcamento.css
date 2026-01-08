@@ -18,6 +18,27 @@
   margin-right: auto;
 }
 
+/* Desktop: deixa o formulário de Orçamento mais largo (sem mexer no celular) */
+@media (min-width: 992px) {
+  body.app-core.model-orcamento.change-form #content,
+  body.app-core.model-orcamento.add-form #content,
+  body.app-core.model-orcamento.change-form #content-main,
+  body.app-core.model-orcamento.add-form #content-main,
+  body.app-core.model-orcamento.change-form .content,
+  body.app-core.model-orcamento.add-form .content,
+  body.app-core.model-orcamento.change-form .container-fluid,
+  body.app-core.model-orcamento.add-form .container-fluid {
+    max-width: 1400px;
+  }
+
+  /* "Caixas"/cards dos itens (inlines): ocupa mais a tela no desktop */
+  body.app-core.model-orcamento.change-form .inline-related,
+  body.app-core.model-orcamento.add-form .inline-related {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 /* Orçamento (add/change): nada na lateral; conteúdo em largura total */
 body.app-core.model-orcamento.change-form .content .row > .col-lg-3,
 body.app-core.model-orcamento.change-form .content .row > .col-md-3,
@@ -198,6 +219,34 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
     width: 100% !important;
     justify-content: center;
     text-align: center;
+  }
+
+  /* Campo Cliente (opcional): no mobile estava ficando alto demais.
+     Mantém a mesma altura/padding dos demais campos. */
+  body.app-core.model-orcamento.change-form #id_cliente,
+  body.app-core.model-orcamento.add-form #id_cliente {
+    height: 44px !important;
+    padding: 10px 14px !important;
+    font-size: 16px !important;
+  }
+
+  /* Se o widget for Select2 (comum no Jazzmin), ajusta apenas o Cliente */
+  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single,
+  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single {
+    height: 44px !important;
+  }
+
+  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__rendered,
+  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 44px !important;
+    padding-left: 14px !important;
+    padding-right: 34px !important;
+    font-size: 16px !important;
+  }
+
+  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__arrow,
+  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 44px !important;
   }
 }
 
@@ -728,6 +777,11 @@ body.app-core.model-orcamento.add-form .related-widget-wrapper a {
 }
 
 /* Total geral fixo no final */
+.oc-orcamento-bottom {
+  width: 100%;
+  clear: both;
+}
+
 .oc-orcamento-total-wrapper {
   margin-top: 14px;
   width: 100%;
@@ -777,6 +831,15 @@ body.app-core.model-orcamento.add-form .related-widget-wrapper a {
 
 .oc-delete-row {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.oc-delete-row .btn {
+  width: 100% !important;
+  justify-content: center;
+  text-align: center;
 }
 
 .oc-actions-row .oc-delete-btn {

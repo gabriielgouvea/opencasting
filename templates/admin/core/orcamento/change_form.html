@@ -40,14 +40,14 @@
     </div>
 
     {% if change and has_delete_permission %}
-      <div class="submit-row oc-delete-row" style="margin-top: 14px;">
+      <div class="oc-delete-row" style="margin-top: 14px;">
         <a class="btn btn-outline-danger btn-lg btn-block oc-delete-btn" href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}">
           Excluir orçamento
         </a>
       </div>
     {% endif %}
 
-    <div class="submit-row oc-actions-row" style="margin-top: 14px;">
+    <div class="oc-actions-row" style="margin-top: 14px;">
       <a href="#" class="btn btn-outline-success btn-lg btn-block oc-add-funcao-btn" data-add-orcamento-item="1">
         Adicionar função
       </a>
