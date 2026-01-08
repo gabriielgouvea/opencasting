@@ -1463,7 +1463,7 @@ class OrcamentoItemInline(admin.StackedInline):
 class OrcamentoAdmin(admin.ModelAdmin):
     form = OrcamentoAdminForm
     changeform_format = 'single'
-    list_display = ('id', 'cliente', 'criado_em', 'validade_dias', 'lixeira')
+    list_display = ('id', 'cliente_coluna', 'criado_em', 'acoes')
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
     sortable_by = ('criado_em',)
@@ -1484,15 +1484,30 @@ class OrcamentoAdmin(admin.ModelAdmin):
             'all': ('core/css/admin_orcamento.css',)
         }
 
+    @admin.display(description='Cliente', ordering='cliente__razao_social')
+    def cliente_coluna(self, obj: Orcamento):
+        c = getattr(obj, 'cliente', None)
+        if not c:
+            return '-'
+        # Preferimos o mesmo texto que o sistema já usa (razao_social/nome_fantasia),
+        # mas sem o "(opcional)" no cabeçalho.
+        return str(c)
+
     @admin.display(description='', ordering=False)
-    def lixeira(self, obj: Orcamento):
-        url = reverse('admin:core_orcamento_delete', args=[obj.pk])
+    def acoes(self, obj: Orcamento):
+        delete_url = reverse('admin:core_orcamento_delete', args=[obj.pk])
+        pdf_url = reverse('admin:core_orcamento_pdf', args=[obj.pk])
         return format_html(
-            '<a class="oc-row-delete" href="{}" data-oc-delete="1" data-oc-id="{}" title="Excluir">'
-            '<span aria-hidden="true">🗑</span>'
-            '</a>',
-            url,
+            '<details class="oc-actions" data-oc-actions="1">'
+            '  <summary class="oc-actions__toggle" aria-label="Ações" title="Ações">⋯</summary>'
+            '  <div class="oc-actions__menu" role="menu">'
+            '    <a class="oc-actions__item" role="menuitem" href="{}" data-oc-delete="1" data-oc-id="{}">Excluir</a>'
+            '    <a class="oc-actions__item" role="menuitem" href="{}">Baixar PDF</a>'
+            '  </div>'
+            '</details>',
+            delete_url,
             obj.pk,
+            pdf_url,
         )
 
     def get_urls(self):

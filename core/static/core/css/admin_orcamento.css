@@ -285,21 +285,65 @@ body.app-core.model-orcamento.change-list #result_list tbody tr:hover th {
 }
 
 /* Botão lixeira (por linha) */
-body.app-core.model-orcamento.change-list a.oc-row-delete {
+body.app-core.model-orcamento.change-list .oc-actions {
+  position: relative;
+  display: inline-block;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions > summary {
+  list-style: none;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions__toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
   text-decoration: none !important;
-  border: none !important;
-  background: transparent !important;
-  color: inherit !important;
-  font-size: 20px;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
 }
 
-body.app-core.model-orcamento.change-list a.oc-row-delete:hover {
+body.app-core.model-orcamento.change-list .oc-actions__toggle:hover {
+  background: rgba(0,0,0,0.04) !important;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions__menu {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  z-index: 9999;
+}
+
+body.app-core.model-orcamento.change-list details:not([open]) .oc-actions__menu {
+  display: none;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions__item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none !important;
+  color: inherit !important;
+  font-weight: 800;
+}
+
+body.app-core.model-orcamento.change-list .oc-actions__item:hover {
   background: rgba(0,0,0,0.04) !important;
 }
 
@@ -314,6 +358,65 @@ body.app-core.model-orcamento.change-list #changelist-search .btn {
 body.app-core.model-orcamento.change-list .sortremove,
 body.app-core.model-orcamento.change-list a.sortremove {
   display: none !important;
+}
+
+/* Reforço: remove o "x" de ordenação mesmo dentro do <thead> */
+body.app-core.model-orcamento.change-list #result_list thead th .sortremove,
+body.app-core.model-orcamento.change-list #result_list thead th a.sortremove {
+  display: none !important;
+}
+
+/* Jazzmin/AdminLTE às vezes renderiza o "remover ordenação" como um 2º link no header sortable.
+   Esconde esse 2º link (mantém o link do título para ordenar). */
+body.app-core.model-orcamento.change-list #result_list thead th.sortable .text a + a {
+  display: none !important;
+}
+
+/* Fallback: se vier como ícone (times/xmark) dentro de algum link no header */
+body.app-core.model-orcamento.change-list #result_list thead th a i.fa-times,
+body.app-core.model-orcamento.change-list #result_list thead th a i.fas.fa-times,
+body.app-core.model-orcamento.change-list #result_list thead th a i.fa.fa-times,
+body.app-core.model-orcamento.change-list #result_list thead th a i.far.fa-times,
+body.app-core.model-orcamento.change-list #result_list thead th a i.fa-xmark,
+body.app-core.model-orcamento.change-list #result_list thead th a i.fas.fa-xmark {
+  display: none !important;
+}
+
+/* Jazzmin/AdminLTE: em alguns casos o "X" vem como um <div class="fa fa-times float-right"> (com ::before).
+   Esconde esse elemento só no cabeçalho da tabela. */
+body.app-core.model-orcamento.change-list #result_list thead .fa.fa-times.float-right,
+body.app-core.model-orcamento.change-list #result_list thead div.fa.fa-times.float-right {
+  display: none !important;
+}
+
+/* Coluna de ações (⋯) menor */
+body.app-core.model-orcamento.change-list #result_list th.column-acoes,
+body.app-core.model-orcamento.change-list #result_list td.field-acoes {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  text-align: center;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Evita que wrappers do tema cortem o menu (desktop) */
+@media (min-width: 992px) {
+  body.app-core.model-orcamento.change-list #changelist,
+  body.app-core.model-orcamento.change-list #changelist-form,
+  body.app-core.model-orcamento.change-list #changelist-form .results,
+  body.app-core.model-orcamento.change-list #changelist-form .card,
+  body.app-core.model-orcamento.change-list #changelist-form .card-body {
+    overflow: visible !important;
+  }
+
+  body.app-core.model-orcamento.change-list .results,
+  body.app-core.model-orcamento.change-list #changelist .results {
+    overflow-x: auto;
+    overflow-y: visible !important;
+  }
 }
 
 /* =========================

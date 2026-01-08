@@ -744,8 +744,8 @@
       });
     }
 
-    // Confirmação na lixeira por linha
-    document.querySelectorAll('a.oc-row-delete[data-oc-delete="1"]').forEach(function (a) {
+    // Confirmação ao excluir por linha (menu ⋯)
+    document.querySelectorAll('a[data-oc-delete="1"]').forEach(function (a) {
       if (a.__ocDeleteBound) return;
       a.__ocDeleteBound = true;
       a.addEventListener('click', function (e) {
@@ -766,11 +766,13 @@
           var target = e && e.target;
           if (!target) return;
 
-          // Não dispara ao clicar em checkbox, links, botões ou na lixeira.
+          // Não dispara ao clicar em checkbox, links, botões ou no menu de ações.
           if (
             (target.closest && target.closest('a')) ||
             (target.closest && target.closest('button')) ||
-            (target.closest && target.closest('input'))
+            (target.closest && target.closest('input')) ||
+            (target.closest && target.closest('summary')) ||
+            (target.closest && target.closest('details[data-oc-actions="1"]'))
           ) {
             return;
           }
