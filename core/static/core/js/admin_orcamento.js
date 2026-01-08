@@ -755,6 +755,78 @@
       });
     });
 
+    // Texto Rápido (WhatsApp): busca no endpoint do admin e copia
+    document.querySelectorAll('a[data-oc-quicktext="1"]').forEach(function (a) {
+      if (a.__ocQuickTextBound) return;
+      a.__ocQuickTextBound = true;
+
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var url = a.getAttribute('href');
+        if (!url) return;
+
+        fetch(url, {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(function (data) {
+            var text = (data && data.text) ? String(data.text) : '';
+            if (!text) throw new Error('Texto vazio');
+
+            function done() {
+              try {
+                window.alert('Texto copiado');
+              } catch (e) {}
+            }
+
+            // Tenta Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              return navigator.clipboard.writeText(text).then(done).catch(function () {
+                // Fallback
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', 'readonly');
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                  document.execCommand('copy');
+                } catch (e) {}
+                document.body.removeChild(ta);
+                done();
+              });
+            }
+
+            // Fallback direto
+            var ta2 = document.createElement('textarea');
+            ta2.value = text;
+            ta2.setAttribute('readonly', 'readonly');
+            ta2.style.position = 'fixed';
+            ta2.style.left = '-9999px';
+            document.body.appendChild(ta2);
+            ta2.select();
+            try {
+              document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(ta2);
+            done();
+          })
+          .catch(function () {
+            try {
+              window.alert('Não foi possível copiar o texto');
+            } catch (e) {}
+          });
+      });
+    });
+
     // Linha inteira clicável: abre o orçamento ao clicar em qualquer lugar da linha.
     var resultList = document.getElementById('result_list');
     if (resultList) {

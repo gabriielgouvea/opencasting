@@ -36,6 +36,7 @@ from django.db.models import Q
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.views.decorators.http import require_GET
 from django.utils.decorators import method_decorator
+from django.http import JsonResponse
 
 # Importação dos Modelos do Sistema OpenCasting
 from .models import (
@@ -1498,17 +1499,20 @@ class OrcamentoAdmin(admin.ModelAdmin):
     def acoes(self, obj: Orcamento):
         delete_url = reverse('admin:core_orcamento_delete', args=[obj.pk])
         pdf_url = reverse('admin:core_orcamento_pdf', args=[obj.pk])
+        texto_url = reverse('admin:core_orcamento_texto', args=[obj.pk])
         return format_html(
             '<details class="oc-actions" data-oc-actions="1">'
             '  <summary class="oc-actions__toggle" aria-label="Ações" title="Ações">⋯</summary>'
             '  <div class="oc-actions__menu" role="menu">'
             '    <a class="oc-actions__item" role="menuitem" href="{}" data-oc-delete="1" data-oc-id="{}">Excluir</a>'
             '    <a class="oc-actions__item" role="menuitem" href="{}">Baixar PDF</a>'
+            '    <a class="oc-actions__item" role="menuitem" href="{}" data-oc-quicktext="1">Texto Rápido</a>'
             '  </div>'
             '</details>',
             delete_url,
             obj.pk,
             pdf_url,
+            texto_url,
         )
 
     def get_urls(self):
@@ -1519,8 +1523,114 @@ class OrcamentoAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.pdf_view),
                 name='core_orcamento_pdf',
             )
+            ,
+            path(
+                '<int:orcamento_id>/texto/',
+                self.admin_site.admin_view(self.texto_view),
+                name='core_orcamento_texto',
+            )
         ]
         return custom + urls
+
+    def _fmt_brl(self, value) -> str:
+        try:
+            v = Decimal(str(value or '0'))
+        except Exception:
+            v = Decimal('0')
+        s = f"{v:,.2f}"
+        s = s.replace(',', 'X').replace('.', ',').replace('X', '.')
+        return f"R$ {s}"
+
+    def _fmt_date(self, d) -> str:
+        try:
+            return d.strftime('%d/%m/%Y')
+        except Exception:
+            return '-'
+
+    def _build_texto_rapido(self, obj: Orcamento) -> str:
+        cliente = getattr(obj, 'cliente', None)
+        cliente_nome = str(cliente) if cliente else '—'
+        cnpj = ''
+        if cliente and getattr(cliente, 'cnpj', None):
+            try:
+                cnpj = getattr(cliente, 'cnpj_formatado', '') or ''
+            except Exception:
+                cnpj = ''
+
+        linhas: list[str] = []
+        linhas.append(f"📌 *ORÇAMENTO #{obj.pk}*")
+        if cliente:
+            if cnpj:
+                linhas.append(f"🏢 *Cliente:* {cliente_nome} (CNPJ {cnpj})")
+            else:
+                linhas.append(f"🏢 *Cliente:* {cliente_nome}")
+        else:
+            linhas.append("🏢 *Cliente:* —")
+
+        if getattr(obj, 'data_evento', None):
+            linhas.append(f"📅 *Data do evento:* {self._fmt_date(obj.data_evento)}")
+
+        try:
+            criado_em = obj.criado_em.date() if getattr(obj, 'criado_em', None) else None
+        except Exception:
+            criado_em = None
+        if criado_em:
+            linhas.append(f"🗓️ *Criado em:* {self._fmt_date(criado_em)}")
+
+        valido_ate = None
+        try:
+            valido_ate = obj.valido_ate
+        except Exception:
+            valido_ate = None
+        if valido_ate:
+            linhas.append(f"⏳ *Validade:* até {self._fmt_date(valido_ate)}")
+
+        linhas.append("")
+        linhas.append("👥 *Itens*:")
+
+        itens = obj.itens.all().order_by('ordem', 'id')
+        if not itens.exists():
+            linhas.append("— (sem itens)")
+        else:
+            for i, item in enumerate(itens, start=1):
+                linhas.append(f"{i}) 🎭 *{item.funcao}*")
+                linhas.append(f"   • Qtde: {item.quantidade}")
+                linhas.append(f"   • Diárias: {item.diarias}")
+                linhas.append(f"   • Carga horária: {item.carga_horaria_horas}h")
+                linhas.append(f"   • Valor diária: {self._fmt_brl(item.valor_diaria)}")
+                linhas.append(f"   • Total: {self._fmt_brl(item.total)}")
+                linhas.append("")
+
+        subtotal = obj.total_geral
+        desconto = obj.calcular_desconto_aplicado(subtotal)
+        total_final = obj.total_final
+
+        linhas.append("💰 *Resumo*:")
+        linhas.append(f"• Subtotal: {self._fmt_brl(subtotal)}")
+
+        if (obj.desconto_percentual or Decimal('0')) and (obj.desconto_percentual or Decimal('0')) > 0:
+            try:
+                pct = Decimal(str(obj.desconto_percentual)).quantize(Decimal('0.01'))
+            except Exception:
+                pct = Decimal('0.00')
+            pct_txt = str(pct).replace('.', ',')
+            linhas.append(f"• Desconto: {pct_txt}% ({self._fmt_brl(desconto)})")
+        elif (obj.desconto_valor or Decimal('0')) and (obj.desconto_valor or Decimal('0')) > 0:
+            linhas.append(f"• Desconto: {self._fmt_brl(desconto)}")
+        else:
+            linhas.append("• Desconto: —")
+
+        linhas.append(f"✅ *Total:* {self._fmt_brl(total_final)}")
+
+        linhas.append("")
+        linhas.append("Se quiser, posso ajustar o orçamento (funções, quantidades e valores).")
+        return "\n".join(linhas).strip() + "\n"
+
+    @method_decorator(require_GET)
+    def texto_view(self, request, orcamento_id: int):
+        obj = get_object_or_404(Orcamento, pk=orcamento_id)
+        texto = self._build_texto_rapido(obj)
+        return JsonResponse({'text': texto})
 
     @method_decorator(require_GET)
     def pdf_view(self, request, orcamento_id: int):
