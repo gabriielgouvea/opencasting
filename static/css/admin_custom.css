@@ -1,0 +1,29 @@
+/* Força o menu lateral expandido (com texto) no desktop.
+   Não altera cores/tema; apenas layout do sidebar. */
+
+@media (min-width: 992px) {
+  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-sidebar,
+  body.oc-sidebar-expanded.sidebar-collapse .main-sidebar,
+  body.oc-sidebar-expanded .main-sidebar {
+    width: 250px !important;
+  }
+
+  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .content-wrapper,
+  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-footer,
+  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-header,
+  body.oc-sidebar-expanded.sidebar-collapse .content-wrapper,
+  body.oc-sidebar-expanded.sidebar-collapse .main-footer,
+  body.oc-sidebar-expanded.sidebar-collapse .main-header {
+    margin-left: 250px !important;
+  }
+
+  /* Garante que o texto dos itens apareça (sem depender de hover) */
+  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link p,
+  body.oc-sidebar-expanded.sidebar-collapse .nav-sidebar .nav-link p {
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    margin-left: 0.5rem !important;
+    display: inline-block !important;
+  }
+}

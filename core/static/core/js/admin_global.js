@@ -1,4 +1,6 @@
 (function () {
+  // Arquivo mantido por compatibilidade/histórico.
+  // O carregamento global do admin agora é feito via Jazzmin custom_js: static/js/admin_custom.js.
   var enforceTimer = null;
 
   function isDesktop() {
