@@ -64,9 +64,7 @@ body.app-core.model-orcamento.change-list #changelist .results {
     overflow-x: visible;
   }
 
-  /* Remove colunas "ID" e "Criado em" no celular */
-  body.app-core.model-orcamento.change-list #result_list th.column-id,
-  body.app-core.model-orcamento.change-list #result_list td.field-id,
+  /* No celular: remove apenas "Criado em" (fica ID, Cliente e ⋯) */
   body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
   body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
     display: none !important;
@@ -77,6 +75,45 @@ body.app-core.model-orcamento.change-list #changelist .results {
   body.app-core.model-orcamento.change-list #result_list td {
     padding: 10px 10px !important;
     white-space: normal;
+  }
+}
+
+/* Alguns celulares/tablets estreitos ficam > 640px em CSS pixels.
+   Mantém a regra de esconder "Criado em" até 768px. */
+@media (max-width: 768px) {
+  body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
+  body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
+    display: none !important;
+  }
+
+  /* No mobile, o menu pode ser cortado por wrappers com overflow. Libera. */
+  body.app-core.model-orcamento.change-list .table-responsive,
+  body.app-core.model-orcamento.change-list .table-responsive .card,
+  body.app-core.model-orcamento.change-list .dataTables_wrapper,
+  body.app-core.model-orcamento.change-list .dataTables_scroll,
+  body.app-core.model-orcamento.change-list .dataTables_scrollBody,
+  body.app-core.model-orcamento.change-list #changelist,
+  body.app-core.model-orcamento.change-list #changelist-form,
+  body.app-core.model-orcamento.change-list #changelist-form .results,
+  body.app-core.model-orcamento.change-list #changelist-form .card,
+  body.app-core.model-orcamento.change-list #changelist-form .card-body,
+  body.app-core.model-orcamento.change-list #result_list,
+  body.app-core.model-orcamento.change-list #result_list tbody,
+  body.app-core.model-orcamento.change-list #result_list tr,
+  body.app-core.model-orcamento.change-list #result_list td {
+    overflow: visible !important;
+  }
+
+  /* No mobile: limita altura e permite scroll interno no menu */
+  body.app-core.model-orcamento.change-list .oc-actions__menu {
+    max-height: 240px;
+    overflow: auto;
+  }
+
+  /* Direção do menu é decidida via JS: para cima somente quando necessário */
+  body.app-core.model-orcamento.change-list details.oc-actions.oc-actions--up .oc-actions__menu {
+    top: auto;
+    bottom: 44px;
   }
 }
 
@@ -323,6 +360,7 @@ body.app-core.model-orcamento.change-list .oc-actions__menu {
   top: 44px;
   min-width: 160px;
   background: #fff;
+  color: #111;
   border: 1px solid rgba(0,0,0,0.12);
   border-radius: 12px;
   padding: 6px;
@@ -339,7 +377,7 @@ body.app-core.model-orcamento.change-list .oc-actions__item {
   padding: 10px 12px;
   border-radius: 10px;
   text-decoration: none !important;
-  color: inherit !important;
+  color: #111 !important;
   font-weight: 800;
 }
 

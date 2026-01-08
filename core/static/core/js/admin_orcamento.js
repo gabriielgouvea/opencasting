@@ -758,6 +758,88 @@
     // Linha inteira clicável: abre o orçamento ao clicar em qualquer lugar da linha.
     var resultList = document.getElementById('result_list');
     if (resultList) {
+      // No mobile, esconder a coluna "Criado em" de forma resiliente (independe de classes).
+      // Faz isso por índice do header cujo texto é "Criado em".
+      function applyMobileHideCriadoEm() {
+        var isMobile = false;
+        try {
+          isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+        } catch (e) {
+          isMobile = false;
+        }
+
+        var thead = resultList.querySelector('thead');
+        if (!thead) return;
+
+        var ths = Array.prototype.slice.call(thead.querySelectorAll('th'));
+        if (!ths.length) return;
+
+        var idx = -1;
+        ths.forEach(function (th, i) {
+          var label = String((th.textContent || '')).replace(/\s+/g, ' ').trim().toLowerCase();
+          if (label === 'criado em') idx = i;
+        });
+
+        if (idx < 0) return;
+
+        // Reset básico (quando voltar pro desktop)
+        ths[idx].style.display = isMobile ? 'none' : '';
+        resultList.querySelectorAll('tbody tr').forEach(function (tr) {
+          var tds = tr.querySelectorAll('td');
+          if (!tds || !tds.length) return;
+          if (tds[idx - 1]) {
+            // td index é diferente quando há <th> como primeira célula
+            tds[idx - 1].style.display = isMobile ? 'none' : '';
+          }
+        });
+      }
+
+      applyMobileHideCriadoEm();
+      window.addEventListener('resize', function () {
+        applyMobileHideCriadoEm();
+      });
+
+      // Menu ⋯: abre pra cima só quando for cortar no rodapé.
+      resultList.querySelectorAll('details[data-oc-actions="1"]').forEach(function (d) {
+        if (d.__ocActionsBound) return;
+        d.__ocActionsBound = true;
+
+        function repositionMenu() {
+          if (!d.open) {
+            d.classList.remove('oc-actions--up');
+            return;
+          }
+
+          var menu = d.querySelector('.oc-actions__menu');
+          if (!menu) return;
+
+          d.classList.remove('oc-actions--up');
+
+          // Mede a altura do menu sem piscar
+          var prevDisplay = menu.style.display;
+          var prevVisibility = menu.style.visibility;
+          menu.style.visibility = 'hidden';
+          menu.style.display = 'block';
+
+          var menuRect = menu.getBoundingClientRect();
+          var dRect = d.getBoundingClientRect();
+          var bottomIfDown = dRect.top + 44 + menuRect.height;
+
+          menu.style.display = prevDisplay;
+          menu.style.visibility = prevVisibility;
+
+          if (bottomIfDown > window.innerHeight - 8) {
+            d.classList.add('oc-actions--up');
+          }
+        }
+
+        d.addEventListener('toggle', function () {
+          window.setTimeout(function () {
+            repositionMenu();
+          }, 0);
+        });
+      });
+
       resultList.querySelectorAll('tbody tr').forEach(function (tr) {
         if (tr.__ocRowBound) return;
         tr.__ocRowBound = true;
