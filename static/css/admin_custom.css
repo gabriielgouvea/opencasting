@@ -1,29 +1,46 @@
-/* Força o menu lateral expandido (com texto) no desktop.
+/* Força o menu lateral SEMPRE expandido (com texto) no desktop.
+   Objetivo: impedir o comportamento "só ícones" + expandir no hover.
    Não altera cores/tema; apenas layout do sidebar. */
 
 @media (min-width: 992px) {
-  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-sidebar,
-  body.oc-sidebar-expanded.sidebar-collapse .main-sidebar,
-  body.oc-sidebar-expanded .main-sidebar {
+  /* Quando o tema ativa mini/hover (sidebar-mini + sidebar-collapse), força largura cheia */
+  body.sidebar-mini.sidebar-collapse .main-sidebar,
+  body.sidebar-mini-md.sidebar-collapse .main-sidebar,
+  body.sidebar-mini-xs.sidebar-collapse .main-sidebar {
     width: 250px !important;
   }
 
-  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .content-wrapper,
-  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-footer,
-  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .main-header,
-  body.oc-sidebar-expanded.sidebar-collapse .content-wrapper,
-  body.oc-sidebar-expanded.sidebar-collapse .main-footer,
-  body.oc-sidebar-expanded.sidebar-collapse .main-header {
+  body.sidebar-mini.sidebar-collapse .content-wrapper,
+  body.sidebar-mini.sidebar-collapse .main-footer,
+  body.sidebar-mini.sidebar-collapse .main-header,
+  body.sidebar-mini-md.sidebar-collapse .content-wrapper,
+  body.sidebar-mini-md.sidebar-collapse .main-footer,
+  body.sidebar-mini-md.sidebar-collapse .main-header,
+  body.sidebar-mini-xs.sidebar-collapse .content-wrapper,
+  body.sidebar-mini-xs.sidebar-collapse .main-footer,
+  body.sidebar-mini-xs.sidebar-collapse .main-header {
     margin-left: 250px !important;
   }
 
-  /* Garante que o texto dos itens apareça (sem depender de hover) */
-  body.oc-sidebar-expanded.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link p,
-  body.oc-sidebar-expanded.sidebar-collapse .nav-sidebar .nav-link p {
+  /* Mostra os textos do menu e do topo lateral sempre */
+  body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link p,
+  body.sidebar-mini-md.sidebar-collapse .nav-sidebar .nav-link p,
+  body.sidebar-mini-xs.sidebar-collapse .nav-sidebar .nav-link p,
+  body.sidebar-mini.sidebar-collapse .brand-text,
+  body.sidebar-mini-md.sidebar-collapse .brand-text,
+  body.sidebar-mini-xs.sidebar-collapse .brand-text,
+  body.sidebar-mini.sidebar-collapse .user-panel .info,
+  body.sidebar-mini-md.sidebar-collapse .user-panel .info,
+  body.sidebar-mini-xs.sidebar-collapse .user-panel .info {
     opacity: 1 !important;
     visibility: visible !important;
-    width: auto !important;
-    margin-left: 0.5rem !important;
     display: inline-block !important;
+  }
+
+  /* Neutraliza o "corte" de largura aplicado pelo modo mini */
+  body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link,
+  body.sidebar-mini-md.sidebar-collapse .nav-sidebar .nav-link,
+  body.sidebar-mini-xs.sidebar-collapse .nav-sidebar .nav-link {
+    width: auto !important;
   }
 }
