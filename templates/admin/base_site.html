@@ -1,7 +1,7 @@
-{% extends "admin/base_site.html" %}
-{% load static %}
+{% extends "admin/base.html" %}
 
-{% block extrahead %}
-  {{ block.super }}
-  <script defer src="{% static 'core/js/admin_global.js' %}"></script>
-{% endblock %}
+{#
+  Este override existe apenas para evitar recursão acidental.
+  Não injeta JS/CSS adicional aqui; customizações globais do admin
+  devem ser feitas via Jazzmin (custom_js/custom_css).
+#}
