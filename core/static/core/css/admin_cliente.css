@@ -51,20 +51,38 @@ fieldset,
    CHANGELIST (Clientes)
    ========================= */
 
-/* Esconde o cabeçalho/breadcrumb dessa página (igual Orçamentos) */
-body.app-core.model-cliente.change-list .content-header {
+/* Esconde o cabeçalho/breadcrumb dessa página (igual Orçamentos)
+   Obs: alguns temas usam classes diferentes, então cobrimos variações. */
+body.model-cliente .content-header,
+body.model-cliente.change-list .content-header,
+body.model-cliente.changelist .content-header,
+body.app-core.model-cliente .content-header,
+body.app-core.model-cliente.change-list .content-header,
+body.app-core.model-cliente.changelist .content-header {
   display: none !important;
 }
 
-/* Some com a busca do navbar/topo e com os links da esquerda (Ver Site / Suporte) */
+/* Fallback extra: esconde breadcrumbs mesmo se não estiverem dentro do content-header */
+body.model-cliente .breadcrumb,
+body.app-core.model-cliente .breadcrumb {
+  display: none !important;
+}
+
+/* Some com a busca do navbar/topo */
+body.model-cliente.change-list .main-header form,
+body.model-cliente.change-list .main-header .navbar-search-block,
+body.model-cliente.change-list .main-header .navbar-search-open,
 body.app-core.model-cliente.change-list .main-header form,
 body.app-core.model-cliente.change-list .main-header .navbar-search-block,
 body.app-core.model-cliente.change-list .main-header .navbar-search-open {
   display: none !important;
 }
 
-/* Mantém só o hamburger no lado esquerdo */
-body.app-core.model-cliente.change-list .main-header .navbar-nav:not(.ml-auto):not(.navbar-right) > li.nav-item:not(:first-child) {
+/* Esconde os links do topo (Ver Site / Suporte etc), mantendo só o hamburger */
+body.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a.nav-link:not([data-widget='pushmenu']),
+body.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a:not([data-widget='pushmenu']),
+body.app-core.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a.nav-link:not([data-widget='pushmenu']),
+body.app-core.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a:not([data-widget='pushmenu']) {
   display: none !important;
 }
 
@@ -92,8 +110,21 @@ body.app-core.model-cliente.change-list .oc-actions {
   display: inline-block;
 }
 
+/* Quando abrir, sobe o z-index para sobrepor a tabela */
+body.model-cliente.change-list details.oc-actions[open],
+body.app-core.model-cliente.change-list details.oc-actions[open] {
+  z-index: 10000;
+}
+
 body.app-core.model-cliente.change-list .oc-actions > summary {
   list-style: none;
+}
+
+/* Remove o marcador padrão (triângulo/play) do summary */
+body.model-cliente.change-list .oc-actions > summary::marker,
+body.app-core.model-cliente.change-list .oc-actions > summary::marker {
+  content: '';
+  color: transparent;
 }
 
 body.app-core.model-cliente.change-list .oc-actions > summary::-webkit-details-marker {
@@ -104,14 +135,14 @@ body.app-core.model-cliente.change-list .oc-actions__toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   cursor: pointer;
   user-select: none;
   text-decoration: none !important;
   background: transparent;
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1;
 }
 
@@ -130,7 +161,24 @@ body.app-core.model-cliente.change-list .oc-actions__menu {
   border-radius: 12px;
   padding: 6px;
   box-shadow: 0 10px 24px rgba(0,0,0,0.10);
-  z-index: 9999;
+  z-index: 10001;
+}
+
+/* Linha da tabela mais compacta (já que só tem poucas colunas) */
+body.model-cliente.change-list #result_list th,
+body.model-cliente.change-list #result_list td,
+body.app-core.model-cliente.change-list #result_list th,
+body.app-core.model-cliente.change-list #result_list td {
+  padding: 8px 10px !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+body.model-cliente.change-list #result_list th:last-child,
+body.model-cliente.change-list #result_list td:last-child,
+body.app-core.model-cliente.change-list #result_list th:last-child,
+body.app-core.model-cliente.change-list #result_list td:last-child {
+  width: 52px;
 }
 
 body.app-core.model-cliente.change-list details:not([open]) .oc-actions__menu {
@@ -152,6 +200,16 @@ body.app-core.model-cliente.change-list .oc-actions__item:hover {
 
 /* Mobile: evita corte do menu */
 @media (max-width: 768px) {
+  body.model-cliente.change-list .content-wrapper,
+  body.model-cliente.change-list .content,
+  body.model-cliente.change-list .container-fluid,
+  body.model-cliente.change-list #content,
+  body.model-cliente.change-list .card,
+  body.model-cliente.change-list .card-body,
+  body.model-cliente.change-list .table-responsive,
+  body.model-cliente.change-list .dataTables_wrapper,
+  body.model-cliente.change-list .dataTables_scroll,
+  body.model-cliente.change-list .dataTables_scrollBody,
   body.app-core.model-cliente.change-list #changelist,
   body.app-core.model-cliente.change-list #changelist-form,
   body.app-core.model-cliente.change-list #changelist-form .results,
@@ -167,5 +225,12 @@ body.app-core.model-cliente.change-list .oc-actions__item:hover {
   body.app-core.model-cliente.change-list .oc-actions__menu {
     max-height: 240px;
     overflow: auto;
+  }
+
+  /* Direção do menu é decidida via JS: pra cima quando necessário */
+  body.model-cliente.change-list details.oc-actions.oc-actions--up .oc-actions__menu,
+  body.app-core.model-cliente.change-list details.oc-actions.oc-actions--up .oc-actions__menu {
+    top: auto;
+    bottom: 44px;
   }
 }

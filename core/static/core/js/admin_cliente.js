@@ -63,8 +63,18 @@
     // Changelist: ajustes visuais e ação do menu ⋯
     try {
       var body = document.body;
-      var isClienteList = body && body.classList && body.classList.contains('app-core') && body.classList.contains('model-cliente') && body.classList.contains('change-list');
+      var isClienteList =
+        body &&
+        body.classList &&
+        body.classList.contains('model-cliente') &&
+        (body.classList.contains('change-list') || body.classList.contains('changelist'));
       if (isClienteList) {
+        // Remove de vez o cabeçalho/breadcrumb (fallback caso o CSS do tema vença)
+        var header = document.querySelector('.content-header');
+        if (header && header.parentNode) {
+          header.parentNode.removeChild(header);
+        }
+
         // Remove links do topo específicos (Ver Site / Suporte Técnico)
         document.querySelectorAll('.main-header a.nav-link, .main-header a').forEach(function (a) {
           var t = String((a.textContent || '')).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -72,6 +82,125 @@
             var li = a.closest ? a.closest('li') : null;
             if (li && li.parentNode) li.parentNode.removeChild(li);
           }
+        });
+
+        // Menu ⋯: flutuante (não corta por overflow) e abre pra cima quando necessário.
+        document.querySelectorAll('details[data-oc-actions="1"]').forEach(function (d) {
+          if (d.__ocActionsBound) return;
+          d.__ocActionsBound = true;
+
+          var menu = d.querySelector('.oc-actions__menu');
+          var summary = d.querySelector('summary');
+          if (!menu || !summary) return;
+
+          // Guarda onde o menu estava para restaurar ao fechar
+          if (!menu.__ocOriginalParent) {
+            menu.__ocOriginalParent = menu.parentNode;
+            menu.__ocNextSibling = menu.nextSibling;
+          }
+
+          function floatMenu() {
+            if (!d.open) {
+              d.classList.remove('oc-actions--up');
+              // Restaura o menu para dentro do details
+              if (menu.__ocFloating) {
+                menu.__ocFloating = false;
+                try {
+                  menu.style.position = '';
+                  menu.style.left = '';
+                  menu.style.top = '';
+                  menu.style.right = '';
+                  menu.style.bottom = '';
+                  menu.style.zIndex = '';
+                  menu.style.width = '';
+                } catch (e) {}
+                try {
+                  if (menu.__ocOriginalParent && menu.__ocOriginalParent.nodeType === 1) {
+                    if (menu.__ocNextSibling && menu.__ocNextSibling.parentNode === menu.__ocOriginalParent) {
+                      menu.__ocOriginalParent.insertBefore(menu, menu.__ocNextSibling);
+                    } else {
+                      menu.__ocOriginalParent.appendChild(menu);
+                    }
+                  }
+                } catch (e2) {}
+              }
+              return;
+            }
+
+            d.classList.remove('oc-actions--up');
+
+            // Mede o menu
+            var prevDisplay = menu.style.display;
+            var prevVisibility = menu.style.visibility;
+            menu.style.visibility = 'hidden';
+            menu.style.display = 'block';
+
+            var menuRect = menu.getBoundingClientRect();
+            var anchorRect = summary.getBoundingClientRect();
+            var menuW = menuRect.width || 160;
+            var menuH = menuRect.height || 120;
+
+            // Restaura antes de mover
+            menu.style.display = prevDisplay;
+            menu.style.visibility = prevVisibility;
+
+            // Move para o body para não ser cortado por overflow
+            try {
+              document.body.appendChild(menu);
+              menu.__ocFloating = true;
+            } catch (e3) {
+              // Se não conseguir mover, ainda tenta posicionar via classe
+            }
+
+            // Calcula posição
+            var margin = 8;
+            var left = Math.max(margin, Math.min(anchorRect.right - menuW, window.innerWidth - menuW - margin));
+            var downTop = anchorRect.bottom + 4;
+            var upTop = anchorRect.top - menuH - 4;
+            var useUp = (downTop + menuH > window.innerHeight - margin) && (upTop >= margin);
+
+            if (useUp) d.classList.add('oc-actions--up');
+
+            var top = useUp ? upTop : downTop;
+            top = Math.max(margin, Math.min(top, window.innerHeight - menuH - margin));
+
+            try {
+              menu.style.position = 'fixed';
+              menu.style.left = left + 'px';
+              menu.style.top = top + 'px';
+              menu.style.right = 'auto';
+              menu.style.bottom = 'auto';
+              menu.style.zIndex = '100000';
+              menu.style.display = 'block';
+            } catch (e4) {}
+          }
+
+          d.addEventListener('toggle', function () {
+            window.setTimeout(function () {
+              floatMenu();
+            }, 0);
+          });
+
+          // Fecha ao clicar fora
+          document.addEventListener('click', function (e) {
+            if (!d.open) return;
+            var t = e && e.target;
+            if (!t) return;
+            if ((t.closest && t.closest('details[data-oc-actions="1"]')) || (menu.contains && menu.contains(t))) {
+              return;
+            }
+            try {
+              d.open = false;
+            } catch (e5) {}
+          });
+
+          // Fecha ao rolar para não ficar “solto”
+          window.addEventListener('scroll', function () {
+            if (!d.open) return;
+            try {
+              d.open = false;
+            } catch (e6) {}
+          }, true);
         });
 
         // Confirmação ao excluir por linha
