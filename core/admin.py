@@ -1244,7 +1244,7 @@ admin.site.register(Avaliacao)
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
     changeform_format = 'single'
-    list_display = ('razao_social', 'nome_fantasia', 'cnpj_formatado', 'cidade', 'uf', 'email_nfe')
+    list_display = ('nome_fantasia_coluna', 'cnpj_formatado', 'acoes')
     search_fields = (
         'cnpj',
         'razao_social',
@@ -1257,6 +1257,10 @@ class ClienteAdmin(admin.ModelAdmin):
         'uf',
     )
     list_filter = ()
+
+    # Remove seleção por checkbox + dropdown de ações (mantém só a busca)
+    actions = None
+    actions_selection_counter = False
 
     fieldsets = (
         ('Identificação', {
@@ -1305,6 +1309,24 @@ class ClienteAdmin(admin.ModelAdmin):
         css = {
             'all': ('core/css/admin_cliente.css',)
         }
+
+    @admin.display(description='Nome fantasia', ordering='nome_fantasia')
+    def nome_fantasia_coluna(self, obj: Cliente):
+        v = (obj.nome_fantasia or '').strip()
+        return v or '-'
+
+    @admin.display(description='', ordering=False)
+    def acoes(self, obj: Cliente):
+        delete_url = reverse('admin:core_cliente_delete', args=[obj.pk])
+        return format_html(
+            '<details class="oc-actions" data-oc-actions="1">'
+            '  <summary class="oc-actions__toggle" aria-label="Ações" title="Ações">⋯</summary>'
+            '  <div class="oc-actions__menu" role="menu">'
+            '    <a class="oc-actions__item" role="menuitem" href="{}" data-oc-delete="1">Excluir</a>'
+            '  </div>'
+            '</details>',
+            delete_url,
+        )
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)

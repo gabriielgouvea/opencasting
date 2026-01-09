@@ -60,6 +60,41 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Changelist: ajustes visuais e ação do menu ⋯
+    try {
+      var body = document.body;
+      var isClienteList = body && body.classList && body.classList.contains('app-core') && body.classList.contains('model-cliente') && body.classList.contains('change-list');
+      if (isClienteList) {
+        // Remove links do topo específicos (Ver Site / Suporte Técnico)
+        document.querySelectorAll('.main-header a.nav-link, .main-header a').forEach(function (a) {
+          var t = String((a.textContent || '')).replace(/\s+/g, ' ').trim().toLowerCase();
+          if (t.indexOf('ver site') >= 0 || t.indexOf('suporte') >= 0) {
+            var li = a.closest ? a.closest('li') : null;
+            if (li && li.parentNode) li.parentNode.removeChild(li);
+          }
+        });
+
+        // Confirmação ao excluir por linha
+        document.querySelectorAll('a[data-oc-delete="1"]').forEach(function (a) {
+          if (a.__ocDeleteBound) return;
+          a.__ocDeleteBound = true;
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var ok = true;
+            try {
+              ok = window.confirm('Excluir este cliente?');
+            } catch (e2) {}
+            if (ok) {
+              window.location.href = a.getAttribute('href');
+            }
+          });
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+
     var cnpjInput = document.getElementById('id_cnpj');
     if (!cnpjInput) return;
 

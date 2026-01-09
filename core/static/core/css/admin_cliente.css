@@ -46,3 +46,126 @@ fieldset,
 .card {
   margin-bottom: 14px;
 }
+
+/* =========================
+   CHANGELIST (Clientes)
+   ========================= */
+
+/* Esconde o cabeçalho/breadcrumb dessa página (igual Orçamentos) */
+body.app-core.model-cliente.change-list .content-header {
+  display: none !important;
+}
+
+/* Some com a busca do navbar/topo e com os links da esquerda (Ver Site / Suporte) */
+body.app-core.model-cliente.change-list .main-header form,
+body.app-core.model-cliente.change-list .main-header .navbar-search-block,
+body.app-core.model-cliente.change-list .main-header .navbar-search-open {
+  display: none !important;
+}
+
+/* Mantém só o hamburger no lado esquerdo */
+body.app-core.model-cliente.change-list .main-header .navbar-nav:not(.ml-auto):not(.navbar-right) > li.nav-item:not(:first-child) {
+  display: none !important;
+}
+
+/* Remove ações em massa caso o tema ainda renderize algo */
+body.app-core.model-cliente.change-list #changelist-form .actions,
+body.app-core.model-cliente.change-list #changelist-form #action-toggle {
+  display: none !important;
+}
+
+/* Deixa a tabela mais limpa */
+body.app-core.model-cliente.change-list #result_list tbody tr,
+body.app-core.model-cliente.change-list #result_list tbody td,
+body.app-core.model-cliente.change-list #result_list tbody th {
+  background: #fff !important;
+}
+
+body.app-core.model-cliente.change-list #result_list tbody tr:hover td,
+body.app-core.model-cliente.change-list #result_list tbody tr:hover th {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Menu ⋯ por linha (reaproveita o mesmo padrão do Orçamentos) */
+body.app-core.model-cliente.change-list .oc-actions {
+  position: relative;
+  display: inline-block;
+}
+
+body.app-core.model-cliente.change-list .oc-actions > summary {
+  list-style: none;
+}
+
+body.app-core.model-cliente.change-list .oc-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+body.app-core.model-cliente.change-list .oc-actions__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none !important;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+}
+
+body.app-core.model-cliente.change-list .oc-actions__toggle:hover {
+  background: rgba(0,0,0,0.04) !important;
+}
+
+body.app-core.model-cliente.change-list .oc-actions__menu {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  min-width: 160px;
+  background: #fff;
+  color: #111;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  z-index: 9999;
+}
+
+body.app-core.model-cliente.change-list details:not([open]) .oc-actions__menu {
+  display: none;
+}
+
+body.app-core.model-cliente.change-list .oc-actions__item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none !important;
+  color: #111 !important;
+  font-weight: 800;
+}
+
+body.app-core.model-cliente.change-list .oc-actions__item:hover {
+  background: rgba(0,0,0,0.04) !important;
+}
+
+/* Mobile: evita corte do menu */
+@media (max-width: 768px) {
+  body.app-core.model-cliente.change-list #changelist,
+  body.app-core.model-cliente.change-list #changelist-form,
+  body.app-core.model-cliente.change-list #changelist-form .results,
+  body.app-core.model-cliente.change-list #changelist-form .card,
+  body.app-core.model-cliente.change-list #changelist-form .card-body,
+  body.app-core.model-cliente.change-list #result_list,
+  body.app-core.model-cliente.change-list #result_list tbody,
+  body.app-core.model-cliente.change-list #result_list tr,
+  body.app-core.model-cliente.change-list #result_list td {
+    overflow: visible !important;
+  }
+
+  body.app-core.model-cliente.change-list .oc-actions__menu {
+    max-height: 240px;
+    overflow: auto;
+  }
+}
