@@ -718,6 +718,138 @@
         } catch (e) {}
     }
 
+    // Base de Promotores: filtros inline no topo (às vezes não vêm como #change-list-filters).
+    // Cria um botão "Filtros" para abrir/fechar esse painel e evita ficar tudo "solto" na tela.
+    function ensureInlineFiltersToggle() {
+        try {
+            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+            if (!path.includes('/admin/core/userprofile/')) return;
+
+            function containsResults(el) {
+                try {
+                    return !!(el && el.querySelector && (el.querySelector('#result_list') || el.querySelector('.results')));
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            function countFilterSelects(el) {
+                try {
+                    if (!el || !el.querySelectorAll) return 0;
+                    return Array.from(el.querySelectorAll('select')).filter(s => s && s.name !== 'action').length;
+                } catch (e) {
+                    return 0;
+                }
+            }
+
+            function hasSearchButton(el) {
+                try {
+                    if (!el || !el.querySelectorAll) return false;
+                    const candidates = Array.from(el.querySelectorAll('button, a, input[type="submit"], input[type="button"], [role="button"]'));
+                    return !!candidates.find(b => {
+                        const t = ((b.innerText || b.value || '') + '').toLowerCase().trim();
+                        return t.includes('pesquisar') || t.includes('buscar');
+                    });
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // 1) Preferência: id do Jazzmin
+            let filtersBox = document.getElementById('change-list-filters');
+
+            // 2) Fallback robusto: encontra o menor container acima do botão "PESQUISAR"
+            // que contenha vários selects e não contenha a tabela/resultados.
+            if (!filtersBox) {
+                const form = document.getElementById('changelist-form');
+                const buttons = Array.from(document.querySelectorAll('#changelist-form button, #changelist-form a, #changelist-form input[type="submit"], #changelist-form input[type="button"], #changelist-form [role="button"]'));
+                const searchButtons = buttons.filter(b => {
+                    const t = ((b.innerText || b.value || '') + '').toLowerCase().trim();
+                    return t.includes('pesquisar') || t.includes('buscar');
+                });
+
+                function bestPanelFromButton(btn, minSelects) {
+                    let node = btn && btn.parentElement;
+                    let guard = 0;
+                    while (node && guard++ < 30) {
+                        if (node.closest && node.closest('#custom-sidebar-filter')) break;
+                        const selects = countFilterSelects(node);
+                        if (selects >= minSelects && !containsResults(node) && hasSearchButton(node)) {
+                            return node;
+                        }
+                        if (form && node === form) break;
+                        node = node.parentElement;
+                    }
+                    return null;
+                }
+
+                // 1ª tentativa: painel "grande" (mais seletivo)
+                for (const btn of searchButtons) {
+                    const candidate = bestPanelFromButton(btn, 5);
+                    if (candidate) { filtersBox = candidate; break; }
+                }
+
+                // 2ª tentativa: painel menor (mais permissivo)
+                if (!filtersBox) {
+                    for (const btn of searchButtons) {
+                        const candidate = bestPanelFromButton(btn, 3);
+                        if (candidate) { filtersBox = candidate; break; }
+                    }
+                }
+            }
+
+            if (!filtersBox) return;
+            if (filtersBox.dataset.ocInlineToggleReady === '1') return;
+            filtersBox.dataset.ocInlineToggleReady = '1';
+
+            // Estado inicial: fechado
+            try {
+                filtersBox.classList.remove('oc-inline-filters-open');
+                filtersBox.classList.add('oc-inline-filters-hidden');
+                filtersBox.style.setProperty('display', 'none', 'important');
+            } catch (e) {}
+
+            // Cria o botão e encaixa na mesma área do botão "Adicionar"
+            if (!document.getElementById('oc-toggle-inline-filters')) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = 'oc-toggle-inline-filters';
+                btn.className = 'btn btn-sm btn-primary';
+                btn.style.whiteSpace = 'nowrap';
+                btn.innerText = 'Filtros';
+
+                const actions = document.querySelector('.page-actions');
+                if (actions) {
+                    const addBtn = actions.querySelector('a.btn-success, a.btn.btn-success, a[href*="/add/"]');
+                    if (addBtn) addBtn.insertAdjacentElement('beforebegin', btn);
+                    else actions.prepend(btn);
+                    btn.style.marginRight = '10px';
+                } else if (filtersBox.parentNode) {
+                    filtersBox.parentNode.insertBefore(btn, filtersBox);
+                    btn.style.marginBottom = '12px';
+                }
+
+                btn.addEventListener('click', () => {
+                    const willOpen = !filtersBox.classList.contains('oc-inline-filters-open');
+                    if (willOpen) {
+                        try {
+                            filtersBox.classList.add('oc-inline-filters-open');
+                            filtersBox.classList.remove('oc-inline-filters-hidden');
+                            filtersBox.style.setProperty('display', 'block', 'important');
+                            filtersBox.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                        } catch (e) {}
+                    } else {
+                        try {
+                            filtersBox.classList.remove('oc-inline-filters-open');
+                            filtersBox.classList.add('oc-inline-filters-hidden');
+                            filtersBox.style.setProperty('display', 'none', 'important');
+                        } catch (e) {}
+                    }
+                });
+            }
+        } catch (e) {}
+    }
+
     function buildFilterSidebar() {
         if (document.getElementById('custom-sidebar-filter')) return;
 
@@ -727,8 +859,8 @@
         sidebar.innerHTML = `
             <div class="sidebar-header">
                 <div class="sidebar-header-left">
-                    <button type="button" id="btn-back-sidebar" aria-label="Voltar">←</button>
-                    <h3>FILTROS DA AGÊNCIA</h3>
+                    <button type="button" id="btn-back-sidebar" aria-label="Fechar">×</button>
+                    <h3>FILTROS</h3>
                 </div>
             </div>
             <div id="sidebar-content">
@@ -913,23 +1045,7 @@
     // Encontra o painel principal de filtros (grid de selects + botão PESQUISAR)
     // mesmo quando estiver oculto (oc-main-filters-hidden).
     function findMainFilterPanelContainer() {
-        // Prioridade 1: botão conhecido (id usado no CSS do projeto)
-        const knownBtn = document.getElementById('btn-realizar-busca');
-        if (knownBtn && !(knownBtn.closest && knownBtn.closest('#custom-sidebar-filter'))) {
-            let node = knownBtn.parentElement;
-            let guard = 0;
-            while (node && guard++ < 14) {
-                if (node.closest && node.closest('#custom-sidebar-filter')) break;
-                const selectCount = node.querySelectorAll ? node.querySelectorAll('select').length : 0;
-                if (selectCount >= 3) {
-                    // pega o container mais próximo do botão, não sobe até pegar o "corpo todo"
-                    return node;
-                }
-                node = node.parentElement;
-            }
-        }
-
-        function hasResultsTable(el) {
+        function containsResults(el) {
             try {
                 return !!(el && el.querySelector && (el.querySelector('#result_list') || el.querySelector('.results')));
             } catch (e) {
@@ -940,56 +1056,55 @@
         function isSearchTrigger(el) {
             if (!el) return false;
             if (el.closest && el.closest('#custom-sidebar-filter')) return false;
+            if (el.closest && el.closest('#custom-filter-toolbar')) return false;
             const txt = ((el.innerText || el.value || '') + '').toLowerCase();
-            return txt.includes('pesquisar');
+            return txt.includes('pesquisar') || txt.includes('buscar');
         }
 
-        // Fallback: acha um botão/link/submit com texto PESQUISAR fora da sidebar e sobe até um container com muitos selects
-        const searchButtons = Array.from(document.querySelectorAll('button, a, input[type="submit"], input[type="button"], [role="button"]'))
-            .filter(b => {
-                if (!b) return false;
-                if (b.closest && b.closest('#custom-sidebar-filter')) return false;
-                return isSearchTrigger(b);
-            });
+        function countFilterSelects(el) {
+            try {
+                if (!el || !el.querySelectorAll) return 0;
+                return Array.from(el.querySelectorAll('select')).filter(s => s && s.name !== 'action').length;
+            } catch (e) {
+                return 0;
+            }
+        }
 
-        let best = null;
-        let bestScore = 0;
+        // Prioridade 1: botão conhecido (id usado no CSS do projeto)
+        const knownBtn = document.getElementById('btn-realizar-busca');
+        if (knownBtn && !(knownBtn.closest && knownBtn.closest('#custom-sidebar-filter'))) {
+            let node = knownBtn.parentElement;
+            let guard = 0;
+            while (node && guard++ < 14) {
+                if (node.closest && node.closest('#custom-sidebar-filter')) break;
+                const selectCount = countFilterSelects(node);
+                // Evita retornar o form inteiro (que inclui resultados)
+                if (selectCount >= 3 && !containsResults(node)) return node;
+                node = node.parentElement;
+            }
+        }
+
+        // Fallback 2: acha um botão/link/submit com texto PESQUISAR/Buscar fora da sidebar e
+        // retorna o MENOR container acima dele que tenha >= 3 selects e NÃO contenha a tabela.
+        const searchButtons = Array.from(document.querySelectorAll('button, a, input[type="submit"], input[type="button"], [role="button"]'))
+            .filter(isSearchTrigger);
+
+        const form = document.getElementById('changelist-form');
         for (const btn of searchButtons) {
             let node = btn.parentElement;
             let guard = 0;
-            let firstCandidate = null;
-
-            while (node && guard++ < 20) {
+            while (node && guard++ < 25) {
                 if (node.closest && node.closest('#custom-sidebar-filter')) break;
-                if (hasResultsTable(node)) break;
-
-                const selects = node.querySelectorAll
-                    ? Array.from(node.querySelectorAll('select')).filter(s => s && s.name !== 'action').length
-                    : 0;
-                const hasSearch = node.querySelector
-                    ? !!Array.from(node.querySelectorAll('button, a, input[type="submit"], input[type="button"], [role="button"]')).find(isSearchTrigger)
-                    : false;
-
-                if (selects >= 3 && hasSearch) {
-                    firstCandidate = node;
-                    break;
+                const selects = countFilterSelects(node);
+                if (selects >= 3 && !containsResults(node)) {
+                    return node;
                 }
+                if (form && node === form) break;
                 node = node.parentElement;
-            }
-
-            if (firstCandidate) {
-                const selects = firstCandidate.querySelectorAll
-                    ? Array.from(firstCandidate.querySelectorAll('select')).filter(s => s && s.name !== 'action').length
-                    : 0;
-                const score = selects * 10 + 200;
-                if (score > bestScore) {
-                    bestScore = score;
-                    best = firstCandidate;
-                }
             }
         }
 
-        return best;
+        return null;
     }
 
     // Move o painel de filtros do topo (grid de selects + botão PESQUISAR) para dentro da sidebar.
@@ -1024,14 +1139,62 @@
 
     // Esconde o painel de filtros do topo (onde ficam vários selects + botão PESQUISAR)
     function hideMainFilterPanel() {
-        const panel = findMainFilterPanelContainer();
-        if (!panel) return;
-        // Não ocultar se já estiver dentro da sidebar
-        if (panel.closest && panel.closest('#custom-sidebar-filter')) return;
-        if (!(panel.classList && panel.classList.contains('oc-main-filters-hidden'))) {
-            panel.classList.add('oc-main-filters-hidden');
+        function containsResults(el) {
+            try {
+                return !!(el && el.querySelector && (el.querySelector('#result_list') || el.querySelector('.results')));
+            } catch (e) {
+                return false;
+            }
         }
-        try { panel.style.setProperty('display', 'none', 'important'); } catch(e) {}
+
+        function hideEl(el) {
+            if (!el) return;
+            if (el.closest && el.closest('#custom-sidebar-filter')) return;
+            if (el.id === 'custom-filter-toolbar') return;
+            if (!(el.classList && el.classList.contains('oc-main-filters-hidden'))) {
+                try { el.classList.add('oc-main-filters-hidden'); } catch (e) {}
+            }
+            try { el.style.setProperty('display', 'none', 'important'); } catch(e) {}
+        }
+
+        // 1) Sempre esconder o container padrão do Django (se existir)
+        try {
+            const clFilter = document.getElementById('changelist-filter');
+            if (clFilter && !(clFilter.closest && clFilter.closest('#custom-sidebar-filter'))) {
+                hideEl(clFilter);
+            }
+        } catch (e) {}
+
+        // 2) Tenta achar o painel principal (selects + PESQUISAR)
+        const panel = findMainFilterPanelContainer();
+        if (panel && !containsResults(panel)) {
+            hideEl(panel);
+            return;
+        }
+
+        // 3) Fallback: esconder blocos antes da tabela/resultados que contenham muitos selects
+        try {
+            const form = document.getElementById('changelist-form');
+            if (!form) return;
+
+            const results = form.querySelector('.results') || (form.querySelector('#result_list') ? (form.querySelector('#result_list').closest('.results') || form.querySelector('#result_list')) : null);
+            if (!results) return;
+
+            let sib = results.previousElementSibling;
+            let guard = 0;
+            while (sib && guard++ < 12) {
+                if (sib.id === 'custom-filter-toolbar') { sib = sib.previousElementSibling; continue; }
+                const selects = sib.querySelectorAll ? Array.from(sib.querySelectorAll('select')).filter(s => s && s.name !== 'action').length : 0;
+                const hasSearch = sib.querySelector ? !!Array.from(sib.querySelectorAll('button, a, input[type="submit"], input[type="button"], [role="button"]')).find(b => {
+                    const t = ((b.innerText || b.value || '') + '').toLowerCase();
+                    return t.includes('pesquisar') || t.includes('buscar');
+                }) : false;
+                if (selects >= 3 || (hasSearch && selects >= 1)) {
+                    hideEl(sib);
+                }
+                sib = sib.previousElementSibling;
+            }
+        } catch (e) {}
     }
 
     // --- PROCESSADORES DE HTML ---
@@ -1296,11 +1459,65 @@
             }
         } catch (e) {}
 
-        // Marca contexto da página para CSS responsivo (PythonAnywhere/mobile)
+        // Marca contexto da página para CSS responsivo e CLEANUP (Remoção de Itens do Topo)
         try {
             if (document.body && document.body.classList) {
-                if (path.includes('/admin/core/userprofile/') && document.body.classList.contains('change-list')) {
-                    document.body.classList.add('oc-userprofile-changelist');
+                // Lista de URLs que devem receber o "Cleanup"
+                const cleanupTargets = [
+                    '/admin/core/userprofile/', 
+                    '/admin/core/contato/', '/admin/core/contatosite/',
+                    '/admin/core/cpfbanido/',
+                    '/admin/core/candidatura/',
+                    '/admin/core/job/',
+                    '/admin/core/orcamento/',
+                    '/admin/auth/user/',
+                    '/admin/core/user/'
+                ];
+                // Verifica Dashboard (exact match)
+                const isDashboard = (path.endsWith('/admin/') || path.endsWith('/admin') || path.includes('/admin/index'));
+                
+                // Verifica se deve limpar
+                const shouldCleanup = isDashboard || cleanupTargets.some(t => path.includes(t));
+
+                if (shouldCleanup) {
+                    if (path.includes('/admin/core/userprofile/') && document.body.classList.contains('change-list')) {
+                        document.body.classList.add('oc-userprofile-changelist');
+                    }
+                    document.body.classList.add('oc-clean-page');
+                    
+                    // CLEANUP: Remove links do topo (Ver Site, Suporte) e busca
+                    document.querySelectorAll('.main-header a.nav-link, .main-header a').forEach(function (a) {
+                        var t = String((a.textContent || '')).replace(/\s+/g, ' ').trim().toLowerCase();
+                        if (t.indexOf('ver site') >= 0 || t.indexOf('suporte') >= 0 || t.indexOf('base de promotores') >= 0) {
+                            var li = a.closest ? a.closest('li') : null;
+                            if (li && li.parentNode) li.parentNode.removeChild(li);
+                            else if (a.parentNode) a.parentNode.removeChild(a);
+                        }
+                    });
+
+                    // Remove TODOS os formulários de busca do topo
+                    document.querySelectorAll('.main-header form').forEach(f => f.style.display = 'none');
+                    
+                    // Injeta estilo para forçar ocultação do header/breadcrumbs
+                    if (!document.getElementById('oc-cleanup-style')) {
+                        const style = document.createElement('style');
+                        style.id = 'oc-cleanup-style';
+                        style.textContent = `
+                            .content-header, 
+                            .breadcrumbs, 
+                            nav[aria-label="breadcrumb"],
+                            .breadcrumb,
+                            h1.m-0,
+                            .col-sm-6 h1 {
+                                display: none !important;
+                                visibility: hidden !important;
+                            }
+                            .content-wrapper > .content {
+                                padding-top: 15px !important;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
                 }
             }
         } catch(e) {}
@@ -1316,6 +1533,7 @@
                     toolbar.id = 'custom-filter-toolbar';
                     toolbar.innerLoc = '1';
                     toolbar.innerHTML = `
+                        <h1 class="oc-bg-title">Base de Promotores</h1>
                         <div class="toolbar-actions">
                             <div class="oc-toolbar-left">
                                 <div class="oc-status-tabs" id="oc-status-tabs" style="display:none;">
@@ -1330,9 +1548,12 @@
                             </div>
 
                             <div class="oc-toolbar-right" id="oc-toolbar-right">
+                                <div id="oc-selection-info" style="display:none; align-items:center; gap:8px; margin-right:10px;">
+                                    <span id="oc-selection-count" style="font-weight:bold; color:var(--primary); font-size:12px;">0 selecionados</span>
+                                    <button type="button" id="btn-limpar-selecao" class="btn btn-sm btn-light" style="font-size:10px; padding:4px 8px; height:auto;">Limpar</button>
+                                </div>
                                 <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
-                                <button type="button" id="btn-gerar-apresentacao" class="btn btn-sm btn-primary">Gerar link de apresentação</button>
-                                <button type="button" id="btn-limpar-selecao" class="btn btn-sm btn-light">Limpar seleção</button>
+                                <button type="button" id="btn-gerar-apresentacao" class="btn btn-sm btn-primary" style="white-space:normal; line-height:1.2; text-align:center; height:auto; padding:8px;">Gerar link<br>de apresentação</button>
                             </div>
                         </div>
                     `;
@@ -1347,6 +1568,17 @@
                 const toolbar = document.getElementById('custom-filter-toolbar');
                 if (toolbar) {
                     const rightRow = document.getElementById('oc-toolbar-right') || toolbar.querySelector('.oc-toolbar-right') || toolbar.querySelector('.toolbar-actions') || toolbar;
+
+                    // MOVER BOTÃO ADICIONAR (Promotor/Talento) para a toolbar
+                    const addBtn = document.querySelector('.page-actions a.btn-success, .object-tools a.addlink, a.btn-success[href*="/add/"]');
+                    if (addBtn && !rightRow.contains(addBtn)) {
+                         addBtn.style.height = '46px';
+                         addBtn.style.display = 'inline-flex';
+                         addBtn.style.alignItems = 'center';
+                         addBtn.style.margin = '0';
+                         addBtn.style.whiteSpace = 'nowrap';
+                         rightRow.insertBefore(addBtn, rightRow.firstChild);
+                    }
 
                     if (!document.getElementById('btn-gerar-apresentacao')) {
                         const b = document.createElement('button');
@@ -1375,6 +1607,18 @@
                 btn.addEventListener('click', () => window.openCastingFilters());
             }
 
+            // Por padrão, não deixar filtros “soltos” na tela da Base de Promotores.
+            // Eles devem aparecer somente ao clicar em “Filtros” (sidebar).
+            if (isUserProfileChangeList) {
+                try { hideMainFilterPanel(); } catch (e) {}
+                try {
+                    const clFilter = document.getElementById('changelist-filter');
+                    if (clFilter && !(clFilter.closest && clFilter.closest('#custom-sidebar-filter'))) {
+                        clFilter.style.setProperty('display', 'none', 'important');
+                    }
+                } catch (e) {}
+            }
+
             function getSelectedCount() {
                 try {
                     return document.querySelectorAll('input[name="_selected_action"]:checked').length;
@@ -1396,6 +1640,10 @@
                 } catch (e) {
                     return [];
                 }
+            }
+
+            function getStoredSelectedCount() {
+                return readStoredSelectedIds().length;
             }
 
             function writeStoredSelectedIds(ids) {
@@ -1422,8 +1670,25 @@
                 writeStoredSelectedIds(ids);
             }
 
-            function getStoredSelectedCount() {
-                return readStoredSelectedIds().length;
+            function updatePersistentSelectionUI() {
+                try {
+                    const count = getStoredSelectedCount();
+                    const info = document.getElementById('oc-selection-info');
+                    const span = document.getElementById('oc-selection-count');
+                    const btnLimpar = document.getElementById('btn-limpar-selecao');
+                    const btnAp = document.getElementById('btn-gerar-apresentacao');
+                    
+                    if (count > 0) {
+                        if(info) info.style.display = 'inline-flex';
+                        if(span) span.innerText = count + (count === 1 ? ' selecionado' : ' selecionados');
+                        if(btnLimpar) btnLimpar.style.display = 'inline-block';
+                        if(btnAp) btnAp.style.display = 'inline-flex';
+                    } else {
+                        if(info) info.style.display = 'none';
+                        if(btnLimpar) btnLimpar.style.display = 'none'; 
+                        if(btnAp) btnAp.style.display = 'none';
+                    }
+                } catch(e) {}
             }
 
             function applyStoredSelectionToVisibleRows() {
@@ -1435,9 +1700,72 @@
                         if (!v) return;
                         if (ids.has(v)) b.checked = true;
                     });
+                    updatePersistentSelectionUI();
                 } catch (e) {}
             }
 
+            if (isUserProfileChangeList) {
+                // Monitora cliques novos
+                window.addEventListener('change', e => {
+                    const t = e.target;
+                    if (!t) return;
+                    if (t.name === '_selected_action' && t.type === 'checkbox') {
+                         if (t.checked) addStoredSelectedId(t.value);
+                         else removeStoredSelectedId(t.value);
+                         updatePersistentSelectionUI();
+                    } else if (t.id === 'action-toggle') {
+                         // Select all
+                         setTimeout(() => {
+                            const boxes = document.querySelectorAll('input[name="_selected_action"]');
+                            boxes.forEach(b => {
+                                if (b.checked) addStoredSelectedId(b.value);
+                                else removeStoredSelectedId(b.value);
+                            });
+                            updatePersistentSelectionUI();
+                         }, 50);
+                    }
+                });
+
+                // Executa na carga
+                applyStoredSelectionToVisibleRows();
+            }
+
+            // Ações dos botões da Toolbar
+            const btnAp = document.getElementById('btn-gerar-apresentacao');
+            if (btnAp && btnAp.dataset.bound !== '1') {
+                btnAp.dataset.bound = '1';
+                btnAp.addEventListener('click', () => {
+                    const selected = getStoredSelectedCount();
+                    if (!selected) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Nenhum promotor selecionado',
+                                text: 'Selecione pelo menos 1 promotor.',
+                                heightAuto: false,
+                                customClass: { popup: 'oc-swal-popup' }
+                            });
+                        }
+                        return;
+                    }
+                    submitAdminAction('gerar_link_apresentacao');
+                });
+            }
+
+            const btnClearSel = document.getElementById('btn-limpar-selecao');
+            if (btnClearSel && btnClearSel.dataset.bound !== '1') {
+                btnClearSel.dataset.bound = '1';
+                btnClearSel.addEventListener('click', () => {
+                    try { sessionStorage.removeItem(SELECT_KEY); } catch (e) {}
+                    try {
+                        document.querySelectorAll('input[name="_selected_action"]:checked').forEach(cb => { cb.checked = false; });
+                        const t = document.getElementById('action-toggle'); if (t) t.checked = false;
+                    } catch (e) {}
+                    updatePersistentSelectionUI();
+                });
+            }
+
+            /*
             function setApresentacaoButtonVisible(flag) {
                 const b = document.getElementById('btn-gerar-apresentacao');
                 if (!b) return;
@@ -1448,7 +1776,7 @@
                 const b = document.getElementById('btn-limpar-selecao');
                 if (!b) return;
                 b.style.display = flag ? 'inline-flex' : 'none';
-            }
+            }*/
 
             function submitAdminAction(actionName) {
                 const form = document.getElementById('changelist-form');
@@ -1457,10 +1785,8 @@
                 const sel = document.querySelector('select[name="action"]');
                 if (!sel) return false;
 
-                // Injeta inputs ocultos para IDs selecionados que NÃO estão visíveis na tabela atual.
-                // Isso permite selecionar via pesquisa e depois gerar um link com todos.
+                // Injeta inputs ocultos para persistência
                 try {
-                    // remove anteriores
                     form.querySelectorAll('input[data-oc-persist="1"]').forEach(n => n.remove());
 
                     const stored = readStoredSelectedIds();
@@ -1473,8 +1799,7 @@
                         stored.forEach(id => {
                             const sid = String(id);
                             if (!sid) return;
-                            if (present.has(sid)) return; // já existe checkbox na tela
-
+                            if (present.has(sid)) return; 
                             const h = document.createElement('input');
                             h.type = 'hidden';
                             h.name = '_selected_action';
@@ -1485,6 +1810,7 @@
                     }
                 } catch (e) {}
 
+
                 sel.value = actionName;
                 try {
                     form.submit();
@@ -1494,117 +1820,6 @@
                 }
             }
 
-            // Botão de gerar link de apresentação (usa a action do Django por trás)
-            const btnAp = document.getElementById('btn-gerar-apresentacao');
-            if (btnAp && btnAp.dataset.bound !== '1') {
-                btnAp.dataset.bound = '1';
-                btnAp.addEventListener('click', () => {
-                    const path = (window.location && window.location.pathname) ? window.location.pathname : '';
-                    if (!path.includes('/admin/core/userprofile/')) return;
-
-                    const selected = getStoredSelectedCount() || getSelectedCount();
-                    if (!selected) {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Selecione pelo menos 1 promotor',
-                                text: 'Marque o checkbox de quem você quer enviar para o cliente.',
-                                heightAuto: false,
-                                customClass: { popup: 'oc-swal-popup' },
-                            });
-                        } else {
-                            alert('Selecione pelo menos 1 promotor (checkbox).');
-                        }
-                        return;
-                    }
-
-                    const ok = submitAdminAction('gerar_link_apresentacao');
-                    if (!ok) {
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Não foi possível gerar',
-                                text: 'Não encontrei o seletor de ações do Django na página.',
-                                heightAuto: false,
-                                customClass: { popup: 'oc-swal-popup' },
-                            });
-                        } else {
-                            alert('Não foi possível gerar o link (ações do Django não encontradas).');
-                        }
-                    }
-                });
-            }
-
-            // Botão limpar seleção (zera seleção persistida e desmarca visíveis)
-            const btnClearSel = document.getElementById('btn-limpar-selecao');
-            if (btnClearSel && btnClearSel.dataset.bound !== '1') {
-                btnClearSel.dataset.bound = '1';
-                btnClearSel.addEventListener('click', () => {
-                    try {
-                        sessionStorage.removeItem(SELECT_KEY);
-                    } catch (e) {}
-
-                    try {
-                        document.querySelectorAll('input[name="_selected_action"]:checked').forEach(cb => {
-                            cb.checked = false;
-                        });
-                    } catch (e) {}
-
-                    // Desmarca "selecionar todos" se existir
-                    try {
-                        const t = document.getElementById('action-toggle');
-                        if (t) t.checked = false;
-                    } catch (e) {}
-
-                    // Remove hidden persistidos (se existirem)
-                    try {
-                        const form = document.getElementById('changelist-form');
-                        if (form) form.querySelectorAll('input[data-oc-persist="1"]').forEach(n => n.remove());
-                    } catch (e) {}
-
-                    setApresentacaoButtonVisible(false);
-                    setLimparSelecaoButtonVisible(false);
-                });
-            }
-
-            // Mostrar/esconder o botão conforme seleção (sem mexer na posição das abas)
-            try {
-                const path = (window.location && window.location.pathname) ? window.location.pathname : '';
-                if (path.includes('/admin/core/userprofile/')) {
-                    const form = document.getElementById('changelist-form');
-                    // Estado inicial
-                    applyStoredSelectionToVisibleRows();
-                    const hasAny = (getStoredSelectedCount() > 0 || getSelectedCount() > 0);
-                    setApresentacaoButtonVisible(hasAny);
-                    setLimparSelecaoButtonVisible(hasAny);
-
-                    if (form && form.dataset.ocBoundApSel !== '1') {
-                        form.dataset.ocBoundApSel = '1';
-                        // Captura mudanças de qualquer checkbox (inclui "selecionar todos")
-                        form.addEventListener('change', (ev) => {
-                            const t = ev && ev.target;
-                            if (t && t.matches && t.matches('input[name="_selected_action"]')) {
-                                if (t.checked) addStoredSelectedId(t.value);
-                                else removeStoredSelectedId(t.value);
-                                const has = getStoredSelectedCount() > 0;
-                                setApresentacaoButtonVisible(has);
-                                setLimparSelecaoButtonVisible(has);
-                            } else if (t && t.matches && t.matches('#action-toggle')) {
-                                // Selecionar tudo (na visão atual): adiciona/remove os visíveis
-                                const boxes = document.querySelectorAll('input[name="_selected_action"]');
-                                boxes.forEach(cb => {
-                                    if (!cb || !cb.value) return;
-                                    if (t.checked) addStoredSelectedId(cb.value);
-                                    else removeStoredSelectedId(cb.value);
-                                });
-                                const has = getStoredSelectedCount() > 0;
-                                setApresentacaoButtonVisible(has);
-                                setLimparSelecaoButtonVisible(has);
-                            }
-                        }, true);
-                    }
-                }
-            } catch (e) {}
         } catch(e) {
             console.error('setupUI toolbar error', e);
         }
@@ -1712,6 +1927,9 @@
 
         // Botão pequeno "Limpar filtros" no topo (só aparece quando houver filtros ativos)
         try { ensureTopClearFiltersButton(); } catch(e) {}
+
+        // Base de Promotores (Jazzmin): botão para abrir/fechar filtros inline do topo
+        // try { ensureInlineFiltersToggle(); } catch (e) {}
 
         // Tabs Aprovados/Pendentes no topo (somente na Base de Promotores)
         try {

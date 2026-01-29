@@ -1,0 +1,45 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{#
+  Base de Promotores (UserProfile)
+  - Garante carregamento de assets custom (CSS/JS)
+  - Permite UX de filtros colapsáveis via JS (sem alterar o comportamento do admin)
+#}
+
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
+  <script src="{% static 'js/admin_custom.js' %}"></script>
+  <style>
+    /* Remove cabeçalho (Título e Breadcrumbs) desta página específica */
+    .content-header,
+    .content-header .container-fluid,
+    .content-header .row,
+    .breadcrumb,
+    .breadcrumbs,
+    nav[aria-label="breadcrumb"],
+    h1.m-0,
+    .col-sm-6 h1 {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Remove barra de busca do topo (Header) */
+    .main-header .form-inline,
+    .main-header form {
+        display: none !important;
+    }
+
+    /* Ajusta espaçamento para não ficar colado no topo */
+    .content-wrapper > .content {
+        padding-top: 15px !important;
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}

@@ -1,53 +1,1007 @@
-/* Força o menu lateral SEMPRE expandido (com texto) no desktop.
-   Objetivo: impedir o comportamento "só ícones" + expandir no hover.
-   Não altera cores/tema; apenas layout do sidebar. */
-
-@media (min-width: 992px) {
-  /* Nunca deixar overlay por cima no desktop (isso trava cliques) */
-  .sidebar-overlay,
-  #sidebar-overlay {
-    display: none !important;
-    pointer-events: none !important;
-  }
-
-  /* Quando o tema ativa mini/hover (sidebar-mini + sidebar-collapse), força largura cheia */
-  body.sidebar-mini.sidebar-collapse .main-sidebar,
-  body.sidebar-mini-md.sidebar-collapse .main-sidebar,
-  body.sidebar-mini-xs.sidebar-collapse .main-sidebar {
-    width: 250px !important;
-  }
-
-  body.sidebar-mini.sidebar-collapse .content-wrapper,
-  body.sidebar-mini.sidebar-collapse .main-footer,
-  body.sidebar-mini.sidebar-collapse .main-header,
-  body.sidebar-mini-md.sidebar-collapse .content-wrapper,
-  body.sidebar-mini-md.sidebar-collapse .main-footer,
-  body.sidebar-mini-md.sidebar-collapse .main-header,
-  body.sidebar-mini-xs.sidebar-collapse .content-wrapper,
-  body.sidebar-mini-xs.sidebar-collapse .main-footer,
-  body.sidebar-mini-xs.sidebar-collapse .main-header {
-    margin-left: 250px !important;
-  }
-
-  /* Mostra os textos do menu e do topo lateral sempre */
-  body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link p,
-  body.sidebar-mini-md.sidebar-collapse .nav-sidebar .nav-link p,
-  body.sidebar-mini-xs.sidebar-collapse .nav-sidebar .nav-link p,
-  body.sidebar-mini.sidebar-collapse .brand-text,
-  body.sidebar-mini-md.sidebar-collapse .brand-text,
-  body.sidebar-mini-xs.sidebar-collapse .brand-text,
-  body.sidebar-mini.sidebar-collapse .user-panel .info,
-  body.sidebar-mini-md.sidebar-collapse .user-panel .info,
-  body.sidebar-mini-xs.sidebar-collapse .user-panel .info {
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: inline-block !important;
-  }
-
-  /* Neutraliza o "corte" de largura aplicado pelo modo mini */
-  body.sidebar-mini.sidebar-collapse .nav-sidebar .nav-link,
-  body.sidebar-mini-md.sidebar-collapse .nav-sidebar .nav-link,
-  body.sidebar-mini-xs.sidebar-collapse .nav-sidebar .nav-link {
-    width: auto !important;
-  }
+/* ============================================================
+   1. CORES, VARIÁVEIS E REGRAS GLOBAIS
+   ============================================================ */
+:root { 
+    --primary: #009688; 
+    --primary-dark: #00796b; 
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --warning: #f1c40f;
+    --info: #3498db;
+    --dark: #2c3e50;
+    --whatsapp: #25D366;
+    --light-bg: #f4f6f9;
+    --border-color: #e0e0e0;
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
+
+/* Força o padrão de cores do Casting Certo no Admin */
+.btn-success, .btn-primary, #btn-realizar-busca {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    transition: 0.3s;
+}
+
+#btn-realizar-busca:hover { background-color: var(--primary-dark) !important; transform: translateY(-2px); }
+
+a { color: var(--primary); transition: 0.2s; text-decoration: none; }
+a:hover { color: var(--primary-dark); text-decoration: none; }
+
+/* ============================================================
+   2. INTERFACE DE LISTAGEM (TOOLBAR, BUSCA E AÇÕES)
+   ============================================================ */
+#custom-filter-toolbar {
+    display: flex; 
+    justify-content: flex-start; 
+    align-items: center; 
+    gap: 20px; 
+    margin: 16px 0 8px 28px; 
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Abas Aprovados / Pendentes (Base de Promotores) */
+.oc-status-tabs {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.oc-status-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    color: var(--dark);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.oc-status-tab.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+
+/* ============================================================
+   CLEANUP (BASE DE PROMOTORES)
+   ============================================================ */
+/* Remove cabeçalho padrão (Breadcrumbs + Título) */
+.oc-userprofile-changelist .content-header {
+    display: none !important;
+}
+
+/* Remove barra de busca padrão do topo (Navbar) */
+.oc-userprofile-changelist .main-header .form-inline,
+.oc-userprofile-changelist .main-header form[action="/admin/search/"] {
+    display: none !important;
+}
+
+/* ============================================================
+   SWEETALERT (POPUPS)
+   ============================================================ */
+
+.swal2-popup.oc-swal-popup {
+    border-radius: 18px !important;
+    padding: 18px 18px 14px 18px !important;
+    max-width: 96vw !important;
+    overflow-x: hidden !important;
+    border-top: 6px solid var(--primary) !important;
+}
+
+.swal2-popup.oc-swal-popup .swal2-title {
+    font-weight: 900 !important;
+    letter-spacing: -0.5px;
+}
+
+.swal2-popup.oc-swal-popup .swal2-html-container {
+    margin: 12px 0 0 0 !important;
+    overflow-x: hidden !important;
+}
+
+.oc-swal-form {
+    text-align: left;
+    display: grid;
+    gap: 12px;
+}
+
+.oc-swal-section {
+    background: #fafafa;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.oc-swal-label {
+    display: block;
+    font-weight: 900;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #5f6a6a;
+    margin-bottom: 6px;
+}
+
+.swal2-popup.oc-swal-popup .swal2-select,
+.swal2-popup.oc-swal-popup .swal2-input,
+.swal2-popup.oc-swal-popup .swal2-textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* IMPORTANTE: não forçar display aqui.
+   O SweetAlert2 usa display:none para esconder inputs padrão quando não são usados;
+   se a gente forçar display, surgem “campos de digitar” em qualquer popup (copiado/sucesso/etc). */
+
+.oc-swal-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+}
+
+.oc-swal-inline input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.oc-swal-help {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.oc-swal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.oc-swal-chip {
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.oc-swal-chip.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.swal2-popup.oc-swal-popup .swal2-confirm {
+    border-radius: 999px !important;
+    font-weight: 900 !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    background: var(--primary) !important;
+}
+
+.swal2-popup.oc-swal-popup .swal2-cancel {
+    border-radius: 999px !important;
+    font-weight: 900 !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    background: #f1f3f5 !important;
+    color: #2c3e50 !important;
+}
+
+@media (max-width: 480px) {
+    .swal2-popup.oc-swal-popup {
+        padding: 14px !important;
+    }
+}
+
+/* Campo de busca (ao digitar) */
+/* Toolbar (Base de Promotores): abas | busca | botões */
+#custom-filter-toolbar .toolbar-actions {
+    display: grid;
+    grid-template-columns: auto minmax(260px, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    width: 100%;
+}
+
+.oc-toolbar-left { min-width: 0; }
+.oc-toolbar-center { min-width: 0; }
+
+.oc-toolbar-right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+/* Busca dentro da toolbar */
+#custom-filter-toolbar #oc-live-search {
+    width: 100%;
+    max-width: 600px; /* Limita a largura para dar espaço visual */
+    min-width: 0;
+}
+
+/* Padroniza altura/forma dos botões da direita */
+#custom-filter-toolbar .btn,
+#custom-filter-toolbar .btn-filtros-avancados {
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Novo título centralizado "Base de Promotores" */
+.oc-bg-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 20px 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+#custom-filter-toolbar .btn-sm {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+}
+
+#custom-filter-toolbar #btn-gerar-apresentacao,
+#custom-filter-toolbar #btn-limpar-selecao {
+    white-space: nowrap;
+}
+
+#custom-filter-toolbar .btn-filtros-avancados {
+    padding: 0 18px;
+}
+
+/* ============================================================
+   RESPONSIVIDADE (MOBILE)
+   Mantém o Admin utilizável no celular (Jazzmin + customizações).
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .oc-status-tabs {
+        flex-wrap: wrap;
+    }
+
+    #custom-filter-toolbar {
+        margin: 12px 12px 8px 12px;
+        width: auto;
+    }
+
+    #custom-filter-toolbar .toolbar-actions {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .oc-toolbar-right {
+        justify-content: stretch;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    #custom-filter-toolbar .btn,
+    #custom-filter-toolbar .btn-filtros-avancados {
+        width: 100%;
+    }
+
+    #oc-live-search {
+        width: 100%;
+        max-width: 100%;
+        height: 46px;
+    }
+
+    #custom-filter-toolbar #btn-open-sidebar {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    /* Sidebar de filtros vira tela cheia no mobile */
+    #custom-sidebar-filter {
+        width: 96% !important;
+        max-width: 96% !important;
+        right: auto !important; /* Reseta o right antigo */
+    }
+
+    .sidebar-header {
+        padding: 18px;
+    }
+
+    #sidebar-content {
+        padding: 16px;
+    }
+
+    .filter-group-box {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* Tabela de resultados: evita “bagunça” e quebra de layout */
+    #changelist-form .results,
+    .changelist .results {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Base de Promotores (UserProfile): no celular, mostrar só o Nome */
+    body.oc-userprofile-changelist #result_list thead {
+        display: none !important;
+    }
+
+    body.oc-userprofile-changelist #result_list,
+    body.oc-userprofile-changelist #result_list tbody,
+    body.oc-userprofile-changelist #result_list tr,
+    body.oc-userprofile-changelist #result_list td {
+        display: block;
+        width: 100%;
+    }
+
+    body.oc-userprofile-changelist #result_list tr {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 0 0 12px 0;
+        box-shadow: none;
+    }
+
+    body.oc-userprofile-changelist #result_list td {
+        padding: 0;
+        border: 0 !important;
+    }
+
+    /* Esconde campos que poluem no mobile */
+    body.oc-userprofile-changelist #result_list td.field-exibir_foto,
+    body.oc-userprofile-changelist #result_list td.field-whatsapp_link,
+    body.oc-userprofile-changelist #result_list td.field-acoes_rapidas {
+        display: none !important;
+    }
+
+    /* No mobile, mantém o checkbox de seleção visível para gerar link */
+    body.oc-userprofile-changelist #result_list td.action-checkbox {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 0 10px 0;
+    }
+
+    body.oc-userprofile-changelist #result_list td.action-checkbox input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Nome + bolinha de status (sem texto)
+       Observação: como o campo é link (list_display_links), os spans ficam dentro de <a>. */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status {
+        display: block !important;
+        width: 100% !important;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.25;
+    }
+
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        width: 100% !important;
+        color: inherit;
+        text-decoration: none;
+        flex-wrap: wrap;
+    }
+
+    /* Mantém o nome (primeiro span) */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a > span:first-child {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    /* No mobile queremos apenas o nome: esconde status/badges de forma confiável */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status .oc-status-badge,
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status .oc-status-badge {
+        display: none !important;
+    }
+
+    /* Fallback: se o badge cair fora do <a>, também some */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > span.oc-status-badge,
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status > span.oc-status-badge {
+        display: none !important;
+    }
+
+    /* Último fallback: esconde qualquer elemento após o nome dentro do link */
+    body.oc-userprofile-changelist #result_list td.field-nome_com_status > a > *:not(:first-child),
+    body.app-core.model-userprofile.change-list #result_list td.field-nome_com_status > a > *:not(:first-child) {
+        display: none !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .btn-filtros-avancados {
+        padding: 12px 18px;
+        font-size: 0.8rem;
+    }
+}
+
+#oc-live-search {
+    width: 420px;
+    max-width: 55vw;
+    height: 46px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #fff;
+    color: #2c3e50;
+    outline: none;
+}
+
+#oc-live-search:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.12);
+}
+
+/* Novo botão de Filtros */
+.btn-filtros-avancados {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 150, 136, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-filtros-avancados:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 150, 136, 0.4);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #004d44 100%);
+}
+
+.btn-filtros-avancados:active {
+    transform: translateY(-1px);
+}
+
+.btn-filtros-avancados i {
+    font-size: 1rem;
+}
+
+/* Ações em Massa (OCULTAS) */
+.custom-action-buttons { display: none !important; }
+.actions { display: none !important; }
+select[name="action"] { display: none !important; }
+.submit-line { display: none !important; }
+
+/* ============================================================
+   3. GAVETA LATERAL DE FILTROS (SIDEBAR) -> POPUP (MODAL)
+   ============================================================ */
+#custom-sidebar-filter {
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 600px; 
+    max-width: 95%; 
+    height: auto; 
+    max-height: 90vh; 
+    background: #fff; 
+    z-index: 9999; 
+    box-shadow: 0 0 50px rgba(0,0,0,0.4); 
+    border-radius: 16px;
+    display: flex; 
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#custom-sidebar-filter.active { 
+    opacity: 1; 
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+    right: auto !important; 
+}
+
+.sidebar-header { 
+    background: var(--primary); 
+    color: white; 
+    padding: 20px 25px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+.sidebar-header h3 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+
+.sidebar-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+/* Botão de fechar (X) */
+#btn-back-sidebar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#btn-back-sidebar:hover { background: rgba(255,255,255,0.4); }
+
+#sidebar-content { 
+    flex: 1; 
+    overflow-y: auto; 
+    overflow-x: hidden;
+    padding: 25px; 
+    background: #fdfdfd;
+    scroll-behavior: smooth;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+.filter-group-box { background: white; border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+.filter-group-box label { color: var(--dark); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
+
+/* Estilo para Filtros de Faixa (Mín/Máx para Peso, Sapato, Altura) */
+.range-inputs { display: flex; gap: 10px; align-items: center; }
+.range-inputs input { flex: 1; height: 38px !important; text-align: center; font-weight: 600; border: 1px solid #ddd !important; border-radius: 6px !important; }
+
+#sidebar-content select, #sidebar-content input:not([type="checkbox"]) {
+    width: 100% !important; height: 40px !important; border: 1px solid #ddd !important; 
+    border-radius: 6px !important; display: block !important; opacity: 1 !important; font-size: 0.85rem;
+}
+
+/* Botões dentro da sidebar ocupando 100% e centralizados */
+#custom-sidebar-filter button,
+#custom-sidebar-filter .btn,
+#custom-sidebar-filter input[type="submit"],
+#custom-sidebar-filter input[type="button"] {
+    width: 100%;
+    max-width: 100%;
+}
+
+#custom-sidebar-filter .btn-clear-all {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+/* Mensagem de nenhum resultado */
+.oc-no-results {
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin: 10px 0 14px 0;
+}
+
+.oc-no-results-title {
+    font-weight: 900;
+    color: var(--dark);
+    margin-bottom: 4px;
+}
+
+.oc-no-results-sub {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Estilização dos Links copiados do Django na Sidebar */
+#custom-sidebar-filter #django-filters-target h3 {
+    color: var(--dark);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+#custom-sidebar-filter #django-filters-target ul { 
+    padding-left: 0; 
+    list-style: none;
+    margin: 0 0 15px 0;
+}
+
+#custom-sidebar-filter #django-filters-target ul li {
+    margin: 0;
+    padding: 0;
+}
+
+#custom-sidebar-filter #django-filters-target ul li a {
+    display: block;
+    padding: 6px 0;
+    color: #666;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border-bottom: 1px solid #f9f9f9;
+    transition: 0.2s;
+}
+
+#custom-sidebar-filter #django-filters-target ul li a:hover {
+    color: #009688;
+    padding-left: 3px;
+}
+
+#custom-sidebar-filter #django-filters-target ul li.selected a { 
+    color: #009688; 
+    font-weight: bold;
+}
+
+/* Backdrop (Fundo Escuro) */
+#filter-backdrop {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(2px);
+}
+
+/* ============================================================
+   4. PERFIL DO PROMOTOR E CORREÇÃO DO MOUSE (HOVER)
+   ============================================================ */
+.back-link { 
+    display: inline-flex; align-items: center; color: #7f8c8d; 
+    font-size: 0.85rem; font-weight: 700; text-transform: uppercase; 
+    margin-bottom: 20px; transition: 0.2s;
+}
+.back-link:hover { color: var(--primary); transform: translateX(-5px); }
+
+.crm-header-card { 
+    background: #fff; border-radius: 16px; padding: 30px; margin-bottom: 30px; 
+    border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+/* --- FIX DEFINITIVO DO MOUSE QUE SOME AO DESCER --- */
+.btn-group-custom { 
+    position: relative; 
+    display: inline-block; 
+    padding-bottom: 15px; /* Zona de segurança abaixo do botão */
+    margin-bottom: -15px; 
+}
+.dropdown-content {
+    display: none; 
+    position: absolute; 
+    background-color: white; 
+    min-width: 240px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+    z-index: 9999; 
+    border-radius: 10px; 
+    border: 1px solid #eee; 
+    top: 45px; /* Colado ao botão */
+    left: 0; 
+    animation: fadeIn 0.2s ease-out;
+}
+/* Ponte invisível que impede o 'onmouseleave' disparar entre o botão e o menu */
+.btn-group-custom::before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 25px;
+    z-index: 1;
+}
+.btn-group-custom:hover .dropdown-content { display: block !important; }
+
+.dropdown-content button, .dropdown-content a {
+    width: 100%; text-align: left; padding: 14px 20px; border: none; background: none;
+    font-size: 0.8rem; font-weight: 600; color: #444; display: flex; align-items: center; transition: 0.2s;
+}
+.dropdown-content button:hover, .dropdown-content a:hover { background: #f8f9fa; color: var(--primary); text-decoration: none; }
+
+/* Info Boxes do Perfil */
+.info-box-summary { background: #fff; border: 1px solid #f0f0f0; border-radius: 12px; padding: 20px; transition: 0.3s; }
+.info-box-summary:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+.info-box-summary h4 { 
+    font-size: 0.7rem; font-weight: 900; color: var(--primary); 
+    border-bottom: 1px solid #f5f5f5; padding-bottom: 10px; margin-bottom: 15px; 
+}
+
+/* ============================================================
+   5. FORMULÁRIO DE EDIÇÃO (DESTRAVAMENTO DE SELECTS)
+   ============================================================ */
+#edit-form-container { background: #fff; border-radius: 16px; padding: 30px; margin-top: 30px; border: 2px solid #e0f2f1; }
+
+/* FORÇA EDIÇÃO NOS CAMPOS DE ESCOLHA (Gênero, Etnia, Idiomas) */
+.fieldset-body select, 
+.fieldset-body input, 
+.fieldset-body textarea {
+    width: 100% !important; 
+    min-height: 45px !important; 
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important; 
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+    background-color: #fff !important;
+    color: #333 !important;
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    appearance: auto !important;
+    -webkit-appearance: listbox !important;
+}
+
+.fieldset-header { background: #fcfcfc; border-bottom: 1px solid #eee; padding: 15px 25px; }
+.fieldset-header h2 { font-size: 0.85rem; font-weight: 800; color: #555; margin: 0; }
+.submit-row { background: #fafafa !important; padding: 30px !important; border-radius: 0 0 16px 16px !important; border-top: 1px solid #eee !important; }
+
+/* ============================================================
+   6. MODAL DE CÓPIA SELETIVA E LIMPEZA DJANGO
+   ============================================================ */
+.swal-copy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    text-align: left;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.swal-copy-item { display: flex; align-items: center; gap: 10px; padding: 5px; }
+.swal-copy-item input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary); }
+.swal-copy-item label { font-size: 0.85rem; font-weight: 700; color: #444; margin: 0; cursor: pointer; }
+
+/* Oculta elementos que poluem a Base de Promotores e força filtros só na sidebar */
+.search-form, .xfull, .object-tools { display: none !important; }
+#changelist-filter { display: none !important; }
+.filters-bar { display: none !important; }
+.filter-toolbar { display: none !important; }
+.jazzmin-filter-toolbar { display: none !important; }
+.hidden { display: none !important; }
+
+/* EXCEÇÃO: quando os filtros forem movidos para a sidebar, eles precisam ficar visíveis */
+#custom-sidebar-filter #changelist-filter {
+    display: block !important;
+}
+
+/* Jazzmin: alguns temas usam containers diferentes para os filtros */
+#custom-sidebar-filter .filters-bar,
+#custom-sidebar-filter .filter-toolbar,
+#custom-sidebar-filter .jazzmin-filter-toolbar {
+    display: block !important;
+}
+
+/* Esconde o painel de filtros do topo (mantendo filtros só na sidebar) */
+.oc-main-filters-hidden { display: none !important; }
+
+/* Base de Promotores: quando usamos toggle do painel inline */
+.oc-inline-filters-hidden { display: none !important; }
+.oc-inline-filters-open { display: block !important; }
+
+/* Jazzmin (Base de Promotores): filtros inline no topo (select.search-filter)
+   Por padrão ficam ocultos e só aparecem quando o usuário clicar no botão de filtros. */
+body.model-userprofile.change-list #change-list-filters,
+body.app-core.model-userprofile.change-list #change-list-filters {
+    display: none !important;
+}
+body.model-userprofile.change-list #change-list-filters.oc-inline-filters-open,
+body.app-core.model-userprofile.change-list #change-list-filters.oc-inline-filters-open {
+    display: block !important;
+}
+
+/* Quando o painel principal é movido para dentro da sidebar */
+#custom-sidebar-filter .oc-moved-main-filters {
+    padding: 15px;
+}
+
+/* Painel original (vindo do topo) dentro da sidebar */
+#custom-sidebar-filter .oc-main-filters-panel {
+    display: block !important;
+}
+
+/* Select2: garante que o dropdown apareça acima da sidebar */
+.select2-container--open {
+    z-index: 100000 !important;
+}
+.select2-dropdown {
+    z-index: 100000 !important;
+}
+
+/* Bootstrap dropdowns (caso algum select use dropdown) */
+.dropdown-menu {
+    z-index: 100000 !important;
+}
+
+#custom-sidebar-filter .oc-moved-main-filters select,
+#custom-sidebar-filter .oc-moved-main-filters input,
+#custom-sidebar-filter .oc-moved-main-filters button {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#custom-sidebar-filter .oc-moved-main-filters [class*="col"],
+#custom-sidebar-filter .oc-moved-main-filters .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* ============================================================
+   MULTI-CHECKBOX FILTERS (SIDEBAR)
+   Converte selects em grupos de checkboxes com layout limpo.
+   ============================================================ */
+#custom-sidebar-filter .oc-multi-filters {
+    display: block;
+    margin-top: 10px;
+}
+
+#custom-sidebar-filter .oc-multi-group {
+    margin-bottom: 12px;
+}
+
+/* Campo com setinha (gatilho) */
+#custom-sidebar-filter .oc-ddmulti-trigger {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #444;
+}
+
+#custom-sidebar-filter .oc-ddmulti-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#custom-sidebar-filter .oc-ddmulti-arrow {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #777;
+    margin-left: 10px;
+    flex: 0 0 auto;
+}
+
+#custom-sidebar-filter .oc-multi-group.is-open .oc-ddmulti-arrow {
+    transform: rotate(180deg);
+}
+
+/* Menu (lista de opções com checks) */
+#custom-sidebar-filter .oc-ddmulti-menu {
+    display: none;
+    margin-top: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+}
+
+#custom-sidebar-filter .oc-multi-group.is-open .oc-ddmulti-menu {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+#custom-sidebar-filter .oc-ddmulti-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#custom-sidebar-filter .oc-ddmulti-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    accent-color: var(--primary);
+}
+
+#custom-sidebar-filter .oc-ddmulti-option span {
+    font-size: 0.88rem;
+    color: #444;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+#custom-sidebar-filter .oc-multi-actions {
+    position: sticky;
+    bottom: 0;
+    padding-top: 12px;
+    background: #fdfdfd;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+#custom-sidebar-filter .oc-multi-actions .btn {
+    border-radius: 999px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 12px 14px;
+}
+
+@media (min-width: 520px) {
+    #custom-sidebar-filter .oc-multi-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Remove espaços em branco deixados por elementos escondidos */
+.changelist .results .hidden,
+.changelist-filter.hidden,
+#changelist-filter.hidden {
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* FIM DO ARQUIVO CSS */

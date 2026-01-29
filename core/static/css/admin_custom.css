@@ -295,9 +295,9 @@ a:hover { color: var(--primary-dark); text-decoration: none; }
 
     /* Sidebar de filtros vira tela cheia no mobile */
     #custom-sidebar-filter {
-        width: 100vw;
-        right: -100vw;
-        max-width: 100vw;
+        width: 96% !important;
+        max-width: 96% !important;
+        right: auto !important; /* Reseta o right antigo */
     }
 
     .sidebar-header {
@@ -484,40 +484,75 @@ select[name="action"] { display: none !important; }
 .submit-line { display: none !important; }
 
 /* ============================================================
-   3. GAVETA LATERAL DE FILTROS (SIDEBAR)
+   3. GAVETA LATERAL DE FILTROS (SIDEBAR) -> POPUP (MODAL)
    ============================================================ */
 #custom-sidebar-filter {
-    position: fixed; top: 0; right: -500px; width: 470px; height: 100vh; 
-    background: #fff; z-index: 9999; box-shadow: -10px 0 40px rgba(0,0,0,0.2); 
-    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 600px; 
+    max-width: 95%; 
+    height: auto; 
+    max-height: 90vh; 
+    background: #fff; 
+    z-index: 9999; 
+    box-shadow: 0 0 50px rgba(0,0,0,0.4); 
+    border-radius: 16px;
+    display: flex; 
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
-#custom-sidebar-filter.active { right: 0 !important; }
 
-.sidebar-header { background: var(--primary); color: white; padding: 25px; display: flex; justify-content: space-between; align-items: center; }
-.sidebar-header h3 { margin: 0; font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; }
+#custom-sidebar-filter.active { 
+    opacity: 1; 
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+    right: auto !important; 
+}
+
+.sidebar-header { 
+    background: var(--primary); 
+    color: white; 
+    padding: 20px 25px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+.sidebar-header h3 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
 
 .sidebar-header-left {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 0;
+    width: 100%;
+    flex-direction: row-reverse;
+    justify-content: space-between;
 }
 
+/* Botão de fechar (X) */
 #btn-back-sidebar {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 2px solid rgba(255,255,255,0.45);
-    background: rgba(255,255,255,0.15);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
     color: #fff;
-    font-weight: 900;
+    font-weight: bold;
+    font-size: 1.2rem;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-#btn-back-sidebar:hover { background: rgba(255,255,255,0.25); }
+#btn-back-sidebar:hover { background: rgba(255,255,255,0.4); }
 
 #sidebar-content { 
     flex: 1; 
@@ -526,6 +561,8 @@ select[name="action"] { display: none !important; }
     padding: 25px; 
     background: #fdfdfd;
     scroll-behavior: smooth;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 .filter-group-box { background: white; border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
 .filter-group-box label { color: var(--dark); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 10px; display: block; }
@@ -756,6 +793,21 @@ select[name="action"] { display: none !important; }
 
 /* Esconde o painel de filtros do topo (mantendo filtros só na sidebar) */
 .oc-main-filters-hidden { display: none !important; }
+
+/* Base de Promotores: quando usamos toggle do painel inline */
+.oc-inline-filters-hidden { display: none !important; }
+.oc-inline-filters-open { display: block !important; }
+
+/* Jazzmin (Base de Promotores): filtros inline no topo (select.search-filter)
+   Por padrão ficam ocultos e só aparecem quando o usuário clicar no botão de filtros. */
+body.model-userprofile.change-list #change-list-filters,
+body.app-core.model-userprofile.change-list #change-list-filters {
+    display: none !important;
+}
+body.model-userprofile.change-list #change-list-filters.oc-inline-filters-open,
+body.app-core.model-userprofile.change-list #change-list-filters.oc-inline-filters-open {
+    display: block !important;
+}
 
 /* Quando o painel principal é movido para dentro da sidebar */
 #custom-sidebar-filter .oc-moved-main-filters {

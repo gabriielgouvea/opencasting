@@ -63,12 +63,16 @@ import requests
 @admin.action(description='Gerar link de apresentação (7 dias)')
 def gerar_link_apresentacao(modeladmin, request, queryset):
     selected_ids = request.POST.getlist(ACTION_CHECKBOX_NAME) or []
-    by_id = {str(obj.pk): obj for obj in queryset}
+    
+    # Carrega objetos do banco baseados nos IDs selecionados (ignorando filtros da tela atual)
+    valid_pks = [int(x) for x in selected_ids if str(x).isdigit()]
+    all_objects = UserProfile.objects.filter(pk__in=valid_pks)
+    by_id = {str(obj.pk): obj for obj in all_objects}
 
     # Regra: o link só pode ser gerado com aprovados.
     # Se a lista estiver em pendentes/reprovados e o usuário marcar, nós ignoramos e avisamos.
     aprovados_ids = set(
-        UserProfile.objects.filter(pk__in=[int(x) for x in selected_ids if str(x).isdigit()], status='aprovado')
+        UserProfile.objects.filter(pk__in=valid_pks, status='aprovado')
         .values_list('pk', flat=True)
     )
 
@@ -540,9 +544,9 @@ class UserProfileAdmin(admin.ModelAdmin):
     Controlador Master da Base de Promotores.
     Focado em triagem absoluta e filtros de alta precisão.
     """
-    # A linha abaixo foi comentada para evitar conflito com o Jazzmin.
-    # O Jazzmin gerencia a lista automaticamente e garante que os filtros sejam renderizados.
-    # change_list_template = "admin/change_list.html"
+    # Template custom para a changelist (Base de Promotores).
+    # Mantém o template base do Jazzmin, mas nos permite garantir assets e ajustar UX.
+    change_list_template = "admin/core/userprofile/change_list.html"
     change_form_template = "admin/core/userprofile/change_form.html"
 
     form = UserProfileAdminForm
