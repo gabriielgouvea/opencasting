@@ -1,0 +1,477 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_list static admin_urls %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Ocultar filtro lateral padrão do Django/Jazzmin */
+    #changelist-filter { display: none !important; }
+    
+    /* TENTAR OCULTAR O BOTÃO DE FILTROS PELO CSS (VÁRIOS SELETORES GERAIS JAZZMIN) */
+    .btn-outline-success.btn-filter,
+    button[data-target="#changelist-filter"],
+    #changelist-filter-button,
+    .search-button[data-target="#changelist-filter"],
+    .btn-filtros-avancados,
+    button.filter-toggle {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Layout Full Width */
+    .change-list .filtered .results, 
+    .change-list .filtered .paginator, 
+    .filtered #toolbar, 
+    .filtered div.xfull {
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Ajustes Modal Z-Index */
+    .modal-backdrop { z-index: 1040 !important; }
+    .modal { z-index: 1050 !important; }
+
+    /* Estilo para tags de filtro */
+    .active-filter-tag {
+        margin-right: 5px;
+        margin-bottom: 5px; 
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block filters %}
+    <!-- SOBRESCREVENDO BLOCO DE FILTROS PARA NÃO RENDERIZAR NADA DO DJANGO -->
+{% endblock %}
+
+{% block search %}
+    <div class="d-flex flex-wrap align-items-center mb-3">
+        <div class="flex-grow-1">
+            {% search_form cl %}
+        </div>
+        
+        <!-- BOTAO ESTATICO DE FILTROS (Garantia de que aparece) -->
+        <button type="button" id="btn-open-filter-custom" class="btn btn-info ml-2" title="Abrir Filtros Completos">
+            <i class="fas fa-sliders-h"></i> FILTROS AVANÇADOS
+        </button>
+    </div>
+
+    <!-- Container para mostrar filtros ativos visualmente (abaixo da barra de busca do Jazzmin) -->
+    <div class="row">
+        <div class="col-md-12 mt-2" id="active-filters-display"></div>
+    </div>
+    
+    <!-- Scripts de Controle -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Lógica de Abertura do Modal
+            const btn = document.getElementById('btn-open-filter-custom');
+            if(btn) {
+                btn.addEventListener('click', function(e) { 
+                     e.preventDefault();
+                     const modalId = '#filterModal';
+                     if(window.jQuery && window.jQuery(modalId).length) {
+                         window.jQuery(modalId).modal('show');
+                     } else {
+                         // Fallback JS Puro
+                         const m = document.querySelector(modalId);
+                         if(m) {
+                            m.classList.add('show');
+                            m.style.display = 'block';
+                            document.body.classList.add('modal-open');
+                            
+                            // Backdrop
+                            let bd = document.querySelector('.modal-backdrop');
+                            if(!bd) {
+                                bd = document.createElement('div');
+                                bd.className = 'modal-backdrop fade show';
+                                document.body.appendChild(bd);
+                            }
+
+                            const closeAll = () => {
+                                m.classList.remove('show');
+                                m.style.display = 'none';
+                                document.body.classList.remove('modal-open');
+                                if(bd) bd.remove();
+                            };
+                            
+                            m.querySelectorAll('[data-dismiss="modal"]').forEach(c => c.onclick = closeAll);
+                         } else {
+                             console.error("Modal de filtros não encontrado no DOM");
+                             alert("Erro: O formulário de filtros não foi carregado.");
+                         }
+                     }
+                });
+
+                // 2. TENTATIVA COSMÉTICA: Mover para dentro da barra de busca do Jazzmin (se existir)
+                // Isso faz ele ficar bonitinho ao lado da lupa, mas se falhar, ele fica onde criamos acima.
+                setTimeout(() => {
+                    const searchForm = document.getElementById('changelist-search');
+                    // Tenta achar o container de botões (input-group-append)
+                    const appendDiv = searchForm ? searchForm.querySelector('.input-group-append') : null;
+                    
+                    if(appendDiv && btn) {
+                        btn.classList.remove('btn-info'); // Remove cor sólida para combinar, ou mantem
+                        btn.classList.add('btn-info'); // Mantem destaque
+                        btn.style.height = '38px'; // Altura padrão do input bootstrap
+                        btn.style.marginLeft = '5px';
+                        btn.innerHTML = '<i class="fas fa-filter"></i> Filtros'; // Texto curto
+                        appendDiv.appendChild(btn);
+                    }
+                }, 500); // Pequeno delay para garantir que o Jazzmin renderizou tudo
+            }
+
+            // 3. LIMPEZA DE BOTÕES ANTIGOS (Scorched Earth)
+            // Remove qualquer outro botão que se chame "Filtros" para evitar duplicatas,
+            // EXCETO o nosso botão customizado.
+            const allButtons = document.querySelectorAll('button, a.btn');
+            allButtons.forEach(b => {
+                // Protege nossos botões importantes (Abrir Modal e Aplicar Modal)
+                if (b.id === 'btn-open-filter-custom' || b.id === 'btn-apply-filters') return; 
+
+                const txt = (b.innerText || "").trim().toUpperCase();
+                if (txt.includes("FILTROS") || txt === "FILTROS") {
+                    b.style.display = 'none';
+                    b.classList.add('d-none');
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+
+<!-- MODAL DE FILTROS (COMPLETO) -->
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="fas fa-sliders-h"></i> Filtrar Base de Promotores (Busca Completa)</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="filter-form" onsubmit="return false;">
+          <!-- Linha 1: Dados Básicos -->
+          <h6 class="text-info border-bottom pb-2 mb-3">Dados Pessoais</h6>
+          <div class="form-row">
+            <div class="form-group col-md-3">
+              <label>Gênero</label>
+              <select class="form-control" name="genero">
+                <option value="">Todos</option>
+                <option value="feminino">Feminino</option>
+                <option value="masculino">Masculino</option>
+                <option value="nao_binario">Não-Binário</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Nacionalidade</label>
+              <select class="form-control" name="nacionalidade">
+                   <option value="">Todas</option>
+                   <option value="brasileira">Brasileira</option>
+                   <option value="americana">Americana</option>
+                   <option value="espanhola">Espanhola</option>
+                   <option value="italiana">Italiana</option>
+                   <option value="argentina">Argentina</option>
+                   <option value="outra">Outra</option>
+              </select>
+            </div>
+             <div class="form-group col-md-3">
+                 <label>Idade (Min/Max)</label>
+                 <div class="d-flex">
+                     <input type="number" class="form-control mr-1" name="idade_min" placeholder="Min">
+                     <input type="number" class="form-control" name="idade_max" placeholder="Max">
+                 </div>
+             </div>
+             <div class="form-group col-md-3">
+                 <label>Localização (UF/Cidade)</label>
+                 <div class="d-flex">
+                    <input type="text" class="form-control mr-1" name="estado" placeholder="UF" maxlength="2" style="width: 60px;">
+                    <input type="text" class="form-control" name="cidade" placeholder="Cidade">
+                 </div>
+             </div>
+          </div>
+
+          <!-- Linha 2: Aparência -->
+          <h6 class="text-info border-bottom pb-2 mb-3 mt-2">Aparência Física</h6>
+          <div class="form-row">
+            <div class="form-group col-md-3">
+              <label>Etnia</label>
+              <select class="form-control" name="etnia">
+                <option value="">Todas</option>
+                <option value="branca">Branca</option>
+                <option value="preta">Preta</option>
+                <option value="parda">Parda</option>
+                <option value="amarela">Amarela</option>
+                <option value="indigena">Indígena</option>
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Olhos</label>
+              <select class="form-control" name="olhos">
+                <option value="">Todos</option>
+                <option value="castanho_escuro">Castanho Escuro</option>
+                <option value="castanho_claro">Castanho Claro</option>
+                <option value="azul">Azul</option>
+                <option value="verde">Verde</option>
+                <option value="mel">Mel</option>
+                <option value="preto">Preto</option>
+                <option value="heterocromia">Heterocromia</option>
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Cabelo (Tipo)</label>
+              <select class="form-control" name="cabelo_tipo">
+                <option value="">Todos</option>
+                <option value="liso">Liso</option>
+                <option value="ondulado">Ondulado</option>
+                <option value="cacheado">Cacheado</option>
+                <option value="crespo">Crespo</option>
+                <option value="black_power">Black Power</option>
+                <option value="dread">Dreadlocks</option>
+                <option value="trancas">Tranças</option>
+              </select>
+            </div>
+             <div class="form-group col-md-3">
+              <label>Cabelo (Comp.)</label>
+              <select class="form-control" name="cabelo_comprimento">
+                <option value="">Todos</option>
+                <option value="curto">Curto</option>
+                <option value="medio">Médio</option>
+                <option value="longo">Longo</option>
+                <option value="careca">Careca/Raspado</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Linha 3: Medidas, Inclusão e Profissional -->
+          <h6 class="text-info border-bottom pb-2 mb-3 mt-2">Medidas & Vestuário</h6>
+          <div class="form-row">
+             <div class="form-group col-md-3">
+                <label>Altura (m)</label>
+                <div class="d-flex">
+                   <input type="number" step="0.01" class="form-control mr-1" name="altura_min" placeholder="Min">
+                   <input type="number" step="0.01" class="form-control" name="altura_max" placeholder="Max">
+                </div>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Peso (kg)</label>
+                <div class="d-flex">
+                   <input type="number" class="form-control mr-1" name="peso_min" placeholder="Min">
+                   <input type="number" class="form-control" name="peso_max" placeholder="Max">
+                </div>
+            </div>
+             <div class="form-group col-md-2">
+                <label>Camiseta</label>
+                <select class="form-control" name="tamanho_camiseta">
+                      <option value="">Todos</option>
+                      <option value="PP">PP</option>
+                      <option value="P">P</option>
+                      <option value="M">M</option>
+                      <option value="G">G</option>
+                      <option value="GG">GG</option>
+                      <option value="XG">XG</option>
+                </select>
+            </div>
+            <div class="form-group col-md-2">
+                <label>Manequim</label>
+                <input type="text" class="form-control" name="manequim" placeholder="Ex: 38">
+            </div>
+             <div class="form-group col-md-2">
+                 <label>Calçado</label>
+                 <input type="number" class="form-control" name="calcado" placeholder="Ex: 37">
+             </div>
+          </div>
+
+           <!-- 4. PROFISSIONAL -->
+           <h6 class="text-info border-bottom pb-2 mb-3 mt-3">Perfil Profissional & Inclusão</h6>
+           <div class="form-row">
+               <div class="form-group col-md-3">
+                  <label>Inglês</label>
+                  <select class="form-control" name="nivel_ingles">
+                      <option value="">Indiferente</option>
+                      <option value="basico">Básico</option>
+                      <option value="intermediario">Intermediário</option>
+                      <option value="fluente">Fluente/Nativo</option>
+                  </select>
+               </div>
+               
+               <div class="form-group col-md-3">
+                  <label>Experiência</label>
+                  <select class="form-control" name="experiencia">
+                      <option value="">Indiferente</option>
+                      <option value="sem_experiencia">Sem Experiência</option>
+                      <option value="pouca">Pouca</option>
+                      <option value="media">Média</option>
+                      <option value="muita">Muita (Expert)</option>
+                  </select>
+               </div>
+                <div class="form-group col-md-3">
+                  <label>Disponibilidade</label>
+                  <select class="form-control" name="disponibilidade">
+                      <option value="">Indiferente</option>
+                      <option value="total">Total</option>
+                      <option value="fds">Final de Semana</option>
+                      <option value="seg_sex">Seg a Sex</option>
+                      <option value="freelancer">Freelancer</option>
+                  </select>
+                </div>
+                 <div class="form-group col-md-3">
+                     <label>PCD?</label>
+                     <select class="form-control" name="is_pcd">
+                         <option value="">Indiferente</option>
+                         <option value="1">Sim</option>
+                         <option value="0">Não</option>
+                     </select>
+                 </div>
+           </div>
+
+            <!-- 5. BUSCA ESPECIFICA -->
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Áreas de Atuação (Palavras-chave)</label>
+                    <input type="text" class="form-control" name="areas_atuacao" placeholder="Ex: garçom, modelo, recepcao">
+                </div>
+                 <div class="form-group col-md-6">
+                    <label>Bairro</label>
+                    <input type="text" class="form-control" name="bairro" placeholder="Ex: Centro, Savassi...">
+                </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer bg-light justify-content-between">
+        <div>
+            <button type="button" class="btn btn-warning" onclick="limparFiltros()">
+                <i class="fas fa-trash-alt"></i> Limpar Tudo
+            </button>
+        </div>
+        <div>
+            <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Fechar</button>
+            <button type="button" class="btn btn-success btn-lg" id="btn-apply-filters">
+                <i class="fas fa-check"></i> <strong>APLICAR FILTROS</strong>
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let $ = window.jQuery || window.django.jQuery;
+
+        // 1. Move Modal to Body
+        const modalEl = document.getElementById('filterModal');
+        if (modalEl && document.body) {
+            document.body.appendChild(modalEl);
+        }
+
+        // 2. Load params from URL into Form
+        const urlParams = new URLSearchParams(window.location.search);
+        const form = document.getElementById('filter-form');
+        let activeTags = [];
+
+        for (let pair of urlParams.entries()) {
+            const key = pair[0];
+            const val = pair[1];
+            
+            if(form.elements[key]) {
+                form.elements[key].value = val;
+
+                // Create display tag
+                let displayVal = val;
+                if(form.elements[key].tagName === 'SELECT') {
+                    const opt = Array.from(form.elements[key].options).find(o => o.value === val);
+                    if(opt) displayVal = opt.text;
+                }
+                
+                activeTags.push(`
+                    <span class="badge badge-info active-filter-tag p-2">
+                        ${displayVal} <i class="fas fa-times ml-1" style="cursor:pointer" onclick="removeFilter('${key}')"></i>
+                    </span>
+                `);
+            }
+        }
+        
+        const displayContainer = document.getElementById('active-filters-display');
+        if(displayContainer && activeTags.length > 0) {
+            displayContainer.innerHTML = 'Filtros ativos: ' + activeTags.join(' ');
+        }
+
+        // 3. REMOVE FILTER BUTTON (Requested by User)
+        // Localiza qualquer botão de filtro existente e o remove da tela.
+        // O usuario quer apenas as abas de status (Aprovados, Pendentes, etc).
+        const possibleButtons = document.querySelectorAll('#btn-open-sidebar, [data-target="#changelist-filter"], .btn-filtros-avancados, button[data-dashlane-label="true"]');
+        
+        possibleButtons.forEach(btn => {
+            btn.style.display = 'none'; // Esconde visualmente
+            // Ou remover do DOM se preferir: btn.remove();
+        });
+
+        // Tenta remover também se estiver dentro de um wrapper específico do Jazzmin
+        const searchFilterBtn = document.querySelector('.search-button[data-target="#changelist-filter"]');
+        if(searchFilterBtn) searchFilterBtn.style.display = 'none';
+        
+        // Assegura que a sidebar nativa nao abra via CSS e JS
+        const sidebar = document.getElementById('changelist-filter');
+        if(sidebar) sidebar.style.display = 'none';
+
+        // 4. Submit logic (Unificado para Botão e Enter no form)
+        const applyFilters = function() {
+                const formData = new FormData(form);
+                const currentParams = new URLSearchParams(window.location.search);
+                
+                // Reset page to 1 on new filter
+                currentParams.delete('p');
+
+                for(let [key, val] of formData.entries()) {
+                    if(val && val.trim() !== '') {
+                        currentParams.set(key, val);
+                    } else {
+                        currentParams.delete(key);
+                    }
+                }
+                
+                window.location.search = currentParams.toString();
+        };
+
+        const btnApply = document.getElementById('btn-apply-filters');
+        if(btnApply) {
+            btnApply.addEventListener('click', applyFilters);
+        }
+        
+        // Também permitir envio ao pressionar Enter dentro do form
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            applyFilters();
+        });
+
+        // 5. Clear helpers
+        window.removeFilter = function(key) {
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.delete(key);
+            window.location.search = currentParams.toString();
+        }
+
+        window.limparFiltros = function() {
+            window.location.search = ''; // or keep 'q' (search term)? 
+            // Better to keep Search term if exists?
+            // Usually "Limpar filtros" implies clearing specific filters, keeping search text.
+            // Let's keep 'q'.
+            const currentParams = new URLSearchParams(window.location.search);
+            const q = currentParams.get('q');
+            if(q) {
+                window.location.search = '?q=' + encodeURIComponent(q);
+            } else {
+                window.location.href = window.location.pathname;
+            }
+        }
+    });
+</script>
+{% endblock %}

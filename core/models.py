@@ -811,3 +811,10 @@ class ApresentacaoItem(models.Model):
 
     def __str__(self):
         return f"{self.promotor.nome_completo}"
+
+
+class PromotorApresentacao(UserProfile):
+    class Meta:
+        proxy = True
+        verbose_name = 'Apresentação'
+        verbose_name_plural = 'Apresentação'

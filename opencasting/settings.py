@@ -131,13 +131,10 @@ JAZZMIN_SETTINGS = {
     "site_brand": "Casting Certo",
     "welcome_sign": "Painel de Controle Administrativo",
     "copyright": "Gouvea Automações",
-    "search_model": ["core.UserProfile"],
+    "search_model": [],
 
     # Menu Superior
-    "topmenu_links": [
-        {"name": "Ver Site (Área do Candidato)", "url": "home", "permissions": ["auth.view_user"]},
-        {"name": "Suporte Técnico", "url": "https://wa.me/5511999999999", "new_window": True},
-    ],
+    "topmenu_links": [],
 
     # Organização do Menu Lateral
     "order_with_respect_to": [

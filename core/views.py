@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from django.http import JsonResponse
+from django.db.models import Q
 from .models import Job, Candidatura, UserProfile, Pergunta, Resposta, Avaliacao, Apresentacao
 from .forms import CadastroForm
 import datetime
@@ -733,3 +735,72 @@ def avaliar_promotor(request, uuid):
             
     return render(request, 'publico_avaliar.html', {'perfil': perfil})
 
+
+
+@login_required
+def api_search_promoters(request):
+    term = request.GET.get('q', '').strip()
+    
+    # Base QuerySet: Apenas aprovados
+    qs = UserProfile.objects.filter(status='aprovado')
+
+    if term:
+        # Se tiver busca, filtra por nome ou CPF
+        qs = qs.filter(Q(nome_completo__icontains=term) | Q(cpf__icontains=term))
+    
+    # Limita e ordena (traz os 50 primeiros em ordem alfabética para facilitar a busca visual)
+    qs = qs.order_by('nome_completo')
+
+    # --- FILTROS EXTENDIDOS (Popup) ---
+    f_genero = request.GET.get('genero', '').strip()
+    if f_genero:
+        qs = qs.filter(genero=f_genero)
+
+    f_etnia = request.GET.get('etnia', '').strip()
+    if f_etnia:
+        qs = qs.filter(etnia=f_etnia)
+        
+    f_cabelo_tipo = request.GET.get('cabelo_tipo', '').strip()
+    if f_cabelo_tipo:
+        qs = qs.filter(cabelo_tipo=f_cabelo_tipo)
+        
+    f_cabelo_comprimento = request.GET.get('cabelo_comprimento', '').strip()
+    if f_cabelo_comprimento:
+        qs = qs.filter(cabelo_comprimento=f_cabelo_comprimento)
+
+    f_olhos = request.GET.get('olhos', '').strip()
+    if f_olhos:
+        qs = qs.filter(olhos=f_olhos)
+        
+    f_cidade = request.GET.get('cidade', '').strip()
+    if f_cidade:
+        qs = qs.filter(cidade__icontains=f_cidade)
+
+    f_estado = request.GET.get('estado', '').strip()
+    if f_estado:
+        qs = qs.filter(estado__iexact=f_estado)
+
+    # Limita (traz os 50 primeiros)
+    qs = qs[:50]
+
+    results = []
+    today = datetime.date.today()
+    for p in qs:
+        foto = p.foto_rosto.url if p.foto_rosto else None
+        
+        # Calcular Idade
+        idade = None
+        if p.data_nascimento:
+            idade = today.year - p.data_nascimento.year - ((today.month, today.day) < (p.data_nascimento.month, p.data_nascimento.day))
+        
+        results.append({
+            'id': p.pk, 
+            'text': p.nome_completo, 
+            'foto': foto, 
+            'cidade': p.cidade, 
+            'uf': p.estado,
+            'genero': p.get_genero_display() if p.genero else None,
+            'altura': str(p.altura).replace('.', ',') if p.altura else None,
+            'idade': idade
+        })
+    return JsonResponse({'results': results})

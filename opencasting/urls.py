@@ -39,6 +39,7 @@ urlpatterns = [
     # 7. PÁGINAS INSTITUCIONAIS
     path('quem-somos/', views.quem_somos, name='quem_somos'),
     path('privacidade/', views.privacidade, name='privacidade'),
+    path('api/search-promoters/', views.api_search_promoters, name='api_search_promoters'),
 ]
 
 # CONFIGURAÇÃO PARA ARQUIVOS DE MÍDIA (FOTOS)

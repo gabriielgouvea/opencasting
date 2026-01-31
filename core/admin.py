@@ -54,6 +54,7 @@ from .models import (
     ContatoSite,
     Apresentacao,
     ApresentacaoItem,
+    PromotorApresentacao,
 )
 
 import requests
@@ -539,9 +540,8 @@ class UserProfileAdmin(admin.ModelAdmin):
     Controlador Master da Base de Promotores.
     Focado em triagem absoluta e filtros de alta precisão.
     """
-    # A linha abaixo foi comentada para evitar conflito com o Jazzmin.
-    # O Jazzmin gerencia a lista automaticamente e garante que os filtros sejam renderizados.
-    # change_list_template = "admin/change_list.html"
+    # Template customizado com Modal de Filtros
+    change_list_template = "admin/core/userprofile/change_list.html"
     change_form_template = "admin/core/userprofile/change_form.html"
 
     form = UserProfileAdminForm
@@ -589,6 +589,20 @@ class UserProfileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         p = request.GET
 
+        # --- FILTROS ESPECIAIS (MODAL) ---
+        if p.get('cidade'):
+            qs = qs.filter(cidade__icontains=p.get('cidade'))
+        if p.get('estado'):
+            qs = qs.filter(estado__iexact=p.get('estado'))
+        if p.get('bairro'):
+            qs = qs.filter(bairro__icontains=p.get('bairro'))
+        if p.get('areas_atuacao'):
+            qs = qs.filter(areas_atuacao__icontains=p.get('areas_atuacao'))
+        if p.get('manequim'):
+            qs = qs.filter(manequim__exact=p.get('manequim'))
+        if p.get('calcado'):  # Filtro direto do modal
+            qs = qs.filter(calcado__exact=p.get('calcado'))
+            
         # Filtro de Idade
         if p.get('idade_min'): 
             try:
@@ -618,7 +632,12 @@ class UserProfileAdmin(admin.ModelAdmin):
 
         # Processamento das Faixas Solicitadas
         qs = apply_range(qs, 'altura_min', 'altura_max', 'altura')
-        qs = apply_range(qs, 'peso_min', 'peso_max', 'peso')
+        # qs = apply_range(qs, 'peso_min', 'peso_max', 'peso') # Ajuste: peso pode vir so como peso_min do modal
+        if p.get('peso_min'):
+            qs = qs.filter(peso__gte=clean_number(p.get('peso_min')))
+        if p.get('peso_max'):
+             qs = qs.filter(peso__lte=clean_number(p.get('peso_max')))
+             
         qs = apply_range(qs, 'sapato_min', 'sapato_max', 'calcado')
 
         # ------------------------------------------------------------------
@@ -1866,3 +1885,16 @@ class ConfiguracaoSiteAdmin(admin.ModelAdmin):
 admin.site.register(CpfBanido)
 
 # FIM DO ARQUIVO ADMIN.PY V6.0
+
+@admin.register(PromotorApresentacao)
+class PromotorApresentacaoAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/core/promotorapresentacao/change_list.html'
+    search_fields = ('nome_completo',)
+    list_display = ('nome_completo', 'foto_rosto_thumb')
+    actions = [gerar_link_apresentacao]
+
+    def foto_rosto_thumb(self, obj):
+        if obj.foto_rosto:
+             return format_html('<img src="{}" width="40" height="40" style="border-radius:50%;" />', obj.foto_rosto.url)
+        return "-"
+    foto_rosto_thumb.short_description = "Foto"
