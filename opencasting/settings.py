@@ -138,13 +138,14 @@ JAZZMIN_SETTINGS = {
 
     # Organização do Menu Lateral
     "order_with_respect_to": [
-        "core.UserProfile", # Promotores
-        "core.Cliente",     # Clientes
-        "core.orcamento",   # Orçamentos
-        "core.Job",         # Vagas
-        "core.Candidatura", # Candidaturas
-        "core.Apresentacao", # Apresentações 
-        "auth.User",        # Equipe Interna
+        "core.UserProfile",          # Promotores
+        "core.Cliente",              # Clientes
+        "core.orcamento",            # Orçamentos
+        "core.Job",                  # Vagas
+        "core.Candidatura",          # Candidaturas
+        "core.apresentacao",         # Apresentações (minúsculo para garantir)
+        "core.promotorapresentacao", # Promotor Apresentação
+        "auth.User",                 # Equipe Interna
     ],
 
     # Ícones
@@ -157,6 +158,7 @@ JAZZMIN_SETTINGS = {
         "core.job": "fas fa-briefcase",
         "core.candidatura": "fas fa-file-signature",
         "core.apresentacao": "fas fa-share-alt",
+        "core.promotorapresentacao": "fas fa-users",
         "core.pergunta": "fas fa-question-circle",
         "core.avaliacao": "fas fa-star",
         "core.configuracaosite": "fas fa-sliders-h", 
