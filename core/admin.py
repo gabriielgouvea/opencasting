@@ -1218,8 +1218,8 @@ class JobAdmin(admin.ModelAdmin):
     changeform_format = 'single'
 
     list_display = ('titulo', 'empresa', 'status', 'data_pagamento')
-    list_filter = ('status', 'data_pagamento')
-    search_fields = ('titulo', 'empresa', 'cidade', 'estado', 'endereco', 'local')
+    # list_filter = ('status', 'data_pagamento')
+    # search_fields = ('titulo', 'empresa', 'cidade', 'estado', 'endereco', 'local')
 
     readonly_fields = ('latitude', 'longitude', 'geocodificado_em', 'criado_em')
 
@@ -1254,13 +1254,29 @@ class JobAdmin(admin.ModelAdmin):
         'criado_em',
     )
 
-admin.site.register(Candidatura)
-admin.site.register(Resposta)
-admin.site.register(Avaliacao)
 
+@admin.register(Candidatura)
+class CandidaturaAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'status', 'data_candidatura')
+    class Media:
+        js = ('js/admin_custom.js',)
+        css = {'all': ('css/admin_custom.css',)}
+
+@admin.register(Resposta)
+class RespostaAdmin(admin.ModelAdmin):
+    class Media:
+        js = ('js/admin_custom.js',)
+        css = {'all': ('css/admin_custom.css',)}
+
+@admin.register(Avaliacao)
+class AvaliacaoAdmin(admin.ModelAdmin):
+    class Media:
+        js = ('js/admin_custom.js',)
+        css = {'all': ('css/admin_custom.css',)}
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
+
     changeform_format = 'single'
     list_display = ('razao_social', 'nome_fantasia', 'cnpj_formatado', 'cidade', 'uf', 'email_nfe')
     search_fields = (
@@ -1319,9 +1335,9 @@ class ClienteAdmin(admin.ModelAdmin):
     )
 
     class Media:
-        js = ('core/js/admin_cliente.js',)
+        js = ('core/js/admin_cliente.js', 'js/admin_custom.js')
         css = {
-            'all': ('core/css/admin_cliente.css',)
+            'all': ('core/css/admin_cliente.css', 'css/admin_custom.css')
         }
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
@@ -1507,9 +1523,9 @@ class OrcamentoAdmin(admin.ModelAdmin):
     change_form_template = 'admin/core/orcamento/change_form.html'
 
     class Media:
-        js = ('core/js/admin_orcamento.js?v=20260105-7',)
+        js = ('core/js/admin_orcamento.js?v=20260105-7', 'js/admin_custom.js')
         css = {
-            'all': ('core/css/admin_orcamento.css?v=20260105-7',)
+            'all': ('core/css/admin_orcamento.css?v=20260105-7', 'css/admin_custom.css')
         }
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):

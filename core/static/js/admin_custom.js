@@ -1307,17 +1307,24 @@
 
         // Cria toolbar (tabs + busca + botão filtros) - SOMENTE Base de Promotores
         try {
-            if (!isUserProfileChangeList) {
-                // não mexer em outras telas
+            // MODIFICADO: Permite Toolbar em outras telas, mas esconde abas/filtros específicos
+            const isAnyChangeList = document.body.classList.contains('change-list');
+            if (!isAnyChangeList || path.includes('/admin/core/job/')) {
+                // não mexer em outras telas ou no Job (que pediu pra tirar)
             } else if (!document.getElementById('custom-filter-toolbar')) {
                 const form = document.getElementById('changelist-form');
                 if (form) {
                     const toolbar = document.createElement('div');
                     toolbar.id = 'custom-filter-toolbar';
                     toolbar.innerLoc = '1';
+                    
+                    // Configuração de exibição baseada na tela
+                    const displayStyle = isUserProfileChangeList ? '' : 'visibility:hidden; width:0; overflow:hidden;';
+                    const ph = isUserProfileChangeList ? "Pesquisar (nome, CPF, WhatsApp...)" : "Pesquisar...";
+
                     toolbar.innerHTML = `
                         <div class="toolbar-actions">
-                            <div class="oc-toolbar-left">
+                            <div class="oc-toolbar-left" style="${displayStyle}">
                                 <div class="oc-status-tabs" id="oc-status-tabs" style="display:none;">
                                     <a class="oc-status-tab" id="oc-tab-aprovados" href="/admin/core/userprofile/aprovados/">Aprovados</a>
                                     <a class="oc-status-tab" id="oc-tab-pendentes" href="/admin/core/userprofile/pendentes/">Pendentes</a>
@@ -1326,10 +1333,10 @@
                             </div>
 
                             <div class="oc-toolbar-center">
-                                <input id="oc-live-search" type="search" placeholder="Pesquisar (nome, CPF, WhatsApp...)" autocomplete="off" />
+                                <input id="oc-live-search" type="search" placeholder="${ph}" autocomplete="off" />
                             </div>
 
-                            <div class="oc-toolbar-right" id="oc-toolbar-right">
+                            <div class="oc-toolbar-right" id="oc-toolbar-right" style="${displayStyle}">
                                 <button type="button" id="btn-open-sidebar" class="btn-filtros-avancados">Filtros</button>
                                 <button type="button" id="btn-gerar-apresentacao" class="btn btn-sm btn-primary">Gerar link de apresentação</button>
                                 <button type="button" id="btn-limpar-selecao" class="btn btn-sm btn-light">Limpar seleção</button>
