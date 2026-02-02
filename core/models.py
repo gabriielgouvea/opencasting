@@ -458,6 +458,19 @@ class UserProfile(models.Model):
     motivo_reprovacao = models.CharField(max_length=50, choices=MOTIVOS_REPROVACAO, blank=True, null=True, verbose_name="Motivo (Se reprovado)")
     observacao_admin = models.TextField(blank=True, null=True, verbose_name="Mensagem para a Modelo")
     data_reprovacao = models.DateTimeField(blank=True, null=True, verbose_name="Data da Reprovação")
+
+    class Meta:
+        # Se usarmos apenas "verbose_name = UserProfile", o Django/Jazzmin pode exibir "Userprofile"
+        # Para ficar "Base de Promotores" no admin, definimos aqui:
+        verbose_name = "Base de Promotores"
+        verbose_name_plural = "Base de Promotores"
+
+    def __str__(self):
+        return f"{self.nome_completo}"
+
+    def nome_com_status(self):
+        s = self.user.username
+        return f"{self.nome_completo} ({s})"
     bloqueado_ate = models.DateField(blank=True, null=True, verbose_name="Bloqueado até")
 
     # Termos

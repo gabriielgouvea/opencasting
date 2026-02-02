@@ -1905,7 +1905,7 @@ class ApresentacaoItemInline(admin.TabularInline):
     extra = 0
     raw_id_fields = ('promotor',)
 
-@admin.register(Apresentacao)
+# @admin.register(Apresentacao)
 class ApresentacaoAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'criado_em', 'expira_em', 'items_count', 'is_expirada_chk')
     readonly_fields = ('uuid', 'link_publico')
