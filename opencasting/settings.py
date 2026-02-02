@@ -143,6 +143,7 @@ JAZZMIN_SETTINGS = {
         "core.orcamento",   # Orçamentos
         "core.Job",         # Vagas
         "core.Candidatura", # Candidaturas
+        "core.Apresentacao", # Apresentações 
         "auth.User",        # Equipe Interna
     ],
 
@@ -155,6 +156,7 @@ JAZZMIN_SETTINGS = {
         "core.orcamento": "fas fa-file-invoice-dollar",
         "core.job": "fas fa-briefcase",
         "core.candidatura": "fas fa-file-signature",
+        "core.apresentacao": "fas fa-share-alt",
         "core.pergunta": "fas fa-question-circle",
         "core.avaliacao": "fas fa-star",
         "core.configuracaosite": "fas fa-sliders-h", 
