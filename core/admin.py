@@ -1900,6 +1900,32 @@ class ConfiguracaoSiteAdmin(admin.ModelAdmin):
 
 admin.site.register(CpfBanido)
 
+class ApresentacaoItemInline(admin.TabularInline):
+    model = ApresentacaoItem
+    extra = 0
+    raw_id_fields = ('promotor',)
+
+@admin.register(Apresentacao)
+class ApresentacaoAdmin(admin.ModelAdmin):
+    list_display = ('uuid', 'criado_em', 'expira_em', 'items_count', 'is_expirada_chk')
+    readonly_fields = ('uuid', 'link_publico')
+    inlines = [ApresentacaoItemInline]
+
+    def items_count(self, obj):
+        return obj.itens.count()
+    items_count.short_description = "Qtd. Modelos"
+
+    def is_expirada_chk(self, obj):
+        return obj.is_expirada()
+    is_expirada_chk.short_description = "Expirada?"
+    is_expirada_chk.boolean = True
+
+    def link_publico(self, obj):
+        url = reverse('apresentacao_publica', kwargs={'uuid': obj.uuid})
+        return format_html('<a href="{}" target="_blank">{}</a>', url, url)
+    link_publico.short_description = "Link Publico"
+
+
 # FIM DO ARQUIVO ADMIN.PY V6.0
 
 @admin.register(PromotorApresentacao)
@@ -1908,6 +1934,10 @@ class PromotorApresentacaoAdmin(admin.ModelAdmin):
     search_fields = ('nome_completo',)
     list_display = ('nome_completo', 'foto_rosto_thumb')
     actions = [gerar_link_apresentacao]
+
+    class Media:
+        js = ('js/admin_custom.js',)
+        css = {'all': ('css/admin_custom.css',)}
 
     def foto_rosto_thumb(self, obj):
         if obj.foto_rosto:
