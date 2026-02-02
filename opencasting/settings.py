@@ -137,16 +137,16 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [],
 
     # Organização do Menu Lateral
-    "order_with_respect_to": [
-        "core.UserProfile",          # Promotores
-        "core.Cliente",              # Clientes
-        "core.orcamento",            # Orçamentos
-        "core.Job",                  # Vagas
-        "core.Candidatura",          # Candidaturas
-        "core.apresentacao",         # Apresentações (minúsculo para garantir)
-        "core.promotorapresentacao", # Promotor Apresentação
-        "auth.User",                 # Equipe Interna
-    ],
+    # "order_with_respect_to": [
+    #     "core.UserProfile",          # Promotores
+    #     "core.Cliente",              # Clientes
+    #     "core.Orcamento",            # Orçamentos
+    #     "core.Job",                  # Vagas
+    #     "core.Candidatura",          # Candidaturas
+    #     "core.Apresentacao",         # Apresentações
+    #     "core.PromotorApresentacao", # Promotor Apresentação
+    #     "auth.User",                 # Equipe Interna
+    # ],
 
     # Ícones
     "icons": {
