@@ -5,6 +5,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db import IntegrityError
 from django.utils import timezone
 from .models import Job, Candidatura, UserProfile, Pergunta, Resposta, Avaliacao, Apresentacao
 from .forms import CadastroForm
@@ -14,6 +15,136 @@ import math
 from pathlib import Path
 from django.templatetags.static import static
 from django.utils.encoding import iri_to_uri
+
+
+# ==============================================================================
+# FUNÇÕES AUXILIARES (usadas em lista_vagas e detalhe_vaga)
+# ==============================================================================
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    r = 6371.0
+    p1 = math.radians(float(lat1))
+    p2 = math.radians(float(lat2))
+    dp = math.radians(float(lat2) - float(lat1))
+    dl = math.radians(float(lon2) - float(lon1))
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return r * c
+
+
+def _parse_csv_set(raw: str):
+    raw = (raw or '').strip()
+    if not raw:
+        return set()
+    return {p.strip() for p in raw.replace('\n', ',').split(',') if p and p.strip()}
+
+
+def _parse_areas(raw: str):
+    raw = (raw or '').strip()
+    if not raw:
+        return set()
+    raw = raw.split('Outros:', 1)[0]
+    parts = [p.strip() for p in raw.split(',') if p and p.strip()]
+    allowed = {k for (k, _lbl) in UserProfile.AREAS_ATUACAO_CHOICES}
+    label_to_value = {str(lbl).casefold(): val for val, lbl in UserProfile.AREAS_ATUACAO_CHOICES}
+    out = set()
+    for part in parts:
+        if part in allowed:
+            out.add(part)
+            continue
+        mapped = label_to_value.get(str(part).casefold())
+        if mapped:
+            out.add(mapped)
+    return out
+
+
+def _idioma_rank(val: str | None) -> int:
+    order = {'basico': 1, 'intermediario': 2, 'fluente': 3}
+    return order.get(val or '', 0)
+
+
+def _fit_info(job: Job, perfil: UserProfile):
+    total = 0
+    passed = 0
+
+    job_serv = _parse_areas(job.tipo_servico)
+    if job_serv:
+        total += 1
+        perfil_serv = _parse_areas(perfil.areas_atuacao)
+        if perfil_serv.intersection(job_serv):
+            passed += 1
+
+    if getattr(job, 'requer_experiencia', False):
+        total += 1
+        if (perfil.experiencia or '') != 'sem_experiencia':
+            passed += 1
+
+    generos = _parse_csv_set(job.generos_aceitos)
+    if generos:
+        total += 1
+        if (perfil.genero or '') in generos:
+            passed += 1
+
+    etnias = _parse_csv_set(job.etnias_aceitas)
+    if etnias:
+        total += 1
+        if (perfil.etnia or '') in etnias:
+            passed += 1
+
+    olhos = _parse_csv_set(getattr(job, 'olhos_aceitos', '') or '')
+    if olhos:
+        total += 1
+        if (perfil.olhos or '') in olhos:
+            passed += 1
+
+    cabelo_tipos = _parse_csv_set(getattr(job, 'cabelo_tipos_aceitos', '') or '')
+    if cabelo_tipos:
+        total += 1
+        if (perfil.cabelo_tipo or '') in cabelo_tipos:
+            passed += 1
+
+    cabelo_comps = _parse_csv_set(getattr(job, 'cabelo_comprimentos_aceitos', '') or '')
+    if cabelo_comps:
+        total += 1
+        if (getattr(perfil, 'cabelo_comprimento', None) or '') in cabelo_comps:
+            passed += 1
+
+    if job.nivel_ingles_min:
+        total += 1
+        if _idioma_rank(perfil.nivel_ingles) >= _idioma_rank(job.nivel_ingles_min):
+            passed += 1
+
+    if total == 0:
+        return {
+            'status': 'good',
+            'message': 'Sem exigências obrigatórias — seu perfil pode se candidatar.',
+            'passed': 0,
+            'total': 0,
+        }
+
+    if passed == total:
+        return {
+            'status': 'good',
+            'message': 'Seu perfil atende aos requisitos.',
+            'passed': passed,
+            'total': total,
+        }
+
+    missing = total - passed
+    if missing <= 1 or (passed / total) >= 0.7:
+        return {
+            'status': 'almost',
+            'message': 'Seu perfil atende a quase todos requisitos.',
+            'passed': passed,
+            'total': total,
+        }
+
+    return {
+        'status': 'bad',
+        'message': 'Seu perfil não atende aos requisitos.',
+        'passed': passed,
+        'total': total,
+    }
 
 
 def _get_landing_gallery_items(max_items: int = 18):
@@ -225,136 +356,6 @@ def lista_vagas(request):
     if perfil.foto_rosto: progresso += 25
     if perfil.foto_corpo: progresso += 25
     progresso = min(progresso, 100)
-    
-    def _haversine_km(lat1, lon1, lat2, lon2):
-        r = 6371.0
-        p1 = math.radians(float(lat1))
-        p2 = math.radians(float(lat2))
-        dp = math.radians(float(lat2) - float(lat1))
-        dl = math.radians(float(lon2) - float(lon1))
-        a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        return r * c
-
-    def _parse_csv_set(raw: str):
-        raw = (raw or '').strip()
-        if not raw:
-            return set()
-        return {p.strip() for p in raw.replace('\n', ',').split(',') if p and p.strip()}
-
-    def _parse_areas(raw: str):
-        # Aceita tokens ou labels legados; ignora "Outros: ..."
-        raw = (raw or '').strip()
-        if not raw:
-            return set()
-        raw = raw.split('Outros:', 1)[0]
-        parts = [p.strip() for p in raw.split(',') if p and p.strip()]
-        allowed = {k for (k, _lbl) in UserProfile.AREAS_ATUACAO_CHOICES}
-        label_to_value = {str(lbl).casefold(): val for val, lbl in UserProfile.AREAS_ATUACAO_CHOICES}
-        out = set()
-        for part in parts:
-            if part in allowed:
-                out.add(part)
-                continue
-            mapped = label_to_value.get(str(part).casefold())
-            if mapped:
-                out.add(mapped)
-        return out
-
-    def _idioma_rank(val: str | None) -> int:
-        order = {'basico': 1, 'intermediario': 2, 'fluente': 3}
-        return order.get(val or '', 0)
-
-    def _fit_info(job: Job, perfil: UserProfile):
-        total = 0
-        passed = 0
-
-        # Tipo de serviço
-        job_serv = _parse_areas(job.tipo_servico)
-        if job_serv:
-            total += 1
-            perfil_serv = _parse_areas(perfil.areas_atuacao)
-            if perfil_serv.intersection(job_serv):
-                passed += 1
-
-        # Experiência
-        if getattr(job, 'requer_experiencia', False):
-            total += 1
-            if (perfil.experiencia or '') != 'sem_experiencia':
-                passed += 1
-
-        # Sexo/Gênero
-        generos = _parse_csv_set(job.generos_aceitos)
-        if generos:
-            total += 1
-            if (perfil.genero or '') in generos:
-                passed += 1
-
-        # Etnia
-        etnias = _parse_csv_set(job.etnias_aceitas)
-        if etnias:
-            total += 1
-            if (perfil.etnia or '') in etnias:
-                passed += 1
-
-        # Cor dos olhos
-        olhos = _parse_csv_set(getattr(job, 'olhos_aceitos', '') or '')
-        if olhos:
-            total += 1
-            if (perfil.olhos or '') in olhos:
-                passed += 1
-
-        # Tipo de cabelo
-        cabelo_tipos = _parse_csv_set(getattr(job, 'cabelo_tipos_aceitos', '') or '')
-        if cabelo_tipos:
-            total += 1
-            if (perfil.cabelo_tipo or '') in cabelo_tipos:
-                passed += 1
-
-        # Comprimento do cabelo
-        cabelo_comps = _parse_csv_set(getattr(job, 'cabelo_comprimentos_aceitos', '') or '')
-        if cabelo_comps:
-            total += 1
-            if (getattr(perfil, 'cabelo_comprimento', None) or '') in cabelo_comps:
-                passed += 1
-
-        # Inglês mínimo
-        if job.nivel_ingles_min:
-            total += 1
-            if _idioma_rank(perfil.nivel_ingles) >= _idioma_rank(job.nivel_ingles_min):
-                passed += 1
-
-        if total == 0:
-            return {
-                'status': 'good',
-                'message': 'Sem exigências obrigatórias — seu perfil pode se candidatar.',
-                'passed': 0,
-                'total': 0,
-            }
-
-        if passed == total:
-            return {
-                'status': 'good',
-                'message': 'Seu perfil atende aos requisitos.',
-                'passed': passed,
-                'total': total,
-            }
-
-        missing = total - passed
-        if missing <= 1 or (passed / total) >= 0.7:
-            return {
-                'status': 'almost',
-                'message': 'Seu perfil atende a quase todos requisitos.',
-                'passed': passed,
-                'total': total,
-            }
-
-        return {
-            'status': 'bad',
-            'message': 'Seu perfil não atende aos requisitos.',
-            'passed': passed,
-            'total': total,
-        }
 
     vagas_disponiveis = list(vagas_disponiveis_qs.prefetch_related('dias'))
     perfil_lat = getattr(perfil, 'latitude', None)
@@ -402,126 +403,6 @@ def lista_vagas(request):
 @login_required(login_url='/login/')
 def detalhe_vaga(request, job_id):
     job = get_object_or_404(Job, id=job_id)
-    def _haversine_km(lat1, lon1, lat2, lon2):
-        r = 6371.0
-        p1 = math.radians(float(lat1))
-        p2 = math.radians(float(lat2))
-        dp = math.radians(float(lat2) - float(lat1))
-        dl = math.radians(float(lon2) - float(lon1))
-        a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        return r * c
-
-    def _parse_csv_set(raw: str):
-        raw = (raw or '').strip()
-        if not raw:
-            return set()
-        return {p.strip() for p in raw.replace('\n', ',').split(',') if p and p.strip()}
-
-    def _parse_areas(raw: str):
-        raw = (raw or '').strip()
-        if not raw:
-            return set()
-        raw = raw.split('Outros:', 1)[0]
-        parts = [p.strip() for p in raw.split(',') if p and p.strip()]
-        allowed = {k for (k, _lbl) in UserProfile.AREAS_ATUACAO_CHOICES}
-        label_to_value = {str(lbl).casefold(): val for val, lbl in UserProfile.AREAS_ATUACAO_CHOICES}
-        out = set()
-        for part in parts:
-            if part in allowed:
-                out.add(part)
-                continue
-            mapped = label_to_value.get(str(part).casefold())
-            if mapped:
-                out.add(mapped)
-        return out
-
-    def _idioma_rank(val: str | None) -> int:
-        order = {'basico': 1, 'intermediario': 2, 'fluente': 3}
-        return order.get(val or '', 0)
-
-    def _fit_info(job: Job, perfil: UserProfile):
-        total = 0
-        passed = 0
-
-        job_serv = _parse_areas(job.tipo_servico)
-        if job_serv:
-            total += 1
-            perfil_serv = _parse_areas(perfil.areas_atuacao)
-            if perfil_serv.intersection(job_serv):
-                passed += 1
-
-        if getattr(job, 'requer_experiencia', False):
-            total += 1
-            if (perfil.experiencia or '') != 'sem_experiencia':
-                passed += 1
-
-        generos = _parse_csv_set(job.generos_aceitos)
-        if generos:
-            total += 1
-            if (perfil.genero or '') in generos:
-                passed += 1
-
-        etnias = _parse_csv_set(job.etnias_aceitas)
-        if etnias:
-            total += 1
-            if (perfil.etnia or '') in etnias:
-                passed += 1
-
-        olhos = _parse_csv_set(getattr(job, 'olhos_aceitos', '') or '')
-        if olhos:
-            total += 1
-            if (perfil.olhos or '') in olhos:
-                passed += 1
-
-        cabelo_tipos = _parse_csv_set(getattr(job, 'cabelo_tipos_aceitos', '') or '')
-        if cabelo_tipos:
-            total += 1
-            if (perfil.cabelo_tipo or '') in cabelo_tipos:
-                passed += 1
-
-        cabelo_comps = _parse_csv_set(getattr(job, 'cabelo_comprimentos_aceitos', '') or '')
-        if cabelo_comps:
-            total += 1
-            if (getattr(perfil, 'cabelo_comprimento', None) or '') in cabelo_comps:
-                passed += 1
-
-        if job.nivel_ingles_min:
-            total += 1
-            if _idioma_rank(perfil.nivel_ingles) >= _idioma_rank(job.nivel_ingles_min):
-                passed += 1
-
-        if total == 0:
-            return {
-                'status': 'good',
-                'message': 'Sem exigências obrigatórias — seu perfil pode se candidatar.',
-                'passed': 0,
-                'total': 0,
-            }
-
-        if passed == total:
-            return {
-                'status': 'good',
-                'message': 'Seu perfil atende aos requisitos.',
-                'passed': passed,
-                'total': total,
-            }
-
-        missing = total - passed
-        if missing <= 1 or (passed / total) >= 0.7:
-            return {
-                'status': 'almost',
-                'message': 'Seu perfil atende a quase todos requisitos.',
-                'passed': passed,
-                'total': total,
-            }
-
-        return {
-            'status': 'bad',
-            'message': 'Seu perfil não atende aos requisitos.',
-            'passed': passed,
-            'total': total,
-        }
 
     dias = job.dias.all().order_by('data')
 
@@ -625,10 +506,14 @@ def candidatar_vaga(request, job_id):
             messages.error(request, "Seu cadastro não está aprovado.")
             return redirect('lista_vagas')
 
-        Candidatura.objects.create(job=job, modelo=perfil)
-        messages.success(request, "Candidatura realizada com sucesso! Boa sorte 🍀")
-    except Exception:
-        messages.warning(request, "Você já se candidatou para esta vaga.")
+        if Candidatura.objects.filter(job=job, modelo=perfil).exists():
+            messages.warning(request, "Você já se candidatou para esta vaga.")
+        else:
+            Candidatura.objects.create(job=job, modelo=perfil)
+            messages.success(request, "Candidatura realizada com sucesso! Boa sorte 🍀")
+    except UserProfile.DoesNotExist:
+        messages.error(request, "Complete seu cadastro primeiro.")
+        return redirect('cadastro')
     
     return redirect('detalhe_vaga', job_id=job.id)
 
@@ -718,17 +603,26 @@ def perfil_publico(request, uuid):
 def avaliar_promotor(request, uuid):
     perfil = get_object_or_404(UserProfile, uuid=uuid)
     if request.method == 'POST':
-        nome = request.POST.get('nome')
-        nota = request.POST.get('nota')
-        comentario = request.POST.get('comentario')
+        nome = (request.POST.get('nome') or '').strip()[:100]
+        nota_raw = request.POST.get('nota')
+        comentario = (request.POST.get('comentario') or '').strip()[:2000]
+        
+        # Validação da nota
+        try:
+            nota = int(nota_raw)
+            if nota < 1 or nota > 5:
+                raise ValueError
+        except (TypeError, ValueError):
+            messages.error(request, "Nota inválida. Selecione de 1 a 5.")
+            return render(request, 'publico_avaliar.html', {'perfil': perfil})
+        
         if nome and nota:
             Avaliacao.objects.create(
                 promotor=perfil, 
                 cliente_nome=nome, 
-                nota=int(nota), 
+                nota=nota, 
                 comentario=comentario
             )
-            # Renderiza uma página de sucesso simples ou redireciona
             return render(request, 'avaliacao_sucesso.html', {'perfil': perfil})
             
     return render(request, 'publico_avaliar.html', {'perfil': perfil})

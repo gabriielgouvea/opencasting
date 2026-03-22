@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from django.templatetags.static import static
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,11 +12,19 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-only')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', '1').strip() in {'1', 'true', 'True', 'yes', 'YES'}
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+
+# Segurança em produção
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    X_FRAME_OPTIONS = 'DENY'
 
 # Application definition
 INSTALLED_APPS = [
-    'jazzmin',                  # <--- TEMAS DO ADMIN (Sempre o primeiro)
+    'unfold',                   # <--- TEMA MODERNO DO ADMIN (Sempre primeiro)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -123,89 +133,106 @@ LOGIN_REDIRECT_URL = 'lista_vagas'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 
-# --- CONFIGURAÇÃO DO ADMIN (JAZZMIN) ---
-JAZZMIN_SETTINGS = {
-    # Textos
-    "site_title": "Gestão Casting Certo",
-    "site_header": "Casting Certo Admin",
-    "site_brand": "Casting Certo",
-    "welcome_sign": "Painel de Controle Administrativo",
-    "copyright": "Gouvea Automações",
-    "search_model": ["core.UserProfile"],
-
-    # Menu Superior
-    "topmenu_links": [
-        {"name": "Ver Site (Área do Candidato)", "url": "home", "permissions": ["auth.view_user"]},
-        {"name": "Suporte Técnico", "url": "https://wa.me/5511999999999", "new_window": True},
+# --- CONFIGURAÇÃO DO ADMIN (UNFOLD) ---
+UNFOLD = {
+    "SITE_TITLE": "Casting Certo",
+    "SITE_HEADER": "Casting Certo",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "THEME": "dark",
+    "STYLES": [
+        lambda request: static("css/admin_custom.css"),
     ],
-
-    # Organização do Menu Lateral
-    "order_with_respect_to": [
-        "core.UserProfile", # Promotores
-        "core.Cliente",     # Clientes
-        "core.orcamento",   # Orçamentos
-        "core.Job",         # Vagas
-        "core.Candidatura", # Candidaturas
-        "auth.User",        # Equipe Interna
+    "SCRIPTS": [
+        lambda request: static("js/admin_custom.js"),
     ],
-
-    # Ícones
-    "icons": {
-        "auth": "fas fa-cogs",
-        "auth.user": "fas fa-user-tie",
-        "core.userprofile": "fas fa-id-badge",
-        "core.cliente": "fas fa-building",
-        "core.orcamento": "fas fa-file-invoice-dollar",
-        "core.job": "fas fa-briefcase",
-        "core.candidatura": "fas fa-file-signature",
-        "core.pergunta": "fas fa-question-circle",
-        "core.avaliacao": "fas fa-star",
-        "core.configuracaosite": "fas fa-sliders-h", 
+    "COLORS": {
+        "primary": {
+            "50": "#e0f2f1",
+            "100": "#b2dfdb",
+            "200": "#80cbc4",
+            "300": "#4db6ac",
+            "400": "#26a69a",
+            "500": "#009688",
+            "600": "#00897b",
+            "700": "#00796b",
+            "800": "#00695c",
+            "900": "#004d40",
+            "950": "#002e27",
+        },
     },
-
-    "hide_models": ["auth.group", "core.resposta", "core.jobdia", "core.avaliacao"],
-
-    # --- ARQUIVOS PERSONALIZADOS ---
-    "custom_css": "css/admin_custom.css",
-    "custom_js": "js/admin_custom.js", 
-
-    # --- ADICIONE ESTAS LINHAS ABAIXO ---
-    # Isso obriga o Jazzmin a renderizar os filtros na lista (onde o JS consegue ler)
-    "change_list_filter_dropdown": False, 
-    "changeform_format": "horizontal_tabs",
-    "changeform_format_overrides": {
-        "core.userprofile": "collapsible",
-        "core.job": "single",
-        "core.cliente": "single",
-        "core.orcamento": "single",
-        "core.configuracaosite": "single",
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Gestão",
+                "items": [
+                    {
+                        "title": "Base de Promotores",
+                        "icon": "badge",
+                        "link": reverse_lazy("admin:core_userprofile_changelist"),
+                    },
+                    {
+                        "title": "Clientes",
+                        "icon": "business",
+                        "link": reverse_lazy("admin:core_cliente_changelist"),
+                    },
+                    {
+                        "title": "Orçamentos",
+                        "icon": "request_quote",
+                        "link": reverse_lazy("admin:core_orcamento_changelist"),
+                    },
+                    {
+                        "title": "Vagas / Jobs",
+                        "icon": "work",
+                        "link": reverse_lazy("admin:core_job_changelist"),
+                    },
+                    {
+                        "title": "Candidaturas",
+                        "icon": "description",
+                        "link": reverse_lazy("admin:core_candidatura_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Sistema",
+                "items": [
+                    {
+                        "title": "Equipe Interna",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": "Contatos do Site",
+                        "icon": "settings",
+                        "link": reverse_lazy("admin:core_configuracaosite_changelist"),
+                    },
+                    {
+                        "title": "CPFs Banidos",
+                        "icon": "block",
+                        "link": reverse_lazy("admin:core_cpfbanido_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Links Rápidos",
+                "items": [
+                    {
+                        "title": "Ver Site",
+                        "icon": "open_in_new",
+                        "link": "/",
+                    },
+                    {
+                        "title": "Suporte Técnico",
+                        "icon": "support_agent",
+                        "link": "https://wa.me/5511999999999",
+                    },
+                ],
+            },
+        ],
     },
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": "navbar-white",
-    "accent": "accent-teal",
-    "navbar": "navbar-white navbar-light",
-    "no_navbar_border": True,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-light-teal",
-    "sidebar_nav_small_text": False,
-    "theme": "lumen", 
-    "button_classes": {
-        "primary": "btn-outline-success",
-        "secondary": "btn-outline-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

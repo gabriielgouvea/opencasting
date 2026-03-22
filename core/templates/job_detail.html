@@ -1,88 +1,140 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <a href="{% url 'lista_vagas' %}" style="text-decoration: none; color: #757575; display: flex; align-items: center; margin-bottom: 15px;">
-        <i class="material-icons">arrow_back</i> Voltar
-    </a>
+<style>
+    .detail-back {
+        text-decoration: none; color: #757575; display: inline-flex; align-items: center;
+        margin-bottom: 15px; font-weight: 600; font-size: 0.92rem; gap: 4px; transition: 0.2s;
+    }
+    .detail-back:hover { color: var(--primary, #009688); }
 
-    <div class="card" style="border-left: none; border-top: 5px solid #009688;">
-        <h1 style="font-size: 1.5rem; margin-top: 0;">{{ job.titulo }}</h1>
-        {% if job.empresa %}
-            <p style="margin-top: 6px; font-size: 1rem; color: #444;"><strong>{{ job.empresa }}</strong></p>
-        {% endif %}
-        <p style="font-size: 1.1rem; color: #333;"><strong>R$ Total a calcular</strong></p>
-        <p style="color: #757575;"><i class="material-icons" style="vertical-align: bottom;">place</i> {{ job.endereco_formatado }}</p>
-        {% if distance_km %}
-            <p style="color: #757575;"><i class="material-icons" style="vertical-align: bottom;">near_me</i> a {{ distance_km }}km de você</p>
-        {% endif %}
+    .detail-card {
+        background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid var(--border, #e8ecef);
+    }
+    .detail-card-top { border-top: 4px solid var(--primary, #009688); }
+    .detail-card h1 { font-size: 1.4rem; margin-top: 0; color: var(--dark, #1a1a2e); font-weight: 800; }
+    .detail-card h3 { color: var(--primary, #009688); font-size: 1.05rem; margin-top: 20px; }
 
-        {% if fit %}
-            <div style="margin-top: 12px; font-weight: 900;">
-                {% if fit.status == 'good' %}
-                    <span style="color:#2e7d32;">{{ fit.message }}</span>
-                {% elif fit.status == 'almost' %}
-                    <span style="color:#ef6c00;">{{ fit.message }}</span>
-                {% else %}
-                    <span style="color:#c62828;">{{ fit.message }}</span>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
+    .dia-row {
+        background: white; padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .dia-row:first-child { border-radius: 12px 12px 0 0; }
+    .dia-row:last-child { border-radius: 0 0 12px 12px; border-bottom: none; }
 
-    <h3 style="color: #009688;">Datas e Cachês</h3>
-    {% for dia in dias %}
-        <div style="background: white; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-            <div>
-                <strong>{{ dia.data|date:"d/m (D)" }}</strong><br>
-                <small style="color: #999;">{{ dia.hora_inicio }} - {{ dia.hora_fim }}</small>
-            </div>
-            <div style="font-weight: bold; color: #333;">
-                R$ {{ dia.valor }}
-            </div>
+    .sticky-cta {
+        position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px;
+        background: rgba(255,255,255,0.97); backdrop-filter: blur(10px);
+        box-shadow: 0 -2px 20px rgba(0,0,0,0.08); box-sizing: border-box; z-index: 100;
+    }
+    .sticky-cta .btn {
+        display: block; width: 100%; max-width: 600px; margin: 0 auto;
+        padding: 15px; background: var(--primary, #009688); color: white;
+        border-radius: 50px; border: none; cursor: pointer;
+        font-size: 1rem; font-weight: 800; text-align: center; text-decoration: none;
+        font-family: inherit;
+    }
+    .sticky-cta .btn:hover { background: var(--primary-dark, #00796b); }
+    .sticky-cta .btn:disabled, .sticky-cta .btn[disabled] { background: #ccc; cursor: not-allowed; }
+
+    .detail-content { padding-bottom: 80px; }
+
+    @media (max-width: 480px) {
+        .detail-card { padding: 18px; border-radius: 14px; }
+        .detail-card h1 { font-size: 1.2rem; }
+        .detail-card h3 { font-size: 0.95rem; }
+        .dia-row { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .sticky-cta { padding: 12px 15px; }
+        .sticky-cta .btn { padding: 14px; font-size: 0.95rem; }
+    }
+</style>
+
+    <div class="detail-content">
+        <a href="{% url 'lista_vagas' %}" class="detail-back">
+            <i class="material-icons">arrow_back</i> Voltar
+        </a>
+
+        <div class="detail-card detail-card-top">
+            <h1>{{ job.titulo }}</h1>
+            {% if job.empresa %}
+                <p style="margin-top: 6px; font-size: 1rem; color: #444;"><strong>{{ job.empresa }}</strong></p>
+            {% endif %}
+            <p style="color: #757575; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                <i class="material-icons" style="font-size:20px;">place</i> {{ job.endereco_formatado }}
+            </p>
+            {% if distance_km %}
+                <p style="color: #757575; display: flex; align-items: center; gap: 4px;">
+                    <i class="material-icons" style="font-size:20px;">near_me</i> a {{ distance_km }}km de você
+                </p>
+            {% endif %}
+
+            {% if fit %}
+                <div style="margin-top: 12px; font-weight: 900;">
+                    {% if fit.status == 'good' %}
+                        <span style="color:#2e7d32;">{{ fit.message }}</span>
+                    {% elif fit.status == 'almost' %}
+                        <span style="color:#ef6c00;">{{ fit.message }}</span>
+                    {% else %}
+                        <span style="color:#c62828;">{{ fit.message }}</span>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
-    {% endfor %}
 
-    <div class="card" style="margin-top: 20px;">
-        {% if requirements %}
-            <h3 style="color: #009688;">Exigências</h3>
-            <ul style="margin: 0; padding-left: 18px; color:#444; line-height:1.7;">
-                {% for item in requirements %}
-                    <li><strong>{{ item.0 }}:</strong> {{ item.1 }}</li>
-                {% endfor %}
-            </ul>
-            <hr style="border:none; border-top: 1px solid #eee; margin: 18px 0;">
-        {% endif %}
+        <h3 style="color: var(--primary, #009688); margin-bottom: 10px;">Datas e Cachês</h3>
+        <div class="detail-card" style="padding: 0; overflow: hidden;">
+            {% for dia in dias %}
+                <div class="dia-row">
+                    <div>
+                        <strong>{{ dia.data|date:"d/m (D)" }}</strong><br>
+                        <small style="color: #999;">{{ dia.hora_inicio }} - {{ dia.hora_fim }}</small>
+                    </div>
+                    <div style="font-weight: bold; color: var(--dark, #1a1a2e);">
+                        R$ {{ dia.valor }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
 
-        <h3 style="color: #009688;">Descrição</h3>
-        {% if job.descricao %}
-            <p>{{ job.descricao|linebreaks }}</p>
-        {% else %}
-            <p style="color:#777;">Sem descrição.</p>
-        {% endif %}
-        
-        <h3 style="color: #009688; margin-top: 20px;">Uniforme</h3>
-        <p>
-            Uniforme fornecido pela empresa:
-            <strong>{% if job.uniforme_fornecido %}Sim{% else %}Não{% endif %}</strong>
-        </p>
+        <div class="detail-card" style="margin-top: 20px;">
+            {% if requirements %}
+                <h3 style="color: var(--primary, #009688); margin-top: 0;">Exigências</h3>
+                <ul style="margin: 0; padding-left: 18px; color:#444; line-height:1.8;">
+                    {% for item in requirements %}
+                        <li><strong>{{ item.0 }}:</strong> {{ item.1 }}</li>
+                    {% endfor %}
+                </ul>
+                <hr style="border:none; border-top: 1px solid #f0f0f0; margin: 18px 0;">
+            {% endif %}
 
-        <h3 style="color: #009688; margin-top: 20px;">Pagamento</h3>
-        {% if job.data_pagamento %}
-            <p>Previsão: {{ job.data_pagamento|date:"d/m/Y" }}</p>
-        {% else %}
-            <p style="color:#777;">Não informado.</p>
-        {% endif %}
+            <h3 style="color: var(--primary, #009688); margin-top: 0;">Descrição</h3>
+            {% if job.descricao %}
+                <div style="line-height: 1.7; color: #444;">{{ job.descricao|linebreaks }}</div>
+            {% else %}
+                <p style="color:#999;">Sem descrição.</p>
+            {% endif %}
+            
+            <h3 style="color: var(--primary, #009688);">Uniforme</h3>
+            <p>
+                Uniforme fornecido pela empresa:
+                <strong>{% if job.uniforme_fornecido %}Sim{% else %}Não{% endif %}</strong>
+            </p>
+
+            <h3 style="color: var(--primary, #009688);">Pagamento</h3>
+            {% if job.data_pagamento %}
+                <p>Previsão: {{ job.data_pagamento|date:"d/m/Y" }}</p>
+            {% else %}
+                <p style="color:#999;">Não informado.</p>
+            {% endif %}
+        </div>
     </div>
 
-    <br><br><br> <div style="position: fixed; bottom: 60px; left: 0; width: 100%; padding: 15px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); box-sizing: border-box;">
+    <div class="sticky-cta">
         {% if ja_candidatou %}
-            <button class="btn" style="background: #ccc; cursor: not-allowed;" disabled>
-                VOCÊ JÁ SE CANDIDATOU ✅
-            </button>
+            <button class="btn" disabled>VOCÊ JÁ SE CANDIDATOU ✅</button>
         {% else %}
-            <a href="{% url 'candidatar_vaga' job.id %}" class="btn">
-                QUERO ME CANDIDATAR
-            </a>
+            <a href="{% url 'candidatar_vaga' job.id %}" class="btn">QUERO ME CANDIDATAR</a>
         {% endif %}
     </div>
 

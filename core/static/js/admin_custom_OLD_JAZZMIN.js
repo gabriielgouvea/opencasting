@@ -292,7 +292,7 @@
                 row.style.gap = '8px';
                 row.style.margin = '0 0 6px 0';
                 row.style.fontSize = '0.85rem';
-                row.style.color = '#666';
+                row.style.color = '#94a3b8';
 
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
@@ -915,7 +915,7 @@
                         titleClone.style.fontSize = '0.75rem';
                         titleClone.style.fontWeight = '800';
                         titleClone.style.marginTop = '15px';
-                        titleClone.style.color = '#555';
+                        titleClone.style.color = '#94a3b8';
                         titleClone.style.textTransform = 'uppercase';
                         titleClone.style.marginBottom = '8px';
                         target.appendChild(titleClone);
@@ -933,7 +933,7 @@
                             if (a) {
                                 a.style.display = 'block';
                                 a.style.padding = '6px 0';
-                                a.style.color = '#666';
+                                a.style.color = '#94a3b8';
                                 a.style.fontSize = '0.85rem';
                                 a.style.textDecoration = 'none';
                                 a.style.transition = '0.2s';
@@ -1212,7 +1212,7 @@
                 if (txt.includes('idade m') || txt.includes('peso m') || txt.includes('altura m') || txt.includes('sapato m')) return;
 
                 title.style.fontSize = '0.75rem'; title.style.fontWeight = '800'; 
-                title.style.marginTop = '15px'; title.style.color = '#555'; 
+                title.style.marginTop = '15px'; title.style.color = '#94a3b8'; 
                 title.style.textTransform = 'uppercase';
                 target.appendChild(title);
 
@@ -1222,7 +1222,7 @@
                     const cloneUl = ul.cloneNode(true);
                     cloneUl.style.paddingLeft = '0'; cloneUl.style.listStyle = 'none';
                     cloneUl.querySelectorAll('li a').forEach(a => {
-                        a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#666';
+                        a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#94a3b8';
                         if (a.parentElement.classList.contains('selected')) { a.style.color = '#009688'; a.style.fontWeight = 'bold'; }
                     });
                     target.appendChild(cloneUl);
@@ -2055,11 +2055,11 @@
             const safeValue = (x.v === undefined || x.v === null || String(x.v).trim() === '') ? '---' : String(x.v);
             const checked = x.on ? 'checked' : '';
             return `
-                <label class="cp-item" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #eee; border-radius:12px; background:#fff;">
+                <label class="cp-item" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #222222; border-radius:12px; background:#141414;">
                     <input type="checkbox" data-k="${x.k}" data-f="${x.f}" data-v="${safeValue.replace(/"/g, '&quot;')}" ${checked} style="margin-top:2px;">
                     <span style="display:block;">
-                        <div style="font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#566;">${x.f}</div>
-                        <div style="font-weight:700; color:#2c3e50; word-break:break-word;">${safeValue}</div>
+                        <div style="font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#64748b;">${x.f}</div>
+                        <div style="font-weight:700; color:#eeeeee; word-break:break-word;">${safeValue}</div>
                     </span>
                 </label>
             `;
@@ -2351,21 +2351,24 @@
         });
     };
 
-    // --- LOOP (sem spam no console) ---
-    // Evita criar múltiplos intervals caso o JS seja injetado duas vezes.
+    // --- INICIALIZACAO ---
+    // Executa setupUI() poucas vezes (o necessario para o DOM estar pronto).
     if (window.__opencasting_admin_custom_interval) {
         clearInterval(window.__opencasting_admin_custom_interval);
     }
     let setupCount = 0;
+    let setupDone = false;
     window.__opencasting_admin_custom_interval = setInterval(() => {
         setupCount++;
-        setupUI();
-        // Sidebar só é construída quando o usuário clica em "Filtros" (openCastingFilters)
-        // mas deixamos um fallback seguro para a primeira carga.
-        if(!isSidebarBuilt) {
-            // não cria a sidebar automaticamente para não aparecer “vazia”
+        if (!setupDone) {
+            setupUI();
+            const toolbar = document.getElementById('custom-filter-toolbar');
+            const isChangeList = document.body && document.body.classList.contains('change-list');
+            if (toolbar || !isChangeList || setupCount >= 3) {
+                setupDone = true;
+            }
         }
-        if(setupCount > 40) {
+        if (setupDone || setupCount > 6) {
             clearInterval(window.__opencasting_admin_custom_interval);
         }
     }, CHECK_INTERVAL);

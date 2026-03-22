@@ -6,7 +6,7 @@
     /* --- ESTILOS DA PÁGINA DE EDIÇÃO --- */
     .edit-container { 
         display: grid; 
-        grid-template-columns: 350px 1fr; 
+        grid-template-columns: 340px 1fr; 
         gap: 30px; 
         align-items: start; 
         margin-top: 20px;
@@ -14,63 +14,91 @@
 
     /* Coluna Esquerda (FOTOS) */
     .photos-card {
-        background: white; border-radius: 12px; padding: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
-        position: sticky; top: 100px;
+        background: white; border-radius: 20px; padding: 30px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.05); text-align: center;
+        position: sticky; top: 100px; border: 1px solid var(--border, #e8ecef);
     }
     
     .current-avatar {
         width: 150px; height: 150px; border-radius: 50%; 
-        object-fit: cover; border: 5px solid #f0f0f0; margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        object-fit: cover; border: 4px solid white; margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,150,136,0.15);
     }
 
     /* Botões de Upload */
     .upload-btn-wrapper {
-        position: relative; overflow: hidden; display: inline-block; width: 100%; margin-bottom: 15px;
+        position: relative; overflow: hidden; display: inline-block; width: 100%; margin-bottom: 12px;
     }
     
     .btn-upload {
-        border: 2px dashed #ddd; color: #666; background-color: white;
-        padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+        border: 2px dashed #d5dbe0; color: #888; background-color: #fafbfc;
+        padding: 14px 20px; border-radius: 12px; font-size: 0.88rem; font-weight: 600;
         width: 100%; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     
-    .btn-upload:hover { border-color: #009688; color: #009688; background: #e0f2f1; }
+    .btn-upload:hover { border-color: var(--primary, #009688); color: var(--primary, #009688); background: var(--primary-light, #e0f2f1); }
     .btn-upload.file-selected { border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; border-style: solid; }
 
     /* Coluna Direita (DADOS) */
     .form-card {
-        background: white; border-radius: 12px; padding: 40px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        background: white; border-radius: 20px; padding: 40px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.05); border: 1px solid var(--border, #e8ecef);
     }
 
-    h2.form-title { margin-top: 0; color: #333; font-weight: 800; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+    h2.form-title { margin-top: 0; color: var(--dark, #1a1a2e); font-weight: 800; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 30px; font-size: 1.4rem; }
+
+    .section-divider {
+        grid-column: 1 / -1; margin-top: 18px; border-top: 2px solid #f0f0f0; padding-top: 18px;
+        color: var(--primary, #009688); font-weight: 800; font-size: 0.95rem;
+        display: flex; align-items: center; gap: 8px;
+    }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .full-width { grid-column: 1 / -1; }
 
-    label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 0.9rem; }
+    label { display: block; margin-bottom: 8px; font-weight: 700; color: #444; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.3px; }
     
     .form-control { 
-        width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
-        font-size: 1rem; box-sizing: border-box; transition: 0.3s;
+        width: 100%; padding: 13px 16px; border: 2px solid #e8ecef; border-radius: 12px; 
+        font-size: 0.95rem; box-sizing: border-box; transition: 0.2s; font-family: inherit;
+        background: #fafbfc;
     }
-    .form-control:focus { border-color: #009688; outline: none; box-shadow: 0 0 0 3px rgba(0,150,136,0.1); }
+    .form-control:focus { border-color: var(--primary, #009688); outline: none; box-shadow: 0 0 0 4px rgba(0,150,136,0.1); background: white; }
+
+    select.form-control {
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg fill='%23999' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center; background-size: 20px;
+        padding-right: 40px;
+    }
 
     .btn-save {
-        background: #009688; color: white; padding: 15px 30px; border: none; 
-        border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; 
-        width: 100%; margin-top: 30px; transition: 0.3s;
+        background: linear-gradient(135deg, var(--primary, #009688), var(--primary-dark, #00796b));
+        color: white; padding: 16px 30px; border: none; 
+        border-radius: 50px; font-weight: 800; font-size: 1.05rem; cursor: pointer; 
+        width: 100%; margin-top: 30px; transition: 0.3s; font-family: inherit; letter-spacing: 0.5px;
     }
-    .btn-save:hover { background: #00796b; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,150,136,0.3); }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,150,136,0.3); }
 
-    .alert-error { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffcdd2; }
+    .alert-error { background: #ffebee; color: #c62828; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #ffcdd2; font-weight: 600; }
 
     @media (max-width: 900px) {
         .edit-container { grid-template-columns: 1fr; }
         .form-grid { grid-template-columns: 1fr; }
         .photos-card { position: static; margin-bottom: 20px; }
+        .form-card { padding: 24px; }
+    }
+    @media (max-width: 480px) {
+        .edit-container { gap: 16px; margin-top: 10px; }
+        .photos-card { padding: 20px; border-radius: 16px; }
+        .current-avatar { width: 110px; height: 110px; }
+        .form-card { padding: 18px; border-radius: 16px; }
+        h2.form-title { font-size: 1.15rem; padding-bottom: 14px; margin-bottom: 20px; }
+        .section-divider { font-size: 0.88rem; margin-top: 14px; padding-top: 14px; }
+        label { font-size: 0.78rem; margin-bottom: 6px; }
+        .form-control { padding: 11px 13px; font-size: 0.92rem; border-radius: 10px; }
+        .btn-save { padding: 14px 20px; font-size: 0.95rem; margin-top: 20px; }
+        .btn-upload { padding: 12px 16px; font-size: 0.84rem; border-radius: 10px; }
     }
 </style>
 
@@ -80,7 +108,7 @@
     <div class="edit-container">
         
         <div class="photos-card">
-            <h3 style="margin-top:0; color:#009688;">Suas Fotos</h3>
+            <h3 style="margin-top:0; color:var(--primary, #009688); font-weight:800;">Suas Fotos</h3>
             
             {% if form.instance.foto_rosto %}
                 <img src="{{ form.instance.foto_rosto.url }}" class="current-avatar" id="preview-rosto">
@@ -146,7 +174,7 @@
                            placeholder="DD/MM/AAAA">
                 </div>
 
-                <div class="full-width" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; color:#009688; font-weight:bold;">📍 Endereço</div>
+                <div class="section-divider"><i class="material-icons" style="font-size:20px;">place</i> Endereço</div>
 
                 <div><label>CEP</label>{{ form.cep }}</div>
                 <div class="full-width"><label>Endereço</label>{{ form.endereco }}</div>
@@ -155,13 +183,13 @@
                 <div><label>Cidade</label>{{ form.cidade }}</div>
                 <div><label>Estado</label>{{ form.estado }}</div>
 
-                <div class="full-width" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; color:#009688; font-weight:bold;">📏 Medidas</div>
+                <div class="section-divider"><i class="material-icons" style="font-size:20px;">straighten</i> Medidas</div>
 
                 <div><label>Altura (ex: 1.70)</label>{{ form.altura }}</div>
                 <div><label>Manequim</label>{{ form.manequim }}</div>
                 <div><label>Calçado</label>{{ form.calcado }}</div>
 
-                <div class="full-width" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px; color:#009688; font-weight:bold;">🏦 Dados Bancários</div>
+                <div class="section-divider"><i class="material-icons" style="font-size:20px;">account_balance</i> Dados Bancários</div>
 
                 <div class="full-width"><label>CPF</label>{{ form.cpf }}</div>
                 
@@ -175,8 +203,8 @@
 
             </div>
 
-            <button type="submit" class="btn-save">SALVAR ALTERAÇÕES ✨</button>
-            <a href="{% url 'lista_vagas' %}" style="display:block; text-align:center; margin-top:15px; color:#666; text-decoration:none;">Cancelar e Voltar</a>
+            <button type="submit" class="btn-save">SALVAR ALTERAÇÕES</button>
+            <a href="{% url 'lista_vagas' %}" style="display:block; text-align:center; margin-top:15px; color:#888; text-decoration:none; font-weight:600; font-size:0.92rem;">Cancelar e Voltar</a>
         </div>
     </div>
 </form>

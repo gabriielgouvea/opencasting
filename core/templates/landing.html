@@ -175,6 +175,36 @@
         .services-grid { grid-template-columns: 1fr; }
         .cta-actions { flex-direction: column; align-items: stretch; }
     }
+
+    @media (max-width: 480px) {
+        .hero { padding: 80px 15px 40px; min-height: auto; }
+        .hero-content h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
+        .hero-content p { font-size: 0.95rem; }
+        .hero-mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .hero-badge { font-size: 0.78rem; padding: 8px 12px; }
+        .btn-hero { padding: 13px 24px; font-size: 0.92rem; }
+        
+        .stats-section { padding: 35px 0; }
+        .stats-grid { gap: 12px; padding: 0 15px; }
+        .stat-item { padding: 18px 16px; border-radius: 14px; }
+        .stat-item h3 { font-size: 1.8rem; }
+        .stat-item p { font-size: 0.7rem; letter-spacing: 1.5px; }
+        
+        .section-title h2 { font-size: 1.6rem; }
+        .section-title p { font-size: 0.88rem; }
+        
+        .why-us { padding: 50px 15px; }
+        .feature-card { padding: 20px; border-radius: 14px; }
+        .feature-icon { font-size: 32px; }
+        
+        .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .gallery-card { border-radius: 12px; }
+        
+        .service-card { padding: 20px; border-radius: 14px; }
+        
+        .cta-section { padding: 50px 15px; }
+        .cta-content h2 { font-size: 1.6rem; }
+    }
 </style>
 
 <section class="hero">

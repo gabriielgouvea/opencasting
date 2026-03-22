@@ -1,145 +1,87 @@
-/* Estilos aplicados somente nas telas do ModelAdmin Orcamento (via Media). */
+﻿/* ============================================================
+   CASTING CERTO - CSS para ModelAdmin Orcamento (django-unfold)
+   ============================================================ */
 
-/* Fundo branco (sem cinza) */
-.content-wrapper,
-.content,
-.container-fluid,
-#content {
-  background: #fff !important;
-}
-
-/* Centraliza o conteúdo do formulário/lista e padroniza largura */
+/* Centraliza o conteudo e padroniza largura */
 #content,
-#content-main,
-.content,
-.container-fluid {
+#content-main {
   max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Desktop: deixa o formulário de Orçamento mais largo (sem mexer no celular) */
+/* Desktop: formulario mais largo */
 @media (min-width: 992px) {
-  body.app-core.model-orcamento.change-form #content,
-  body.app-core.model-orcamento.add-form #content,
-  body.app-core.model-orcamento.change-form #content-main,
-  body.app-core.model-orcamento.add-form #content-main,
-  body.app-core.model-orcamento.change-form .content,
-  body.app-core.model-orcamento.add-form .content,
-  body.app-core.model-orcamento.change-form .container-fluid,
-  body.app-core.model-orcamento.add-form .container-fluid {
+  body.app-core.model-orcamento #content,
+  body.app-core.model-orcamento #content-main {
     max-width: 1400px;
   }
-
-  /* "Caixas"/cards dos itens (inlines): ocupa mais a tela no desktop */
-  body.app-core.model-orcamento.change-form .inline-related,
-  body.app-core.model-orcamento.add-form .inline-related {
+  body.app-core.model-orcamento .inline-related {
     width: 100% !important;
     max-width: 100% !important;
   }
 }
 
-/* Orçamento (add/change): nada na lateral; conteúdo em largura total */
-body.app-core.model-orcamento.change-form .content .row > .col-lg-3,
-body.app-core.model-orcamento.change-form .content .row > .col-md-3,
-body.app-core.model-orcamento.add-form .content .row > .col-lg-3,
-body.app-core.model-orcamento.add-form .content .row > .col-md-3 {
-  display: none !important;
-}
-
 /* =========================
-   CHANGE LIST (ORÇAMENTOS)
+   CHANGE LIST (ORCAMENTOS)
    ========================= */
 
-/* Mobile: tabela pode estourar; permite scroll horizontal só aqui */
-body.app-core.model-orcamento.change-list .results,
-body.app-core.model-orcamento.change-list #changelist .results {
+/* Mobile: tabela permite scroll horizontal */
+.results {
   overflow-x: auto;
 }
 
-/* Mobile: preferimos NÃO precisar arrastar — ocultamos colunas para caber */
 @media (max-width: 640px) {
-  body.app-core.model-orcamento.change-list .results,
-  body.app-core.model-orcamento.change-list #changelist .results {
+  .results {
     overflow-x: visible;
   }
-
-  /* No celular: remove apenas "Criado em" (fica ID, Cliente e ⋯) */
-  body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
-  body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
+  /* No celular: remove "Criado em" */
+  #result_list th.column-criado_em,
+  #result_list td.field-criado_em {
     display: none !important;
   }
-
-  /* Tabela mais compacta */
-  body.app-core.model-orcamento.change-list #result_list th,
-  body.app-core.model-orcamento.change-list #result_list td {
+  #result_list th,
+  #result_list td {
     padding: 10px 10px !important;
     white-space: normal;
   }
 }
 
-/* Alguns celulares/tablets estreitos ficam > 640px em CSS pixels.
-   Mantém a regra de esconder "Criado em" até 768px. */
 @media (max-width: 768px) {
-  body.app-core.model-orcamento.change-list #result_list th.column-criado_em,
-  body.app-core.model-orcamento.change-list #result_list td.field-criado_em {
+  #result_list th.column-criado_em,
+  #result_list td.field-criado_em {
     display: none !important;
   }
-
-  /* No mobile, o menu pode ser cortado por wrappers com overflow. Libera. */
-  body.app-core.model-orcamento.change-list .table-responsive,
-  body.app-core.model-orcamento.change-list .table-responsive .card,
-  body.app-core.model-orcamento.change-list .dataTables_wrapper,
-  body.app-core.model-orcamento.change-list .dataTables_scroll,
-  body.app-core.model-orcamento.change-list .dataTables_scrollBody,
-  body.app-core.model-orcamento.change-list #changelist,
-  body.app-core.model-orcamento.change-list #changelist-form,
-  body.app-core.model-orcamento.change-list #changelist-form .results,
-  body.app-core.model-orcamento.change-list #changelist-form .card,
-  body.app-core.model-orcamento.change-list #changelist-form .card-body,
-  body.app-core.model-orcamento.change-list #result_list,
-  body.app-core.model-orcamento.change-list #result_list tbody,
-  body.app-core.model-orcamento.change-list #result_list tr,
-  body.app-core.model-orcamento.change-list #result_list td {
+  /* Libera overflow para o menu nao ser cortado */
+  #changelist,
+  #changelist-form,
+  .results,
+  #result_list,
+  #result_list tbody,
+  #result_list tr,
+  #result_list td {
     overflow: visible !important;
   }
-
-  /* No mobile: limita altura e permite scroll interno no menu */
-  body.app-core.model-orcamento.change-list .oc-actions__menu {
+  .oc-actions__menu {
     max-height: 240px;
     overflow: auto;
   }
-
-  /* Direção do menu é decidida via JS: para cima somente quando necessário */
-  body.app-core.model-orcamento.change-list details.oc-actions.oc-actions--up .oc-actions__menu {
+  details.oc-actions.oc-actions--up .oc-actions__menu {
     top: auto;
     bottom: 44px;
   }
 }
 
-/* Ajusta a barra de ações (botão "Realizar orçamento") */
-body.app-core.model-orcamento.change-list ul.object-tools {
+/* Botao "Realizar orcamento" */
+ul.object-tools {
   list-style: none !important;
   padding-left: 0 !important;
   margin-top: 34px !important;
 }
-
-body.app-core.model-orcamento.change-list ul.object-tools > li {
-  list-style: none !important;
-}
-
-/* Alguns temas colocam o “•” via pseudo-elemento */
-body.app-core.model-orcamento.change-list ul.object-tools > li::marker {
-  color: transparent !important;
-}
-
-body.app-core.model-orcamento.change-list ul.object-tools > li:before {
-  display: none !important;
-  content: none !important;
-}
-
-/* Botão maior */
-body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
+ul.object-tools > li { list-style: none !important; }
+ul.object-tools > li::marker { color: transparent !important; }
+ul.object-tools > li:before { display: none !important; content: none !important; }
+ul.object-tools a.addlink {
   border-radius: 999px !important;
   padding: 14px 26px !important;
   font-weight: 900 !important;
@@ -147,195 +89,35 @@ body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
 }
 
 @media (max-width: 640px) {
-  body.app-core.model-orcamento.change-list ul.object-tools {
+  ul.object-tools {
     margin-top: 18px !important;
     display: flex;
     justify-content: flex-end;
   }
-
-  body.app-core.model-orcamento.change-list ul.object-tools a.addlink {
+  ul.object-tools a.addlink {
     padding: 12px 18px !important;
     font-size: 0.92rem !important;
   }
-
   .oc-modal__dialog {
     top: 10% !important;
   }
 }
 
-/* =========================
-   MOBILE (ORÇAMENTO FORM)
-   ========================= */
-
-@media (max-width: 640px) {
-  /* Aproveita mais a largura da tela no formulário */
-  body.app-core.model-orcamento.change-form #content,
-  body.app-core.model-orcamento.add-form #content,
-  body.app-core.model-orcamento.change-form #content-main,
-  body.app-core.model-orcamento.add-form #content-main,
-  body.app-core.model-orcamento.change-form .content,
-  body.app-core.model-orcamento.add-form .content,
-  body.app-core.model-orcamento.change-form .container-fluid,
-  body.app-core.model-orcamento.add-form .container-fluid {
-    max-width: 100% !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
-  /* Remove o “miolo estreito” e deixa inputs realmente grandes */
-  body.app-core.model-orcamento.change-form .form-row > div,
-  body.app-core.model-orcamento.add-form .form-row > div,
-  body.app-core.model-orcamento.change-form .form-group > div,
-  body.app-core.model-orcamento.add-form .form-group > div,
-  body.app-core.model-orcamento.change-form .form-row .field-box,
-  body.app-core.model-orcamento.add-form .form-row .field-box,
-  body.app-core.model-orcamento.change-form .form-group .field-box,
-  body.app-core.model-orcamento.add-form .form-group .field-box {
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  /* Cards dos inlines um pouco mais “largos” */
-  body.app-core.model-orcamento.change-form .inline-related,
-  body.app-core.model-orcamento.add-form .inline-related {
-    padding: 10px 10px !important;
-    border-radius: 12px !important;
-  }
-
-  /* No celular, deixa os campos realmente grandes dentro dos itens */
-  body.app-core.model-orcamento.change-form .inline-related input[type='text'],
-  body.app-core.model-orcamento.add-form .inline-related input[type='text'],
-  body.app-core.model-orcamento.change-form .inline-related input[type='number'],
-  body.app-core.model-orcamento.add-form .inline-related input[type='number'],
-  body.app-core.model-orcamento.change-form .inline-related select,
-  body.app-core.model-orcamento.add-form .inline-related select,
-  body.app-core.model-orcamento.change-form .inline-related textarea,
-  body.app-core.model-orcamento.add-form .inline-related textarea {
-    font-size: 16px;
-    height: 44px;
-    padding: 10px 14px;
-  }
-
-  body.app-core.model-orcamento.change-form .inline-related .vIntegerField,
-  body.app-core.model-orcamento.add-form .inline-related .vIntegerField {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 44px !important;
-    display: block;
-  }
-
-  /* Django admin costuma limitar inteiros (quantidade/carga/diárias) com largura pequena.
-     Aqui força 100% igual Função/Valor da diária. */
-  body.app-core.model-orcamento.change-form .inline-related input[id$='-quantidade'],
-  body.app-core.model-orcamento.add-form .inline-related input[id$='-quantidade'],
-  body.app-core.model-orcamento.change-form .inline-related input[id$='-carga_horaria_horas'],
-  body.app-core.model-orcamento.add-form .inline-related input[id$='-carga_horaria_horas'],
-  body.app-core.model-orcamento.change-form .inline-related input[id$='-diarias'],
-  body.app-core.model-orcamento.add-form .inline-related input[id$='-diarias'] {
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block;
-  }
-
-  body.app-core.model-orcamento.change-form .inline-related textarea,
-  body.app-core.model-orcamento.add-form .inline-related textarea {
-    height: auto;
-    min-height: 110px;
-  }
-
-  /* Botões no final: sempre empilhados e ocupando 100% */
-  body.app-core.model-orcamento.change-form .oc-actions-row,
-  body.app-core.model-orcamento.add-form .oc-actions-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-
-  body.app-core.model-orcamento.change-form .oc-actions-row .btn,
-  body.app-core.model-orcamento.add-form .oc-actions-row .btn {
-    width: 100% !important;
-    justify-content: center;
-    text-align: center;
-  }
-
-  /* Campo Cliente (opcional): no mobile estava ficando alto demais.
-     Mantém a mesma altura/padding dos demais campos. */
-  body.app-core.model-orcamento.change-form #id_cliente,
-  body.app-core.model-orcamento.add-form #id_cliente {
-    height: 44px !important;
-    padding: 10px 14px !important;
-    font-size: 16px !important;
-  }
-
-  /* Se o widget for Select2 (comum no Jazzmin), ajusta apenas o Cliente */
-  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single,
-  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single {
-    height: 44px !important;
-  }
-
-  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__rendered,
-  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 44px !important;
-    padding-left: 14px !important;
-    padding-right: 34px !important;
-    font-size: 16px !important;
-  }
-
-  body.app-core.model-orcamento.change-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__arrow,
-  body.app-core.model-orcamento.add-form .field-cliente .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 44px !important;
-  }
-}
-
-/* Garante que o botão do menu (hamburger) exista/esteja visível no changelist */
-body.app-core.model-orcamento.change-list .main-header .nav-link[data-widget='pushmenu'] {
-  display: inline-flex !important;
-}
-
-body.app-core.model-orcamento.change-list .main-header form,
-body.app-core.model-orcamento.change-list .main-header .navbar-search-block,
-body.app-core.model-orcamento.change-list .main-header .navbar-search-open {
-  display: none !important;
-}
-
-/* Reexibe a área direita (perfil/usuário) quando o tema usar ml-auto */
-body.app-core.model-orcamento.change-list .main-header .navbar-nav.ml-auto,
-body.app-core.model-orcamento.change-list .main-header .navbar-nav.navbar-right {
-  display: flex !important;
-}
-
-/* Linha inteira clicável */
-body.app-core.model-orcamento.change-list #result_list tbody tr {
+/* Linha inteira clicavel */
+#result_list tbody tr {
   cursor: pointer;
 }
 
-/* Remove fundo cinza/striped do tema nessa tabela */
-body.app-core.model-orcamento.change-list #result_list tbody tr,
-body.app-core.model-orcamento.change-list #result_list tbody td,
-body.app-core.model-orcamento.change-list #result_list tbody th {
-  background: #fff !important;
-}
-
-body.app-core.model-orcamento.change-list #result_list tbody tr:hover td,
-body.app-core.model-orcamento.change-list #result_list tbody tr:hover th {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Botão lixeira (por linha) */
-body.app-core.model-orcamento.change-list .oc-actions {
+/* === Menu de acoes (tres pontinhos) por linha === */
+.oc-actions {
   position: relative;
   display: inline-block;
 }
+.oc-actions > summary { list-style: none; }
+.oc-actions > summary::-webkit-details-marker { display: none; }
+.oc-actions > summary::marker { content: ''; color: transparent; }
 
-body.app-core.model-orcamento.change-list .oc-actions > summary {
-  list-style: none;
-}
-
-body.app-core.model-orcamento.change-list .oc-actions > summary::-webkit-details-marker {
-  display: none;
-}
-
-body.app-core.model-orcamento.change-list .oc-actions__toggle {
+.oc-actions__toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -348,88 +130,43 @@ body.app-core.model-orcamento.change-list .oc-actions__toggle {
   background: transparent;
   font-size: 22px;
   line-height: 1;
+  transition: background 0.15s;
+}
+.oc-actions__toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
-body.app-core.model-orcamento.change-list .oc-actions__toggle:hover {
-  background: rgba(0,0,0,0.04) !important;
-}
-
-body.app-core.model-orcamento.change-list .oc-actions__menu {
+.oc-actions__menu {
   position: absolute;
   right: 0;
   top: 44px;
   min-width: 160px;
-  background: #fff;
-  color: #111;
-  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--bg-elevated, #222);
+  color: var(--text-primary, #eee);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
   z-index: 9999;
 }
+details:not([open]) .oc-actions__menu { display: none; }
 
-body.app-core.model-orcamento.change-list details:not([open]) .oc-actions__menu {
-  display: none;
-}
-
-body.app-core.model-orcamento.change-list .oc-actions__item {
+.oc-actions__item {
   display: block;
   padding: 10px 12px;
   border-radius: 10px;
   text-decoration: none !important;
-  color: #111 !important;
+  color: var(--text-primary, #eee) !important;
   font-weight: 800;
+  transition: background 0.15s;
+}
+.oc-actions__item:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
-body.app-core.model-orcamento.change-list .oc-actions__item:hover {
-  background: rgba(0,0,0,0.04) !important;
-}
-
-/* Busca: remove botão, deixa só o campo */
-body.app-core.model-orcamento.change-list #changelist-search input[type="submit"],
-body.app-core.model-orcamento.change-list #changelist-search button,
-body.app-core.model-orcamento.change-list #changelist-search .btn {
-  display: none !important;
-}
-
-/* Esconde o "X" (limpar ordenação) que aparece nos headers */
-body.app-core.model-orcamento.change-list .sortremove,
-body.app-core.model-orcamento.change-list a.sortremove {
-  display: none !important;
-}
-
-/* Reforço: remove o "x" de ordenação mesmo dentro do <thead> */
-body.app-core.model-orcamento.change-list #result_list thead th .sortremove,
-body.app-core.model-orcamento.change-list #result_list thead th a.sortremove {
-  display: none !important;
-}
-
-/* Jazzmin/AdminLTE às vezes renderiza o "remover ordenação" como um 2º link no header sortable.
-   Esconde esse 2º link (mantém o link do título para ordenar). */
-body.app-core.model-orcamento.change-list #result_list thead th.sortable .text a + a {
-  display: none !important;
-}
-
-/* Fallback: se vier como ícone (times/xmark) dentro de algum link no header */
-body.app-core.model-orcamento.change-list #result_list thead th a i.fa-times,
-body.app-core.model-orcamento.change-list #result_list thead th a i.fas.fa-times,
-body.app-core.model-orcamento.change-list #result_list thead th a i.fa.fa-times,
-body.app-core.model-orcamento.change-list #result_list thead th a i.far.fa-times,
-body.app-core.model-orcamento.change-list #result_list thead th a i.fa-xmark,
-body.app-core.model-orcamento.change-list #result_list thead th a i.fas.fa-xmark {
-  display: none !important;
-}
-
-/* Jazzmin/AdminLTE: em alguns casos o "X" vem como um <div class="fa fa-times float-right"> (com ::before).
-   Esconde esse elemento só no cabeçalho da tabela. */
-body.app-core.model-orcamento.change-list #result_list thead .fa.fa-times.float-right,
-body.app-core.model-orcamento.change-list #result_list thead div.fa.fa-times.float-right {
-  display: none !important;
-}
-
-/* Coluna de ações (⋯) menor */
-body.app-core.model-orcamento.change-list #result_list th.column-acoes,
-body.app-core.model-orcamento.change-list #result_list td.field-acoes {
+/* Coluna de acoes (tres pontinhos) menor */
+#result_list th.column-acoes,
+#result_list td.field-acoes {
   width: 72px;
   min-width: 72px;
   max-width: 72px;
@@ -440,39 +177,34 @@ body.app-core.model-orcamento.change-list #result_list td.field-acoes {
   overflow: visible !important;
 }
 
-/* Evita que wrappers do tema cortem o menu (desktop) */
-@media (min-width: 992px) {
-  body.app-core.model-orcamento.change-list #changelist,
-  body.app-core.model-orcamento.change-list #changelist-form,
-  body.app-core.model-orcamento.change-list #changelist-form .results,
-  body.app-core.model-orcamento.change-list #changelist-form .card,
-  body.app-core.model-orcamento.change-list #changelist-form .card-body {
-    overflow: visible !important;
-  }
+/* Esconde sortremove */
+.sortremove,
+a.sortremove {
+  display: none !important;
+}
 
-  body.app-core.model-orcamento.change-list .results,
-  body.app-core.model-orcamento.change-list #changelist .results {
-    overflow-x: auto;
-    overflow-y: visible !important;
+/* Desktop: libera overflow para o menu */
+@media (min-width: 992px) {
+  #changelist,
+  #changelist-form,
+  .results {
+    overflow: visible !important;
   }
 }
 
 /* =========================
-   MODAL (EXCLUSÃO)
+   MODAL (EXCLUSAO)
    ========================= */
-
 .oc-modal {
   position: fixed;
   inset: 0;
   z-index: 9999;
 }
-
 .oc-modal__backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.45);
 }
-
 .oc-modal__dialog {
   position: absolute;
   left: 50%;
@@ -480,83 +212,41 @@ body.app-core.model-orcamento.change-list #result_list td.field-acoes {
   transform: translateX(-50%);
   width: min(680px, calc(100% - 28px));
 }
-
 .oc-modal__card {
   border-radius: 14px;
 }
-
-/* Deixa o popup mais “presente” */
-.oc-modal .card-body {
-  padding: 22px 24px;
-}
-
-.oc-modal .card-title {
-  font-size: 1.25rem;
-}
-
-.oc-modal .card-text {
-  font-size: 1.05rem;
-}
-
+.oc-modal .card-body { padding: 22px 24px; }
+.oc-modal .card-title { font-size: 1.25rem; }
+.oc-modal .card-text { font-size: 1.05rem; }
 .oc-modal__actions .btn {
   border-radius: 999px !important;
   padding: 10px 18px !important;
   font-weight: 900 !important;
 }
-
 .oc-modal__actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
 }
 
-body.app-core.model-orcamento.change-form .content .row > .col-lg-9,
-body.app-core.model-orcamento.change-form .content .row > .col-md-9,
-body.app-core.model-orcamento.add-form .content .row > .col-lg-9,
-body.app-core.model-orcamento.add-form .content .row > .col-md-9 {
-  flex: 0 0 100% !important;
-  max-width: 100% !important;
-}
+/* =========================
+   FORMULARIO (ADD/CHANGE)
+   ========================= */
 
-/* Remove breadcrumbs/cabeçalho para ficar mais "cara de sistema" */
-.content-header .breadcrumb,
-.breadcrumb {
-  display: none !important;
-}
-
-/* Força single-page mesmo se o tema tentar renderizar abas */
-.nav-tabs,
-.nav.nav-tabs,
-.card-header .nav,
-.card-header-tabs {
-  display: none !important;
-}
-
-.tab-content > .tab-pane {
-  display: block !important;
-  opacity: 1 !important;
-}
-
-.tab-content {
-  padding-top: 0 !important;
-}
-
-/* Força formulário em 1 coluna (linhas) */
+/* Forca formulario em 1 coluna */
 .form-row,
 .form-group {
   display: block;
   width: 100%;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
-
-/* Remove o excesso de linhas/divisórias internas */
-.form-row,
-.form-group,
 .module {
   border-bottom: none !important;
   box-shadow: none !important;
 }
 
-/* Campos com mesma largura e centralizados */
+/* Campos centralizados */
 .form-row > div,
 .form-group > div,
 .form-row .field-box,
@@ -575,6 +265,16 @@ input[type='date'],
 select,
 textarea {
   width: 100% !important;
+  border-radius: 12px;
+  padding: 8px 12px;
+  height: 38px;
+}
+textarea {
+  height: auto;
+  min-height: 90px;
+}
+.btn {
+  border-radius: 10px;
 }
 
 .form-group > .row,
@@ -586,9 +286,9 @@ textarea {
   flex: 0 0 100%;
 }
 
-/* Inlines mais "em lista" */
+/* Inlines em lista */
 .inline-related {
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 12px;
@@ -596,90 +296,71 @@ textarea {
   overflow: hidden;
 }
 
-/* Evita estouro por padding/width em qualquer filho do inline */
-body.app-core.model-orcamento.change-form .inline-related,
-body.app-core.model-orcamento.add-form .inline-related,
-body.app-core.model-orcamento.change-form .inline-related *,
-body.app-core.model-orcamento.add-form .inline-related * {
+body.app-core.model-orcamento .inline-related,
+body.app-core.model-orcamento .inline-related * {
   box-sizing: border-box;
 }
 
-/* No inline, sempre empilha label + input e ocupa 100% (principalmente no mobile) */
-body.app-core.model-orcamento.change-form .inline-related .form-row,
-body.app-core.model-orcamento.add-form .inline-related .form-row,
-body.app-core.model-orcamento.change-form .inline-related .form-group,
-body.app-core.model-orcamento.add-form .inline-related .form-group {
+/* Empilha label + input */
+body.app-core.model-orcamento .inline-related .form-row,
+body.app-core.model-orcamento .inline-related .form-group {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
   width: 100% !important;
   padding-left: 0 !important;
+  overflow: hidden;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 0 !important;
 }
 
-/* Django admin (.aligned) aplica margin-left no "campo"; no mobile isso estoura. */
-body.app-core.model-orcamento.change-form .aligned .inline-related .form-row > div,
-body.app-core.model-orcamento.add-form .aligned .inline-related .form-row > div,
-body.app-core.model-orcamento.change-form .aligned .inline-related .form-group > div,
-body.app-core.model-orcamento.add-form .aligned .inline-related .form-group > div {
+body.app-core.model-orcamento .aligned .inline-related .form-row > div,
+body.app-core.model-orcamento .aligned .inline-related .form-group > div {
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
 
-body.app-core.model-orcamento.change-form .aligned .inline-related label,
-body.app-core.model-orcamento.add-form .aligned .inline-related label {
+body.app-core.model-orcamento .aligned .inline-related label {
   float: none !important;
   width: auto !important;
 }
 
-body.app-core.model-orcamento.change-form .inline-related .form-row label,
-body.app-core.model-orcamento.add-form .inline-related .form-row label,
-body.app-core.model-orcamento.change-form .inline-related .form-group label,
-body.app-core.model-orcamento.add-form .inline-related .form-group label {
+body.app-core.model-orcamento .inline-related .form-row label,
+body.app-core.model-orcamento .inline-related .form-group label {
   float: none !important;
   width: auto !important;
   margin: 0 0 6px 0 !important;
   padding: 0 !important;
 }
 
-body.app-core.model-orcamento.change-form .inline-related .form-row > div,
-body.app-core.model-orcamento.add-form .inline-related .form-row > div,
-body.app-core.model-orcamento.change-form .inline-related .form-group > div,
-body.app-core.model-orcamento.add-form .inline-related .form-group > div {
+body.app-core.model-orcamento .inline-related .form-row > div,
+body.app-core.model-orcamento .inline-related .form-group > div {
   width: 100% !important;
   max-width: 100% !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
 
-body.app-core.model-orcamento.change-form .inline-related .help,
-body.app-core.model-orcamento.add-form .inline-related .help,
-body.app-core.model-orcamento.change-form .inline-related .help-block,
-body.app-core.model-orcamento.add-form .inline-related .help-block,
-body.app-core.model-orcamento.change-form .inline-related .text-muted,
-body.app-core.model-orcamento.add-form .inline-related .text-muted {
+body.app-core.model-orcamento .inline-related .help,
+body.app-core.model-orcamento .inline-related .help-block,
+body.app-core.model-orcamento .inline-related .text-muted {
   margin-left: 0 !important;
   max-width: 100% !important;
 }
 
-/* Evita estouro de largura por margens negativas do Bootstrap (.row) dentro do inline */
-body.app-core.model-orcamento.change-form .inline-related .row,
-body.app-core.model-orcamento.add-form .inline-related .row {
+body.app-core.model-orcamento .inline-related .row {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
-
-body.app-core.model-orcamento.change-form .inline-related .row > [class*='col-'],
-body.app-core.model-orcamento.add-form .inline-related .row > [class*='col-'] {
+body.app-core.model-orcamento .inline-related .row > [class*='col-'] {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
 
-body.app-core.model-orcamento.change-form .inline-related input,
-body.app-core.model-orcamento.add-form .inline-related input,
-body.app-core.model-orcamento.change-form .inline-related select,
-body.app-core.model-orcamento.add-form .inline-related select,
-body.app-core.model-orcamento.change-form .inline-related textarea,
-body.app-core.model-orcamento.add-form .inline-related textarea {
+body.app-core.model-orcamento .inline-related input,
+body.app-core.model-orcamento .inline-related select,
+body.app-core.model-orcamento .inline-related textarea {
   max-width: 100% !important;
   box-sizing: border-box;
   min-width: 0;
@@ -687,65 +368,35 @@ body.app-core.model-orcamento.add-form .inline-related textarea {
   display: block;
 }
 
-/* Alguns temas/admin colocam wrappers com largura fixa; aqui zera tudo dentro do item */
-body.app-core.model-orcamento.change-form .inline-related .fieldBox,
-body.app-core.model-orcamento.add-form .inline-related .fieldBox,
-body.app-core.model-orcamento.change-form .inline-related .flex-container,
-body.app-core.model-orcamento.add-form .inline-related .flex-container,
-body.app-core.model-orcamento.change-form .inline-related .related-widget-wrapper,
-body.app-core.model-orcamento.add-form .inline-related .related-widget-wrapper,
-body.app-core.model-orcamento.change-form .inline-related .form-row > div,
-body.app-core.model-orcamento.add-form .inline-related .form-row > div {
+body.app-core.model-orcamento .inline-related .fieldBox,
+body.app-core.model-orcamento .inline-related .flex-container,
+body.app-core.model-orcamento .inline-related .related-widget-wrapper,
+body.app-core.model-orcamento .inline-related .form-row > div {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
 }
 
-/* Visual consistente (alguns campos vinham com “estilo” diferente) */
-body.app-core.model-orcamento.change-form .inline-related input,
-body.app-core.model-orcamento.add-form .inline-related input,
-body.app-core.model-orcamento.change-form .inline-related select,
-body.app-core.model-orcamento.add-form .inline-related select,
-body.app-core.model-orcamento.change-form .inline-related textarea,
-body.app-core.model-orcamento.add-form .inline-related textarea {
-  background-color: #fff;
-}
-
-/* Django admin costuma dar largura fixa para campos numéricos (vIntegerField). Aqui padroniza. */
-body.app-core.model-orcamento.change-form .inline-related .vIntegerField,
-body.app-core.model-orcamento.add-form .inline-related .vIntegerField,
-body.app-core.model-orcamento.change-form .inline-related .vTextField,
-body.app-core.model-orcamento.add-form .inline-related .vTextField,
-body.app-core.model-orcamento.change-form .inline-related input[id$='-quantidade'],
-body.app-core.model-orcamento.add-form .inline-related input[id$='-quantidade'],
-body.app-core.model-orcamento.change-form .inline-related input[id$='-carga_horaria_horas'],
-body.app-core.model-orcamento.add-form .inline-related input[id$='-carga_horaria_horas'],
-body.app-core.model-orcamento.change-form .inline-related input[id$='-diarias'],
-body.app-core.model-orcamento.add-form .inline-related input[id$='-diarias'],
-body.app-core.model-orcamento.change-form .inline-related input[id$='-valor_diaria'],
-body.app-core.model-orcamento.add-form .inline-related input[id$='-valor_diaria'] {
+body.app-core.model-orcamento .inline-related .vIntegerField,
+body.app-core.model-orcamento .inline-related .vTextField,
+body.app-core.model-orcamento .inline-related input[id$='-quantidade'],
+body.app-core.model-orcamento .inline-related input[id$='-carga_horaria_horas'],
+body.app-core.model-orcamento .inline-related input[id$='-diarias'],
+body.app-core.model-orcamento .inline-related input[id$='-valor_diaria'] {
   width: 100% !important;
   max-width: 100% !important;
   display: block;
 }
 
-/* Padroniza a altura visual dentro do inline (desktop e mobile) */
-body.app-core.model-orcamento.change-form .inline-related input,
-body.app-core.model-orcamento.add-form .inline-related input,
-body.app-core.model-orcamento.change-form .inline-related select,
-body.app-core.model-orcamento.add-form .inline-related select {
+body.app-core.model-orcamento .inline-related input,
+body.app-core.model-orcamento .inline-related select {
   height: 38px;
 }
 
-/* Alguns widgets do admin usam flex/colunas: garante que possam "encolher" no mobile */
-body.app-core.model-orcamento.change-form .inline-related [class*='col-'],
-body.app-core.model-orcamento.add-form .inline-related [class*='col-'],
-body.app-core.model-orcamento.change-form .inline-related .field-box,
-body.app-core.model-orcamento.add-form .inline-related .field-box,
-body.app-core.model-orcamento.change-form .inline-related .form-row > div,
-body.app-core.model-orcamento.add-form .inline-related .form-row > div,
-body.app-core.model-orcamento.change-form .inline-related .form-group > div,
-body.app-core.model-orcamento.add-form .inline-related .form-group > div {
+body.app-core.model-orcamento .inline-related [class*='col-'],
+body.app-core.model-orcamento .inline-related .field-box,
+body.app-core.model-orcamento .inline-related .form-row > div,
+body.app-core.model-orcamento .inline-related .form-group > div {
   min-width: 0;
   width: 100% !important;
   max-width: 100% !important;
@@ -753,78 +404,15 @@ body.app-core.model-orcamento.add-form .inline-related .form-group > div {
   margin-right: 0 !important;
 }
 
-body.app-core.model-orcamento.change-form .inline-related .form-row,
-body.app-core.model-orcamento.add-form .inline-related .form-row,
-body.app-core.model-orcamento.change-form .inline-related .form-group,
-body.app-core.model-orcamento.add-form .inline-related .form-group {
-  overflow: hidden;
-}
-
-/* Remove a caixa do GRUPO (wrapper) do inline no Orçamento: fica só a caixa do item */
-body.app-core.model-orcamento.change-form .inline-group,
-body.app-core.model-orcamento.add-form .inline-group,
-body.app-core.model-orcamento.change-form .inline-group > .card,
-body.app-core.model-orcamento.add-form .inline-group > .card,
-body.app-core.model-orcamento.change-form .inline-group > fieldset,
-body.app-core.model-orcamento.add-form .inline-group > fieldset,
-body.app-core.model-orcamento.change-form .inline-group > fieldset.module,
-body.app-core.model-orcamento.add-form .inline-group > fieldset.module {
+/* Remove caixa do grupo do inline */
+body.app-core.model-orcamento .inline-group,
+body.app-core.model-orcamento .inline-group > fieldset,
+body.app-core.model-orcamento .inline-group > fieldset.module {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-body.app-core.model-orcamento.change-form .inline-group,
-body.app-core.model-orcamento.add-form .inline-group {
   padding: 0 !important;
   margin: 0 !important;
-}
-
-body.app-core.model-orcamento.change-form .inline-group > .card > .card-body,
-body.app-core.model-orcamento.add-form .inline-group > .card > .card-body {
-  padding: 0 !important;
-}
-
-body.app-core.model-orcamento.change-form .inline-group > .card > .card-header,
-body.app-core.model-orcamento.add-form .inline-group > .card > .card-header {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  margin-bottom: 12px;
-}
-
-/* Tira “caixa dentro de caixa” (Jazzmin/Bootstrap cards/modules) dentro do inline */
-.inline-related .card,
-.inline-related .card-header,
-.inline-related .card-body,
-.inline-related .module,
-.inline-related .inline-group,
-.inline-related .inline-group .card,
-.inline-related .inline-group .module {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.inline-related .card-header {
-  padding: 0 !important;
-  margin-bottom: 10px;
-}
-
-.inline-related .card-body {
-  padding: 0 !important;
-}
-
-.inline-related hr {
-  display: none !important;
-}
-
-/* Dentro de cada função: evita "linhas" por campo; a borda do bloco já separa */
-.inline-related .form-row,
-.inline-related .form-group {
-  padding-top: 6px;
-  padding-bottom: 6px;
-  margin-bottom: 0 !important;
 }
 
 .inline-related fieldset,
@@ -833,28 +421,24 @@ body.app-core.model-orcamento.add-form .inline-group > .card > .card-header {
   padding: 0 !important;
   margin: 0 !important;
 }
-
 .inline-related h3 {
   border: none !important;
   background: transparent !important;
   padding: 0 !important;
   margin: 0 0 10px 0 !important;
 }
-
-input[type='text'],
-input[type='email'],
-input[type='tel'],
-input[type='number'],
-input[type='url'],
-input[type='date'],
-select,
-textarea {
-  border-radius: 12px;
-  padding: 8px 12px;
-  height: 38px;
+.inline-related hr {
+  display: none !important;
 }
 
-/* Foco em verde (usa variável do tema quando existir) */
+/* Esconde icones do widget relacionado (campo Cliente) */
+.related-widget-wrapper-link,
+.related-widget-wrapper .related-widget-wrapper-link,
+body.app-core.model-orcamento .related-widget-wrapper a {
+  display: none !important;
+}
+
+/* Foco verde */
 input[type='text']:focus,
 input[type='email']:focus,
 input[type='tel']:focus,
@@ -867,78 +451,71 @@ textarea:focus {
   box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
 }
 
-/* Remove o "X" de limpar ordenação (só fica setinha) */
-.sortremove {
-  display: none !important;
-}
-
-textarea {
-  height: auto;
-  min-height: 90px;
-}
-
-.btn {
-  border-radius: 10px;
-}
-
-/* Botão principal (estilo "cadastro") */
+/* Botao principal */
 .oc-generate-btn {
   border-radius: 999px !important;
   padding: 14px 22px !important;
   font-weight: 900 !important;
   letter-spacing: 0.2px;
 }
-
-/* Some com os ícones do widget relacionado (lápis/+/x/olho) do campo Cliente */
-.related-widget-wrapper-link,
-.related-widget-wrapper .related-widget-wrapper-link {
-  display: none !important;
-}
-
-/* Reforço: no Orçamento, esconde QUALQUER link/ícone do wrapper relacionado */
-body.app-core.model-orcamento.change-form .related-widget-wrapper a,
-body.app-core.model-orcamento.add-form .related-widget-wrapper a {
-  display: none !important;
-}
-
-/* Botão aplicar desconto com o mesmo "padrão" dos outros */
 .oc-apply-discount-btn {
   border-radius: 999px !important;
   padding: 14px 22px !important;
   font-weight: 900 !important;
 }
 
-@media (max-width: 640px) {
-  body.app-core.model-orcamento.change-form .oc-apply-discount-btn,
-  body.app-core.model-orcamento.add-form .oc-apply-discount-btn {
-    width: 100% !important;
-    justify-content: center;
-    text-align: center;
-  }
-}
-
-/* Total geral fixo no final */
+/* === Total geral e acoes === */
 .oc-orcamento-bottom {
   width: 100%;
   clear: both;
 }
-
 .oc-orcamento-total-wrapper {
   margin-top: 14px;
   width: 100%;
 }
-
 .oc-desconto-area {
   margin-bottom: 10px;
 }
-
-
-
 .oc-orcamento-total-hint {
   margin-top: 8px;
-  color: rgba(0, 0, 0, 0.62);
+  color: var(--text-muted, #888);
   font-weight: 700;
   font-size: 0.92rem;
+}
+.oc-orcamento-total {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.oc-orcamento-total-label {
+  font-weight: 700;
+  color: var(--text-secondary, #b0b0b0);
+}
+.oc-orcamento-total-value {
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+/* Total por funcao */
+.oc-line-total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color, rgba(255,255,255,0.1));
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.oc-line-total-label {
+  font-weight: 700;
+  color: var(--text-secondary, #b0b0b0);
+}
+.oc-line-total-value {
+  font-weight: 800;
 }
 
 .oc-actions-row {
@@ -948,19 +525,6 @@ body.app-core.model-orcamento.add-form .related-widget-wrapper a {
   gap: 12px;
   width: 100%;
 }
-
-.oc-actions-row .oc-add-funcao-btn {
-  border-radius: 999px !important;
-  padding: 14px 22px !important;
-  font-weight: 900 !important;
-  white-space: nowrap;
-}
-
-.oc-actions-row .oc-generate-btn {
-  flex: 0 0 auto;
-}
-
-/* Deixa os dois botões com "cara" igual (mesma altura e borda) */
 .oc-actions-row .btn {
   border-radius: 999px !important;
   padding: 14px 22px !important;
@@ -969,130 +533,91 @@ body.app-core.model-orcamento.add-form .related-widget-wrapper a {
   justify-content: center;
   text-align: center;
 }
-
+.oc-actions-row .oc-add-funcao-btn {
+  border-radius: 999px !important;
+  padding: 14px 22px !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+}
+.oc-actions-row .oc-delete-btn {
+  white-space: nowrap;
+}
 .oc-delete-row {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
-
 .oc-delete-row .btn {
   width: 100% !important;
   justify-content: center;
   text-align: center;
 }
 
-.oc-actions-row .oc-delete-btn {
-  white-space: nowrap;
-}
+/* =========================
+   MOBILE (ORCAMENTO FORM)
+   ========================= */
+@media (max-width: 640px) {
+  body.app-core.model-orcamento #content,
+  body.app-core.model-orcamento #content-main {
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
 
-.oc-orcamento-total {
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 14px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
+  body.app-core.model-orcamento .inline-related {
+    padding: 10px 10px !important;
+    border-radius: 12px !important;
+  }
 
-.oc-orcamento-total-label {
-  font-weight: 700;
-  color: #333;
-}
+  body.app-core.model-orcamento .inline-related input[type='text'],
+  body.app-core.model-orcamento .inline-related input[type='number'],
+  body.app-core.model-orcamento .inline-related select,
+  body.app-core.model-orcamento .inline-related textarea {
+    font-size: 16px;
+    height: 44px;
+    padding: 10px 14px;
+  }
 
-.oc-orcamento-total-value {
-  font-weight: 900;
-  font-size: 1.1rem;
-}
+  body.app-core.model-orcamento .inline-related .vIntegerField {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 44px !important;
+    display: block;
+  }
 
-/* Total por função */
-.oc-line-total {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(0,0,0,0.12);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
+  body.app-core.model-orcamento .inline-related input[id$='-quantidade'],
+  body.app-core.model-orcamento .inline-related input[id$='-carga_horaria_horas'],
+  body.app-core.model-orcamento .inline-related input[id$='-diarias'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block;
+  }
 
-.oc-line-total-label {
-  font-weight: 700;
-  color: #444;
-}
+  body.app-core.model-orcamento .inline-related textarea {
+    height: auto;
+    min-height: 110px;
+  }
 
-.oc-line-total-value {
-  font-weight: 800;
-}
+  body.app-core.model-orcamento .oc-actions-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  body.app-core.model-orcamento .oc-actions-row .btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
 
-/* =====================================================================
-   OVERRIDES FINAIS (INLINE): garante tamanhos idênticos
-   ===================================================================== */
+  body.app-core.model-orcamento #id_cliente {
+    height: 44px !important;
+    padding: 10px 14px !important;
+    font-size: 16px !important;
+  }
 
-body.app-core.model-orcamento.change-form .inline-related input,
-body.app-core.model-orcamento.add-form .inline-related input,
-body.app-core.model-orcamento.change-form .inline-related select,
-body.app-core.model-orcamento.add-form .inline-related select,
-body.app-core.model-orcamento.change-form .inline-related textarea,
-body.app-core.model-orcamento.add-form .inline-related textarea,
-body.app-core.model-orcamento.change-form .inline-related .form-control,
-body.app-core.model-orcamento.add-form .inline-related .form-control {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  display: block !important;
-  height: 38px !important;
-  padding: 8px 12px !important;
-  border-radius: 12px !important;
-}
-
-body.app-core.model-orcamento.change-form .inline-related textarea,
-body.app-core.model-orcamento.add-form .inline-related textarea {
-  height: auto !important;
-}
-
-body.app-core.model-orcamento.change-form .inline-related input.vTextField,
-body.app-core.model-orcamento.add-form .inline-related input.vTextField,
-body.app-core.model-orcamento.change-form .inline-related input.vIntegerField,
-body.app-core.model-orcamento.add-form .inline-related input.vIntegerField {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Se o tema não colocar as classes no <body>, ainda assim garante tamanhos iguais */
-.inline-related input,
-.inline-related select,
-.inline-related textarea,
-.inline-related input.vTextField,
-.inline-related input.vIntegerField,
-.inline-related .vTextField,
-.inline-related .vIntegerField {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  display: block !important;
-  box-sizing: border-box !important;
-}
-
-/* Neutraliza wrappers do Django/Jazzmin que podem limitar largura */
-.inline-related .form-row,
-.inline-related .form-group {
-  width: 100% !important;
-}
-
-.inline-related .form-row > div,
-.inline-related .form-group > div,
-.inline-related .fieldBox,
-.inline-related .field-box,
-.inline-related .flex-container {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  margin-left: 0 !important;
-}
-
-.inline-related .flex-container {
-  display: block !important;
+  body.app-core.model-orcamento .oc-apply-discount-btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
 }

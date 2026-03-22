@@ -1,12 +1,6 @@
-/* Estilos aplicados somente nas telas do ModelAdmin Cliente (via Media). */
-
-/* Remove o “fundo cinza” do conteúdo e deixa mais clean. */
-.content-wrapper,
-.content,
-.container-fluid,
-#content {
-  background: #fff !important;
-}
+﻿/* ============================================================
+   CASTING CERTO - CSS para ModelAdmin Cliente (django-unfold)
+   ============================================================ */
 
 /* Layout em linhas (1 coluna) */
 .form-row,
@@ -15,17 +9,7 @@
   width: 100%;
 }
 
-/* Jazzmin/AdminLTE costuma usar colunas internas: força full-width */
-.form-group > .row,
-.form-group .row,
-.form-group [class*='col-'],
-.form-group [class*='col-md-'],
-.form-group [class*='col-lg-'] {
-  max-width: 100%;
-  flex: 0 0 100%;
-}
-
-/* Campos e botões com acabamento mais “profissional” */
+/* Campos e botões com acabamento arredondado */
 input[type='text'],
 input[type='email'],
 input[type='tel'],
@@ -41,9 +25,8 @@ textarea {
   border-radius: 10px;
 }
 
-/* Dá um respiro vertical entre blocos */
-fieldset,
-.card {
+/* Respiro vertical entre blocos */
+fieldset {
   margin-bottom: 14px;
 }
 
@@ -51,87 +34,34 @@ fieldset,
    CHANGELIST (Clientes)
    ========================= */
 
-/* Esconde o cabeçalho/breadcrumb dessa página (igual Orçamentos)
-   Obs: alguns temas usam classes diferentes, então cobrimos variações. */
-body.model-cliente .content-header,
-body.model-cliente.change-list .content-header,
-body.model-cliente.changelist .content-header,
-body.app-core.model-cliente .content-header,
-body.app-core.model-cliente.change-list .content-header,
-body.app-core.model-cliente.changelist .content-header {
+/* Ações em massa - esconde */
+#changelist-form .actions,
+#changelist-form #action-toggle {
   display: none !important;
 }
 
-/* Fallback extra: esconde breadcrumbs mesmo se não estiverem dentro do content-header */
-body.model-cliente .breadcrumb,
-body.app-core.model-cliente .breadcrumb {
-  display: none !important;
-}
-
-/* Some com a busca do navbar/topo */
-body.model-cliente.change-list .main-header form,
-body.model-cliente.change-list .main-header .navbar-search-block,
-body.model-cliente.change-list .main-header .navbar-search-open,
-body.app-core.model-cliente.change-list .main-header form,
-body.app-core.model-cliente.change-list .main-header .navbar-search-block,
-body.app-core.model-cliente.change-list .main-header .navbar-search-open {
-  display: none !important;
-}
-
-/* Esconde os links do topo (Ver Site / Suporte etc), mantendo só o hamburger */
-body.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a.nav-link:not([data-widget='pushmenu']),
-body.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a:not([data-widget='pushmenu']),
-body.app-core.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a.nav-link:not([data-widget='pushmenu']),
-body.app-core.model-cliente.change-list .main-header .navbar-nav > li.nav-item > a:not([data-widget='pushmenu']) {
-  display: none !important;
-}
-
-/* Remove ações em massa caso o tema ainda renderize algo */
-body.app-core.model-cliente.change-list #changelist-form .actions,
-body.app-core.model-cliente.change-list #changelist-form #action-toggle {
-  display: none !important;
-}
-
-/* Deixa a tabela mais limpa */
-body.app-core.model-cliente.change-list #result_list tbody tr,
-body.app-core.model-cliente.change-list #result_list tbody td,
-body.app-core.model-cliente.change-list #result_list tbody th {
-  background: #fff !important;
-}
-
-body.app-core.model-cliente.change-list #result_list tbody tr:hover td,
-body.app-core.model-cliente.change-list #result_list tbody tr:hover th {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Menu ⋯ por linha (reaproveita o mesmo padrão do Orçamentos) */
-body.app-core.model-cliente.change-list .oc-actions {
+/* === Menu de ações () por linha === */
+.oc-actions {
   position: relative;
   display: inline-block;
 }
 
-/* Quando abrir, sobe o z-index para sobrepor a tabela */
-body.model-cliente.change-list details.oc-actions[open],
-body.app-core.model-cliente.change-list details.oc-actions[open] {
-  z-index: 10000;
-}
-
-body.app-core.model-cliente.change-list .oc-actions > summary {
+.oc-actions > summary {
   list-style: none;
 }
 
-/* Remove o marcador padrão (triângulo/play) do summary */
-body.model-cliente.change-list .oc-actions > summary::marker,
-body.app-core.model-cliente.change-list .oc-actions > summary::marker {
+.oc-actions > summary::marker,
+.oc-actions > summary::-webkit-details-marker {
   content: '';
+  display: none;
   color: transparent;
 }
 
-body.app-core.model-cliente.change-list .oc-actions > summary::-webkit-details-marker {
-  display: none;
+.oc-actions[open] {
+  z-index: 10000;
 }
 
-body.app-core.model-cliente.change-list .oc-actions__toggle {
+.oc-actions__toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -144,93 +74,70 @@ body.app-core.model-cliente.change-list .oc-actions__toggle {
   background: transparent;
   font-size: 18px;
   line-height: 1;
+  transition: background 0.15s;
 }
 
-body.app-core.model-cliente.change-list .oc-actions__toggle:hover {
-  background: rgba(0,0,0,0.04) !important;
+.oc-actions__toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
-body.app-core.model-cliente.change-list .oc-actions__menu {
+.oc-actions__menu {
   position: absolute;
   right: 0;
   top: 44px;
   min-width: 160px;
-  background: #fff;
-  color: #111;
-  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--bg-elevated, #222);
+  color: var(--text-primary, #eee);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
   z-index: 10001;
 }
 
-/* Linha da tabela mais compacta (já que só tem poucas colunas) */
-body.model-cliente.change-list #result_list th,
-body.model-cliente.change-list #result_list td,
-body.app-core.model-cliente.change-list #result_list th,
-body.app-core.model-cliente.change-list #result_list td {
+details:not([open]) .oc-actions__menu {
+  display: none;
+}
+
+.oc-actions__item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none !important;
+  color: var(--text-primary, #eee) !important;
+  font-weight: 800;
+  transition: background 0.15s;
+}
+
+.oc-actions__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Coluna de ações compacta */
+#result_list th:last-child,
+#result_list td:last-child {
+  width: 52px;
+  text-align: center;
+}
+
+#result_list th,
+#result_list td {
   padding: 8px 10px !important;
   white-space: nowrap;
   vertical-align: middle;
 }
 
-body.model-cliente.change-list #result_list th:last-child,
-body.model-cliente.change-list #result_list td:last-child,
-body.app-core.model-cliente.change-list #result_list th:last-child,
-body.app-core.model-cliente.change-list #result_list td:last-child {
-  width: 52px;
-}
-
-body.app-core.model-cliente.change-list details:not([open]) .oc-actions__menu {
-  display: none;
-}
-
-body.app-core.model-cliente.change-list .oc-actions__item {
-  display: block;
-  padding: 10px 12px;
-  border-radius: 10px;
-  text-decoration: none !important;
-  color: #111 !important;
-  font-weight: 800;
-}
-
-body.app-core.model-cliente.change-list .oc-actions__item:hover {
-  background: rgba(0,0,0,0.04) !important;
-}
-
-/* Mobile: evita corte do menu */
+/* =========================
+   MOBILE
+   ========================= */
 @media (max-width: 768px) {
-  body.model-cliente.change-list .content-wrapper,
-  body.model-cliente.change-list .content,
-  body.model-cliente.change-list .container-fluid,
-  body.model-cliente.change-list #content,
-  body.model-cliente.change-list .card,
-  body.model-cliente.change-list .card-body,
-  body.model-cliente.change-list .table-responsive,
-  body.model-cliente.change-list .dataTables_wrapper,
-  body.model-cliente.change-list .dataTables_scroll,
-  body.model-cliente.change-list .dataTables_scrollBody,
-  body.app-core.model-cliente.change-list #changelist,
-  body.app-core.model-cliente.change-list #changelist-form,
-  body.app-core.model-cliente.change-list #changelist-form .results,
-  body.app-core.model-cliente.change-list #changelist-form .card,
-  body.app-core.model-cliente.change-list #changelist-form .card-body,
-  body.app-core.model-cliente.change-list #result_list,
-  body.app-core.model-cliente.change-list #result_list tbody,
-  body.app-core.model-cliente.change-list #result_list tr,
-  body.app-core.model-cliente.change-list #result_list td {
+  #result_list,
+  #result_list tbody,
+  #result_list tr,
+  #result_list td,
+  #changelist,
+  #changelist-form,
+  .results {
     overflow: visible !important;
-  }
-
-  body.app-core.model-cliente.change-list .oc-actions__menu {
-    max-height: 240px;
-    overflow: auto;
-  }
-
-  /* Direção do menu é decidida via JS: pra cima quando necessário */
-  body.model-cliente.change-list details.oc-actions.oc-actions--up .oc-actions__menu,
-  body.app-core.model-cliente.change-list details.oc-actions.oc-actions--up .oc-actions__menu {
-    top: auto;
-    bottom: 44px;
   }
 }

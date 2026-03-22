@@ -288,9 +288,31 @@
     @keyframes spinner-border { 
         to { transform: rotate(360deg); } 
     }
+
+    /* --- RESPONSIVIDADE WIZARD --- */
+    @media (max-width: 600px) {
+        .checkbox-grid { grid-template-columns: 1fr !important; }
+        .payment-method-card { width: 100% !important; }
+        /* Colapsa TODOS os grids inline de 2/3 colunas dentro do wizard */
+        .step-container [style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .form-group { margin-bottom: 18px; }
+        .form-label { font-size: 0.88rem; }
+        .form-control { padding: 11px 13px; font-size: 0.95rem; }
+        .btn { padding: 13px; font-size: 1rem; }
+        .photo-upload-box { padding: 25px 15px; }
+        .photo-tips { padding: 14px; font-size: 0.85rem; }
+        .payment-warning { padding: 12px; font-size: 0.88rem; }
+        .password-rules { padding: 12px; font-size: 0.88rem; }
+        .dot { width: 16px; height: 16px; }
+        .dot.active { transform: scale(1.2); }
+    }
 </style>
 
-<div style="max-width: 800px; margin: 40px auto; padding: 20px;">
+<div style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
     <h2 style="text-align: center; color: #009688; margin-bottom: 10px; font-weight: 800;">Ficha de Cadastro</h2>
     <p style="text-align: center; color: #777; font-size: 1rem; margin-top: 0; margin-bottom: 30px;">
         Complete seu perfil para ter acesso às vagas.

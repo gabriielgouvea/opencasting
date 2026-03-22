@@ -1,7 +1,7 @@
 """
-OPENCASTING CRM - SISTEMA DE GESTÃO DE TALENTOS V6.0
+OPENCASTING CRM - SISTEMA DE GESTÃO DE TALENTOS V7.0
 ------------------------------------------------------------------
-Versão: 6.0 - Compatibilidade Total Jazzmin & Estabilidade de URL
+Versão: 7.0 - Migração para django-unfold
 Finalidade: Backend para Listagem Inteligente e Gestão de Promotores.
 Desenvolvido para: Gabriel Gouvêa com suporte de IA.
 """
@@ -18,6 +18,8 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.contrib.filters.admin import RangeDateFilter
 from django.utils.html import format_html
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordResetForm
@@ -399,7 +401,7 @@ class ContatoSiteInlineForm(forms.ModelForm):
         return cleaned
 
 
-class ContatoSiteInline(admin.StackedInline):
+class ContatoSiteInline(StackedInline):
     model = ContatoSite
     form = ContatoSiteInlineForm
     extra = 0
@@ -527,7 +529,7 @@ def excluir_modelos_massa(modeladmin, request, queryset):
 # ==============================================================================
 
 @admin.register(User)
-class EquipeAdmin(BaseUserAdmin):
+class EquipeAdmin(ModelAdmin, BaseUserAdmin):
     """Configuração da visualização da equipe interna de gestão."""
     list_display = ('nome_visual', 'email', 'is_staff', 'is_superuser', 'last_login')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
@@ -539,13 +541,11 @@ class EquipeAdmin(BaseUserAdmin):
 # ==============================================================================
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
+class UserProfileAdmin(ModelAdmin):
     """
     Controlador Master da Base de Promotores.
     Focado em triagem absoluta e filtros de alta precisão.
     """
-    # Template custom para a changelist (Base de Promotores).
-    # Mantém o template base do Jazzmin, mas nos permite garantir assets e ajustar UX.
     change_list_template = "admin/core/userprofile/change_list.html"
     change_form_template = "admin/core/userprofile/change_form.html"
 
@@ -553,10 +553,6 @@ class UserProfileAdmin(admin.ModelAdmin):
     
     # Remove contador nativo para dar lugar à barra de botões customizada
     actions_selection_counter = False
-    
-    class Media:
-        css = { 'all': ('css/admin_custom.css',) }
-        js = ('js/admin_custom.js',)
 
     # 1. LISTAGEM COM NOME E STATUS ACOPLADO (PONTO 1)
     list_display = (
@@ -1190,18 +1186,15 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
 
 # REGISTRO FINAL DOS MODELOS
-class JobDiaInline(admin.TabularInline):
+class JobDiaInline(TabularInline):
     model = JobDia
     extra = 1
 
 
 @admin.register(Job)
-class JobAdmin(admin.ModelAdmin):
+class JobAdmin(ModelAdmin):
     form = JobAdminForm
     inlines = [JobDiaInline]
-
-    # Jazzmin: força um único formulário (sem abas)
-    changeform_format = 'single'
 
     list_display = ('titulo', 'empresa', 'status', 'data_pagamento')
     list_filter = ('status', 'data_pagamento')
@@ -1246,8 +1239,7 @@ admin.site.register(Avaliacao)
 
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-    changeform_format = 'single'
+class ClienteAdmin(ModelAdmin):
     list_display = ('nome_fantasia_coluna', 'cnpj_formatado', 'acoes')
     search_fields = (
         'cnpj',
@@ -1477,7 +1469,7 @@ class OrcamentoItemInlineForm(forms.ModelForm):
                         pass
 
 
-class OrcamentoItemInline(admin.StackedInline):
+class OrcamentoItemInline(StackedInline):
     model = OrcamentoItem
     form = OrcamentoItemInlineForm
     extra = 1
@@ -1487,9 +1479,8 @@ class OrcamentoItemInline(admin.StackedInline):
 
 
 @admin.register(Orcamento)
-class OrcamentoAdmin(admin.ModelAdmin):
+class OrcamentoAdmin(ModelAdmin):
     form = OrcamentoAdminForm
-    changeform_format = 'single'
     list_display = ('id', 'cliente_coluna', 'criado_em', 'acoes')
     search_fields = ('id', 'cliente__razao_social', 'cliente__nome_fantasia', 'cliente__cnpj')
     list_filter = ()
@@ -1925,14 +1916,11 @@ class ConfiguracaoSiteContatosForm(forms.ModelForm):
 
 
 @admin.register(ConfiguracaoSite)
-class ConfiguracaoSiteAdmin(admin.ModelAdmin):
+class ConfiguracaoSiteAdmin(ModelAdmin):
     list_display = ('titulo_site',)
     inlines = (ContatoSiteInline,)
     form = ConfiguracaoSiteContatosForm
     fieldsets = ((None, {'fields': ()}),)
-
-    # Jazzmin: evita tabs/scroll desnecessários
-    changeform_format = 'single'
 
     change_form_template = 'admin/core/configuracaosite/change_form.html'
 

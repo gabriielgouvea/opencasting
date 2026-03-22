@@ -7,9 +7,21 @@
     .cover-bg { height: 150px; background: linear-gradient(135deg, #009688, #004d40); }
     .profile-avatar { width: 150px; height: 150px; border-radius: 50%; border: 5px solid white; margin-top: -75px; object-fit: cover; background: #eee; }
     .stat-badge { background: #e0f2f1; color: #00796b; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; margin: 0 5px; display: inline-block; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 20px; margin-top: 30px; }
     .gallery-item img { width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
     .gallery-item img:hover { transform: scale(1.02); }
+    .profile-stats-row { display: flex; justify-content: center; gap: 30px; color: #666; margin-top: 20px; flex-wrap: wrap; padding: 0 15px; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 14px; color: #444; }
+    
+    @media (max-width: 480px) {
+        .profile-header { border-radius: 12px; padding-bottom: 20px; }
+        .cover-bg { height: 110px; }
+        .profile-avatar { width: 110px; height: 110px; margin-top: -55px; }
+        .stat-badge { font-size: 0.82rem; padding: 4px 12px; margin: 2px; }
+        .profile-stats-row { gap: 15px; font-size: 0.9rem; }
+        .gallery-grid { grid-template-columns: 1fr; gap: 15px; }
+        .info-grid { grid-template-columns: 1fr; }
+    }
 </style>
 
 <div class="profile-header">
@@ -27,7 +39,7 @@
         <span class="stat-badge"><i class="material-icons" style="font-size:14px; vertical-align:middle;">check_circle</i> Verificado</span>
     </div>
 
-    <div style="display: flex; justify-content: center; gap: 40px; color: #666; margin-top: 20px; flex-wrap: wrap;">
+    <div class="profile-stats-row">
         <div><strong>Altura</strong><br>{{ perfil.altura|default:'---' }}m</div>
         <div><strong>Peso</strong><br>{{ perfil.peso|default:'---' }}kg</div>
         <div><strong>Manequim</strong><br>{{ perfil.manequim|default:'---' }}</div>
@@ -39,7 +51,7 @@
     <div style="background:#fff; border-radius: 14px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
         <h3 style="margin:0 0 14px 0; color:#009688;">📋 Informações</h3>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; color:#444;">
+        <div class="info-grid">
             <div><strong>WhatsApp:</strong> {{ perfil.whatsapp|default:'---' }}</div>
             <div><strong>Instagram:</strong> {{ perfil.instagram|default:'---' }}</div>
             <div><strong>E-mail:</strong> {{ perfil.user.email|default:'---' }}</div>

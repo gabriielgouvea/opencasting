@@ -320,7 +320,7 @@ class UserProfile(models.Model):
         ('italiana', 'Italiana 🇮🇹'),
         ('japonesa', 'Japonesa 🇯🇵'),
         ('chinesa', 'Chinesa 🇨🇳'),
-        ('alemama', 'Alemã 🇩🇪'),
+        ('alema', 'Alemã 🇩🇪'),
         ('outra', 'Outra'),
     ]
     nacionalidade = models.CharField(max_length=20, choices=NACIONALIDADE_CHOICES, default='brasileira', verbose_name="Nacionalidade")

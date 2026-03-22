@@ -225,6 +225,16 @@ class CadastroForm(forms.ModelForm):
             'termo_uso_imagem', 'termo_comunicacao'
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Se estiver editando (instance já existe), esconde campos de login
+        if self.instance and self.instance.pk:
+            for field_name in ('email', 'password', 'confirm_password', 
+                               'termo_uso_imagem', 'termo_comunicacao'):
+                if field_name in self.fields:
+                    self.fields[field_name].required = False
+                    self.fields[field_name].widget = forms.HiddenInput()
+
     def clean_cpf(self):
         cpf = (self.cleaned_data.get('cpf') or '').strip()
         cpf_digits = re.sub(r'\D', '', cpf)
@@ -237,13 +247,15 @@ class CadastroForm(forms.ModelForm):
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
 
-        if password:
+        # Validação de senha só no cadastro (quando não há instance com pk)
+        is_edit = self.instance and self.instance.pk
+        if password and not is_edit:
             try:
                 validate_password(password)
             except DjangoValidationError as exc:
                 self.add_error('password', exc.messages)
 
-        if password and confirm_password and password != confirm_password:
+        if password and confirm_password and password != confirm_password and not is_edit:
             raise forms.ValidationError("As senhas não conferem.")
         
         areas = cleaned_data.get('areas_interesse')

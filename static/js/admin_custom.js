@@ -1,7 +1,7 @@
-/**
- * CASTING CERTO - GESTOR V16 (JAZZMIN BOOTSTRAP SUPPORT)
+﻿/**
+ * CASTING CERTO - GESTOR V17 (UNFOLD ADMIN)
  * ------------------------------------------------------------------
- * 1. SUPORTE JAZZMIN: Lê filtros dentro de Cards/Bootstraps.
+ * 1. SUPORTE UNFOLD: Lê filtros no painel lateral do Django admin.
  * 2. VISIBILIDADE: Garante que os filtros sejam encontrados.
  * 3. FERRAMENTAS: WhatsApp, Links e Ações em Massa.
  */
@@ -9,7 +9,7 @@
 (function() {
     'use strict';
 
-    // Evita carregar/executar duas vezes (Jazzmin às vezes injeta assets duplicados)
+    // Evita carregar/executar duas vezes (Unfold às vezes injeta assets duplicados)
     if (window.__opencasting_admin_custom_loaded) {
         return;
     }
@@ -292,7 +292,7 @@
                 row.style.gap = '8px';
                 row.style.margin = '0 0 6px 0';
                 row.style.fontSize = '0.85rem';
-                row.style.color = '#666';
+                row.style.color = '#94a3b8';
 
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
@@ -915,7 +915,7 @@
                         titleClone.style.fontSize = '0.75rem';
                         titleClone.style.fontWeight = '800';
                         titleClone.style.marginTop = '15px';
-                        titleClone.style.color = '#555';
+                        titleClone.style.color = '#94a3b8';
                         titleClone.style.textTransform = 'uppercase';
                         titleClone.style.marginBottom = '8px';
                         target.appendChild(titleClone);
@@ -933,7 +933,7 @@
                             if (a) {
                                 a.style.display = 'block';
                                 a.style.padding = '6px 0';
-                                a.style.color = '#666';
+                                a.style.color = '#94a3b8';
                                 a.style.fontSize = '0.85rem';
                                 a.style.textDecoration = 'none';
                                 a.style.transition = '0.2s';
@@ -1212,7 +1212,7 @@
                 if (txt.includes('idade m') || txt.includes('peso m') || txt.includes('altura m') || txt.includes('sapato m')) return;
 
                 title.style.fontSize = '0.75rem'; title.style.fontWeight = '800'; 
-                title.style.marginTop = '15px'; title.style.color = '#555'; 
+                title.style.marginTop = '15px'; title.style.color = '#94a3b8'; 
                 title.style.textTransform = 'uppercase';
                 target.appendChild(title);
 
@@ -1222,7 +1222,7 @@
                     const cloneUl = ul.cloneNode(true);
                     cloneUl.style.paddingLeft = '0'; cloneUl.style.listStyle = 'none';
                     cloneUl.querySelectorAll('li a').forEach(a => {
-                        a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#666';
+                        a.style.display = 'block'; a.style.padding = '4px 0'; a.style.color = '#94a3b8';
                         if (a.parentElement.classList.contains('selected')) { a.style.color = '#009688'; a.style.fontWeight = 'bold'; }
                     });
                     target.appendChild(cloneUl);
@@ -1288,22 +1288,29 @@
 
             let didUpdate = false;
 
-            // Preferência 1: trocar o bloco .results
-            const newResults = doc.querySelector('#changelist-form .results') || doc.querySelector('.results');
-            const curResults = document.querySelector('#changelist-form .results') || document.querySelector('.results');
-            if (newResults && curResults) {
-                curResults.replaceWith(newResults);
+            // Unfold/Django: substituir o conteúdo do #changelist-form inteiro
+            const newForm = doc.querySelector('#changelist-form');
+            const curForm = document.querySelector('#changelist-form');
+            if (newForm && curForm) {
+                curForm.innerHTML = newForm.innerHTML;
                 didUpdate = true;
             } else {
-                // Preferência 2: trocar só a tabela #result_list (Jazzmin/Django)
-                const newTable = doc.querySelector('#result_list');
-                const curTable = document.querySelector('#result_list');
-                if (newTable && curTable) {
-                    const newWrap = newTable.closest('.results') || newTable.parentElement;
-                    const curWrap = curTable.closest('.results') || curTable.parentElement;
-                    if (newWrap && curWrap) {
-                        curWrap.replaceWith(newWrap);
-                        didUpdate = true;
+                // Fallback: trocar bloco .results ou wrapper do #result_list
+                const newResults = doc.querySelector('#changelist-form .results') || doc.querySelector('.results');
+                const curResults = document.querySelector('#changelist-form .results') || document.querySelector('.results');
+                if (newResults && curResults) {
+                    curResults.replaceWith(newResults);
+                    didUpdate = true;
+                } else {
+                    const newTable = doc.querySelector('#result_list');
+                    const curTable = document.querySelector('#result_list');
+                    if (newTable && curTable) {
+                        const newWrap = newTable.closest('.results') || newTable.parentElement;
+                        const curWrap = curTable.closest('.results') || curTable.parentElement;
+                        if (newWrap && curWrap) {
+                            curWrap.replaceWith(newWrap);
+                            didUpdate = true;
+                        }
                     }
                 }
             }
@@ -1313,14 +1320,12 @@
             if (newPaginator && curPaginator) {
                 curPaginator.replaceWith(newPaginator);
             } else if (newPaginator && !curPaginator) {
-                // alguns temas só renderizam paginator em certos casos
                 const changelist = document.getElementById('changelist') || document.body;
                 changelist.appendChild(newPaginator);
             } else if (!newPaginator && curPaginator) {
                 curPaginator.remove();
             }
 
-            // Se não conseguimos atualizar a lista no DOM, faz fallback para reload normal
             if (!didUpdate) {
                 throw new Error('DOM update failed');
             }
@@ -1486,7 +1491,7 @@
                     document.body.classList.add('oc-clean-page');
                     
                     // CLEANUP: Remove links do topo (Ver Site, Suporte) e busca
-                    document.querySelectorAll('.main-header a.nav-link, .main-header a').forEach(function (a) {
+                    document.querySelectorAll('#header a, [data-component="header"] a').forEach(function (a) {
                         var t = String((a.textContent || '')).replace(/\s+/g, ' ').trim().toLowerCase();
                         if (t.indexOf('ver site') >= 0 || t.indexOf('suporte') >= 0 || t.indexOf('base de promotores') >= 0) {
                             var li = a.closest ? a.closest('li') : null;
@@ -1496,25 +1501,15 @@
                     });
 
                     // Remove TODOS os formulários de busca do topo
-                    document.querySelectorAll('.main-header form').forEach(f => f.style.display = 'none');
+                    document.querySelectorAll('#header form').forEach(f => f.style.display = 'none');
                     
                     // Injeta estilo para forçar ocultação do header/breadcrumbs
                     if (!document.getElementById('oc-cleanup-style')) {
                         const style = document.createElement('style');
                         style.id = 'oc-cleanup-style';
                         style.textContent = `
-                            .content-header, 
-                            .breadcrumbs, 
-                            nav[aria-label="breadcrumb"],
-                            .breadcrumb,
-                            h1.m-0,
-                            .col-sm-6 h1 {
-                                display: none !important;
-                                visibility: hidden !important;
-                            }
-                            .content-wrapper > .content {
-                                padding-top: 15px !important;
-                            }
+                            /* AdminLTE selectors removed - Unfold handles this natively */
+                            /* AdminLTE content-wrapper removed */
                         `;
                         document.head.appendChild(style);
                     }
@@ -2055,11 +2050,11 @@
             const safeValue = (x.v === undefined || x.v === null || String(x.v).trim() === '') ? '---' : String(x.v);
             const checked = x.on ? 'checked' : '';
             return `
-                <label class="cp-item" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #eee; border-radius:12px; background:#fff;">
+                <label class="cp-item" style="display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #222222; border-radius:12px; background:#141414;">
                     <input type="checkbox" data-k="${x.k}" data-f="${x.f}" data-v="${safeValue.replace(/"/g, '&quot;')}" ${checked} style="margin-top:2px;">
                     <span style="display:block;">
-                        <div style="font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#566;">${x.f}</div>
-                        <div style="font-weight:700; color:#2c3e50; word-break:break-word;">${safeValue}</div>
+                        <div style="font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#64748b;">${x.f}</div>
+                        <div style="font-weight:700; color:#eeeeee; word-break:break-word;">${safeValue}</div>
                     </span>
                 </label>
             `;
@@ -2351,21 +2346,24 @@
         });
     };
 
-    // --- LOOP (sem spam no console) ---
-    // Evita criar múltiplos intervals caso o JS seja injetado duas vezes.
+    // --- INICIALIZACAO ---
+    // Executa setupUI() poucas vezes (o necessario para o DOM estar pronto).
     if (window.__opencasting_admin_custom_interval) {
         clearInterval(window.__opencasting_admin_custom_interval);
     }
     let setupCount = 0;
+    let setupDone = false;
     window.__opencasting_admin_custom_interval = setInterval(() => {
         setupCount++;
-        setupUI();
-        // Sidebar só é construída quando o usuário clica em "Filtros" (openCastingFilters)
-        // mas deixamos um fallback seguro para a primeira carga.
-        if(!isSidebarBuilt) {
-            // não cria a sidebar automaticamente para não aparecer “vazia”
+        if (!setupDone) {
+            setupUI();
+            const toolbar = document.getElementById('custom-filter-toolbar');
+            const isChangeList = document.body && document.body.classList.contains('change-list');
+            if (toolbar || !isChangeList || setupCount >= 3) {
+                setupDone = true;
+            }
         }
-        if(setupCount > 40) {
+        if (setupDone || setupCount > 6) {
             clearInterval(window.__opencasting_admin_custom_interval);
         }
     }, CHECK_INTERVAL);
